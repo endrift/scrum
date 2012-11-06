@@ -1,0 +1,6 @@
+../graphics/raw/tile-blue.bmp
+../graphics/raw/tile-red.bmp
+../graphics/raw/tile-yellow.bmp
+../graphics/raw/tile-green.bmp
+-pe 16 -g!
+-fa
