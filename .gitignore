@@ -1,3 +1,4 @@
 /build
 *.elf
 *.gba
+.DS_Store
