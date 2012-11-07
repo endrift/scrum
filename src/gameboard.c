@@ -1,8 +1,16 @@
+#include "gameboard.h"
+
 #include <gba_dma.h>
 #include <gba_video.h>
 
 #include "tile-palette.h"
 #include "tile-data.h"
+
+Runloop gameBoard = {
+	.init = gameBoardInit,
+	.deinit = gameBoardDeinit,
+	.frame = gameBoardFrame
+};
 
 void gameBoardInit() {
 	DMA0COPY(tile_bluePal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 4));
@@ -16,4 +24,10 @@ void gameBoardInit() {
 
 	REG_BG0CNT = CHAR_BASE(0) | SCREEN_BASE(1);
 	REG_DISPCNT = MODE_0 | BG0_ON;
+}
+
+void gameBoardDeinit() {
+}
+
+void gameBoardFrame(u32 framecount) {
 }
