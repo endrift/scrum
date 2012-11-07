@@ -5,17 +5,20 @@
 
 #include "runloop.h"
 
+#define GAMEBOARD_ROWS 16
+#define GAMEBOARD_COLS 16
+
 typedef struct GameBoard {
 	struct Row {
-		u8 color[16];
+		u8 color[GAMEBOARD_COLS];
 		u8 width;
-	} rows[16];
+	} rows[GAMEBOARD_ROWS];
 } GameBoard;
 
 void gameBoardInit(void);
 void gameBoardDeinit(void);
 void gameBoardFrame(u32 framecount);
 
-extern Runloop gameBoard;
+Runloop gameBoard;
 
 #endif

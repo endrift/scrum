@@ -10,6 +10,6 @@ typedef struct Runloop {
 } Runloop;
 
 void setRunloop(Runloop* runloop);
-void incrementRunloop();
+void incrementRunloop(void);
 
 #endif
