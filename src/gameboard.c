@@ -5,6 +5,7 @@
 #include <gba_sprites.h>
 #include <gba_video.h>
 
+#include "rng.h"
 #include "sprite.h"
 
 #include "tile-palette.h"
@@ -18,12 +19,15 @@ Runloop gameBoard = {
 
 typedef struct GameBoard {
 	struct Row {
-		u8 color[GAMEBOARD_COLS];
+		u8 color[GAMEBOARD_COLS + GAMEBOARD_DEADZONE];
 		u8 width;
-	} rows[GAMEBOARD_ROWS + GAMEBOARD_DEADZONE];
+	} rows[GAMEBOARD_ROWS];
 
-	Sprite activeBlock;
+	Sprite activeBlockL;
+	Sprite activeBlockR;
 	int activeY;
+	int activeWidth;
+	int activeColor;
 } GameBoard;
 
 static GameBoard board;
@@ -42,11 +46,53 @@ static void drawBoard(void) {
 	}
 }
 
+static void genBlock(void) {
+	u32 seed = rand() >> 16;
+	board.activeWidth = (seed & 3) + 1;
+	board.activeColor = (seed >> 2) & 3;
+	board.activeBlockL.palette = board.activeColor;
+	board.activeBlockR.palette = board.activeColor;
+
+	switch (board.activeWidth) {
+	case 1:
+		board.activeBlockL.shape = 0;
+		board.activeBlockR.disable = 1;
+		break;
+	case 2:
+		board.activeBlockL.shape = 1;
+		board.activeBlockR.disable = 1;
+		break;
+	case 3:
+		board.activeBlockL.shape = 1;
+		board.activeBlockR.disable = 0;
+		board.activeBlockR.shape = 0;
+		break;
+	case 4:
+		board.activeBlockL.shape = 1;
+		board.activeBlockR.disable = 0;
+		board.activeBlockR.shape = 1;
+		break;
+	}
+}
+
 static void resetBoard(void) {
-	int x, y;
+	int y;
 	for (y = 0; y < GAMEBOARD_ROWS; ++y) {
 		board.rows[y].width = 0;
 	}
+	srand(42);
+	genBlock();
+}
+
+static void layBlock(void) {
+	if (board.rows[board.activeY].width < GAMEBOARD_COLS) {
+		int i;
+		for (i = board.rows[board.activeY].width; i < board.rows[board.activeY].width + board.activeWidth; ++i) {
+			board.rows[board.activeY].color[i] = board.activeColor;
+		}
+		board.rows[board.activeY].width = i;
+	}
+	genBlock();
 }
 
 void gameBoardInit() {
@@ -60,10 +106,14 @@ void gameBoardInit() {
 	DMA3COPY(tileTiles, OBJ_BASE_ADR + 96, DMA16 | DMA_IMMEDIATE | (tileTilesLen >> 1));
 
 	clearSpriteTable();
-	board.activeBlock.raw.a = 0x4000;
-	board.activeBlock.raw.b = 0x4088;
-	board.activeBlock.raw.c = 0x0000;
-	insertSprite(&board.activeBlock, 0);
+	board.activeBlockL.raw.a = 0x4000;
+	board.activeBlockL.raw.b = 0x0088;
+	board.activeBlockL.raw.c = 0x0000;
+	board.activeBlockR.raw.a = 0x4000;
+	board.activeBlockR.raw.b = 0x0098;
+	board.activeBlockR.raw.c = 0x0000;
+	insertSprite(&board.activeBlockL, 0);
+	insertSprite(&board.activeBlockR, 1);
 	writeSpriteTable();
 
 	REG_BG0CNT = CHAR_BASE(0) | SCREEN_BASE(1);
@@ -96,14 +146,13 @@ void gameBoardFrame(u32 framecount) {
 	}
 
 	if (keys & KEY_A) {
-		if (board.rows[board.activeY].width < GAMEBOARD_COLS) {
-			++board.rows[board.activeY].width;
-		}
+		layBlock();
 	}
 
-	board.activeBlock.y = 160 - 8 - 8 * GAMEBOARD_ROWS + (board.activeY << 3);
+	board.activeBlockL.y = board.activeBlockR.y = 160 - 8 - 8 * GAMEBOARD_ROWS + (board.activeY << 3);
 
 	drawBoard();
-	updateSprite(&board.activeBlock, 0);
+	updateSprite(&board.activeBlockL, 0);
+	updateSprite(&board.activeBlockR, 1);
 	writeSpriteTable();
 }
