@@ -7,6 +7,7 @@
 
 #define GAMEBOARD_ROWS 16
 #define GAMEBOARD_COLS 16
+#define GAMEBOARD_DEADZONE 4
 
 void gameBoardInit(void);
 void gameBoardDeinit(void);

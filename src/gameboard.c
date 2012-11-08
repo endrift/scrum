@@ -1,6 +1,7 @@
 #include "gameboard.h"
 
 #include <gba_dma.h>
+#include <gba_input.h>
 #include <gba_sprites.h>
 #include <gba_video.h>
 
@@ -19,9 +20,10 @@ typedef struct GameBoard {
 	struct Row {
 		u8 color[GAMEBOARD_COLS];
 		u8 width;
-	} rows[GAMEBOARD_ROWS];
+	} rows[GAMEBOARD_ROWS + GAMEBOARD_DEADZONE];
 
 	Sprite activeBlock;
+	int activeY;
 } GameBoard;
 
 static GameBoard board;
@@ -34,7 +36,7 @@ static void drawBoard(void) {
 		for (x = 0; x < board.rows[y].width; ++x) {
 			mapData[x + y * 32] = 1 | CHAR_PALETTE(board.rows[y].color[x]);
 		}
-		for (; x < GAMEBOARD_COLS; ++x) {
+		for (; x < GAMEBOARD_COLS + GAMEBOARD_DEADZONE; ++x) {
 			mapData[x + y * 32] = 0;
 		}
 	}
@@ -43,10 +45,7 @@ static void drawBoard(void) {
 static void resetBoard(void) {
 	int x, y;
 	for (y = 0; y < GAMEBOARD_ROWS; ++y) {
-		board.rows[y].width = y;
-		for (x = 0; x < GAMEBOARD_COLS; ++x) {
-			board.rows[y].color[x] = (x + y) & 3;
-		}
+		board.rows[y].width = 0;
 	}
 }
 
@@ -79,14 +78,32 @@ void gameBoardDeinit() {
 }
 
 void gameBoardFrame(u32 framecount) {
-	drawBoard();
+	scanKeys();
+	u16 keys = keysDown();
 
-	int y;
-	for (y = 0; y < GAMEBOARD_ROWS; ++y) {
-		board.rows[y].width = ((y + framecount / 10) & 15) + 1;
+	if (keys & KEY_UP) {
+		--board.activeY;
+		if (board.activeY < 0) {
+			board.activeY = 0;
+		}
 	}
 
-	board.activeBlock.y = framecount & 0xFF;
+	if (keys & KEY_DOWN) {
+		++board.activeY;
+		if (board.activeY >= GAMEBOARD_ROWS) {
+			board.activeY = GAMEBOARD_ROWS - 1;
+		}
+	}
+
+	if (keys & KEY_A) {
+		if (board.rows[board.activeY].width < GAMEBOARD_COLS) {
+			++board.rows[board.activeY].width;
+		}
+	}
+
+	board.activeBlock.y = 160 - 8 - 8 * GAMEBOARD_ROWS + (board.activeY << 3);
+
+	drawBoard();
 	updateSprite(&board.activeBlock, 0);
 	writeSpriteTable();
 }
