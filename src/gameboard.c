@@ -28,6 +28,10 @@ typedef struct GameBoard {
 	int activeY;
 	int activeWidth;
 	int activeColor;
+
+	int score;
+	int lines;
+	int bugs;
 } GameBoard;
 
 static GameBoard board;
@@ -84,13 +88,27 @@ static void resetBoard(void) {
 	genBlock();
 }
 
+static void removeRow(void) {
+	++board.lines;
+	if (board.rows[board.activeY].width > GAMEBOARD_COLS) {
+		board.bugs += board.rows[board.activeY].width;
+	}
+	int y;
+	for (y = board.activeY; y < GAMEBOARD_ROWS - 1; ++y) {
+		board.rows[y] = board.rows[y + 1];
+	}
+	board.rows[GAMEBOARD_ROWS - 1].width = 0;
+}
+
 static void layBlock(void) {
-	if (board.rows[board.activeY].width < GAMEBOARD_COLS) {
-		int i;
-		for (i = board.rows[board.activeY].width; i < board.rows[board.activeY].width + board.activeWidth; ++i) {
-			board.rows[board.activeY].color[i] = board.activeColor;
-		}
-		board.rows[board.activeY].width = i;
+	int nextWidth = board.rows[board.activeY].width + board.activeWidth;
+	int i;
+	for (i = board.rows[board.activeY].width; i < nextWidth; ++i) {
+		board.rows[board.activeY].color[i] = board.activeColor;
+	}
+	board.rows[board.activeY].width = i;
+	if (nextWidth >= GAMEBOARD_COLS) {
+		removeRow();
 	}
 	genBlock();
 }
