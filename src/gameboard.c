@@ -32,6 +32,7 @@ typedef struct GameBoard {
 	int activeY;
 	int activeWidth;
 	int activeColor;
+	int timer;
 
 	int score;
 	int lines;
@@ -233,6 +234,7 @@ static void layBlock(void) {
 	if (nextWidth >= GAMEBOARD_COLS) {
 		removeRow();
 	}
+	board.timer = 0;
 	genBlock();
 }
 
@@ -253,10 +255,10 @@ void gameBoardInit() {
 	DMA3COPY(frameTiles, TILE_BASE_ADR(4) + 128 * 32, DMA16 | DMA_IMMEDIATE | (frameTilesLen >> 1));
 
 	clearSpriteTable();
-	board.activeBlockL.raw.a = 0x4000;
+	board.activeBlockL.raw.a = 0x4400;
 	board.activeBlockL.raw.b = 0x0088;
 	board.activeBlockL.raw.c = 0x0000;
-	board.activeBlockR.raw.a = 0x4000;
+	board.activeBlockR.raw.a = 0x4400;
 	board.activeBlockR.raw.b = 0x0098;
 	board.activeBlockR.raw.c = 0x0000;
 	insertSprite(&board.activeBlockL, 0);
@@ -270,6 +272,7 @@ void gameBoardInit() {
 	REG_BG0VOFS = -24;
 	REG_BG3CNT = CHAR_BASE(0) | SCREEN_BASE(2);
 	REG_DISPCNT = MODE_0 | BG0_ON | BG3_ON | OBJ_ON | OBJ_1D_MAP;
+	REG_BLDCNT = 0x0800;
 
 	resetBoard();
 }
@@ -299,6 +302,11 @@ void gameBoardFrame(u32 framecount) {
 		layBlock();
 	}
 
+	int alpha = (framecount / 6) & 0xF;
+	if (alpha & 0x8) {
+		alpha = 0xF - alpha;
+	}
+	REG_BLDALPHA = 0x0F00 | (alpha + 0x4);
 	board.activeBlockL.y = board.activeBlockR.y = 160 - 8 - 8 * GAMEBOARD_ROWS + (board.activeY << 3);
 
 	drawBoard();
