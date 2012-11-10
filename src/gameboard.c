@@ -302,7 +302,7 @@ void gameBoardFrame(u32 framecount) {
 		layBlock();
 	}
 
-	int alpha = (framecount / 6) & 0xF;
+	int alpha = (framecount / 5) & 0xF;
 	if (alpha & 0x8) {
 		alpha = 0xF - alpha;
 	}

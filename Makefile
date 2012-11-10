@@ -21,7 +21,12 @@ BUILD		:=	build
 SOURCES		:=	src
 DATA		:=
 GRAPHICS	:=	graphics
-INCLUDES	:=  include
+INCLUDES	:=	include
+TITLE		:=	GHUB GAMEOFF
+MAKER		:=	8N
+CODE		:=	G12E
+VERSION		:=	0
+
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -128,6 +133,8 @@ DEPENDS	:=	$(OFILES:.o=.d)
 # main targets
 #---------------------------------------------------------------------------------
 $(OUTPUT).gba	:	$(OUTPUT).elf
+	@$(OBJCOPY) -O binary $< $@
+	@gbafix -t"$(TITLE)" -c$(CODE) -m$(MAKER) -r$(VERSION) $@
 
 $(OUTPUT).elf	:	$(OFILES)
 
