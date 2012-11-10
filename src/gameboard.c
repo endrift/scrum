@@ -19,11 +19,13 @@ Runloop gameBoard = {
 	.frame = gameBoardFrame
 };
 
+typedef struct Row {
+	u8 color[GAMEBOARD_COLS + GAMEBOARD_DEADZONE];
+	u8 width;
+} Row;
+
 typedef struct GameBoard {
-	struct Row {
-		u8 color[GAMEBOARD_COLS + GAMEBOARD_DEADZONE];
-		u8 width;
-	} rows[GAMEBOARD_ROWS];
+	Row rows[GAMEBOARD_ROWS];
 
 	Sprite activeBlockL;
 	Sprite activeBlockR;
@@ -146,6 +148,8 @@ static void resetBackdrop(void) {
 	}
 }
 
+static void layBlock(void);
+
 static void genBlock(void) {
 	u32 seed = rand() >> 16;
 	board.activeWidth = (seed & 3) + 1;
@@ -175,25 +179,48 @@ static void genBlock(void) {
 	}
 }
 
+static void genRow(int row) {
+	int i;
+	int y = board.activeY;
+	board.activeY = row;
+	board.rows[row].width = 0;
+	for (i = 0; i < 4; ++i) {
+		while (board.activeWidth == 4) {
+			genBlock();
+		}
+		layBlock();
+	}
+	board.activeY = y;
+}
+
 static void resetBoard(void) {
+	srand(42);
+	genBlock();
 	int y;
 	for (y = 0; y < GAMEBOARD_ROWS; ++y) {
 		board.rows[y].width = 0;
+		genRow(y);
 	}
-	srand(42);
-	genBlock();
 }
 
 static void removeRow(void) {
-	++board.lines;
-	if (board.rows[board.activeY].width > GAMEBOARD_COLS) {
-		board.bugs += board.rows[board.activeY].width;
+	int x;
+	Row* row = &board.rows[board.activeY];
+	int color = row->color[row->width - 1];
+	for (x = row->width - 1; x >= 0; --x) {
+		if (row->color[x] != color) {
+			break;
+		}
+		--row->width;
 	}
-	int y;
-	for (y = board.activeY; y < GAMEBOARD_ROWS - 1; ++y) {
-		board.rows[y] = board.rows[y + 1];
+	if (x < 0) {
+		++board.lines;
+		int y;
+		for (y = board.activeY; y < GAMEBOARD_ROWS - 1; ++y) {
+			board.rows[y] = board.rows[y + 1];
+		}
+		genRow(GAMEBOARD_ROWS - 1);
 	}
-	board.rows[GAMEBOARD_ROWS - 1].width = 0;
 }
 
 static void layBlock(void) {
