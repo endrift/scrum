@@ -47,7 +47,7 @@ void clearSpriteTable(void);
 void writeSpriteTable(void);
 
 int activeSprites(void);
-void appendSprite(const Sprite* sprite);
+int appendSprite(const Sprite* sprite);
 void updateSprite(const Sprite* sprite, int at);
 void insertSprite(const Sprite* sprite, int at);
 void removeSprite(int at);

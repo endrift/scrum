@@ -10,6 +10,8 @@
 
 #include "tile-palette.h"
 #include "tile-data.h"
+#include "game-backdrop.h"
+#include "frame.h"
 
 Runloop gameBoard = {
 	.init = gameBoardInit,
@@ -47,6 +49,100 @@ static void drawBoard(void) {
 		for (; x < GAMEBOARD_COLS + GAMEBOARD_DEADZONE; ++x) {
 			mapData[x + y * 32] = 0;
 		}
+	}
+}
+
+static void resetBackdrop(void) {
+	int x, y;
+	for (y = 0; y < 20; ++y) {
+		for (x = 0; x < 30; ++x) {
+			((u16*) SCREEN_BASE_BLOCK(2))[x + y * 32] = (((x + y) % 3) + 2) | CHAR_PALETTE(4);
+		}
+	}
+
+	for (y = 0; y < GAMEBOARD_ROWS; ++y) {
+		for (x = 0; x < GAMEBOARD_COLS + GAMEBOARD_DEADZONE; ++x) {
+			((u16*) SCREEN_BASE_BLOCK(2))[x + y * 32 + 97] = 5 | CHAR_PALETTE(4);
+		}
+		((u16*) SCREEN_BASE_BLOCK(2))[y * 32 + 97 + 16] = 6 | CHAR_PALETTE(4);
+	}
+
+	appendSprite(&(Sprite) {
+		.x = 0,
+		.y = 16,
+		.base = 128,
+		.palette = 4,
+		.size = 2
+	});
+
+	appendSprite(&(Sprite) {
+		.x = 144,
+		.y = 16,
+		.base = 128,
+		.palette = 4,
+		.size = 2,
+		.hflip = 1
+	});
+
+	appendSprite(&(Sprite) {
+		.x = 0,
+		.y = 104,
+		.base = 132,
+		.palette = 4,
+		.shape = 2,
+		.size = 3
+	});
+
+	appendSprite(&(Sprite) {
+		.x = 144,
+		.y = 104,
+		.base = 132,
+		.palette = 4,
+		.shape = 2,
+		.size = 3,
+		.hflip = 1
+	});
+
+
+	for (x = 0; x < 7; ++x) {
+		appendSprite(&(Sprite) {
+			.x = 16 * x + 32,
+			.y = 16,
+			.base = 129,
+			.palette = 4,
+			.shape = 1,
+			.size = 0
+		});
+
+		appendSprite(&(Sprite) {
+			.x = 16 * x + 32,
+			.y = 152,
+			.base = 158,
+			.palette = 4,
+			.shape = 1,
+			.size = 0
+		});
+	}
+
+	for (y = 0; y < 3; ++y) {
+		appendSprite(&(Sprite) {
+			.x = 0,
+			.y = 16 * y + 48,
+			.base = 132,
+			.palette = 4,
+			.shape = 0,
+			.size = 2
+		});
+
+		appendSprite(&(Sprite) {
+			.x = 144,
+			.y = 16 * y + 48,
+			.base = 132,
+			.palette = 4,
+			.shape = 0,
+			.size = 2,
+			.hflip = 1
+		});
 	}
 }
 
@@ -123,6 +219,12 @@ void gameBoardInit() {
 	DMA3COPY(tileTiles, OBJ_BASE_ADR + 64, DMA16 | DMA_IMMEDIATE | (tileTilesLen >> 1));
 	DMA3COPY(tileTiles, OBJ_BASE_ADR + 96, DMA16 | DMA_IMMEDIATE | (tileTilesLen >> 1));
 
+	DMA3COPY(game_backdropPal, &BG_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | game_backdropPalLen);
+	DMA3COPY(game_backdropTiles, TILE_BASE_ADR(0) + 64, DMA16 | DMA_IMMEDIATE | game_backdropTilesLen);
+
+	DMA3COPY(framePal, &OBJ_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | framePalLen);
+	DMA3COPY(frameTiles, TILE_BASE_ADR(4) + 128 * 32, DMA16 | DMA_IMMEDIATE | frameTilesLen);
+
 	clearSpriteTable();
 	board.activeBlockL.raw.a = 0x4000;
 	board.activeBlockL.raw.b = 0x0088;
@@ -134,10 +236,13 @@ void gameBoardInit() {
 	insertSprite(&board.activeBlockR, 1);
 	writeSpriteTable();
 
+	resetBackdrop();
+
 	REG_BG0CNT = CHAR_BASE(0) | SCREEN_BASE(1);
 	REG_BG0HOFS = -8;
 	REG_BG0VOFS = -24;
-	REG_DISPCNT = MODE_0 | BG0_ON | OBJ_ON;
+	REG_BG3CNT = CHAR_BASE(0) | SCREEN_BASE(2);
+	REG_DISPCNT = MODE_0 | BG0_ON | BG3_ON | OBJ_ON | OBJ_1D_MAP;
 
 	resetBoard();
 }

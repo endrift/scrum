@@ -43,6 +43,15 @@ void writeSpriteTable(void) {
 	DMA0COPY(&spriteTable, OAM, DMA16 | DMA_IMMEDIATE | 512);
 }
 
+int appendSprite(const Sprite* sprite) {
+	if (numActiveSprites == 128) {
+		return -1;
+	}
+
+	spriteTable.obj[numActiveSprites].attr = *sprite;
+	return numActiveSprites++;
+}
+
 void updateSprite(const Sprite* sprite, int at) {
 	spriteTable.obj[at].attr = *sprite;
 }
