@@ -289,6 +289,7 @@ void renderText(const char* text, const Textarea* destination, const Font* font)
 				int swizzled = (innerY & 0x7) * 4; // Row
 				swizzled += (innerX & 0x7) >> 1; // Column
 				swizzled += (innerX >> 3) * 0x20 + (innerY >> 3) * 0x400; // Cell
+				pixels[swizzled >> 1] &= ~(0xF << (4 * (innerX & 3)));
 				pixels[swizzled >> 1] |= glyphPixel << (4 * (innerX & 3));
 			}
 		}

@@ -9,6 +9,11 @@ inline void formatNumber(char* buffer, unsigned int len, unsigned int value) {
 		buffer[len - i - 1] = '0' + (value % 10);
 		value /= 10;
 	}
+	if (value) {
+		for (i = 0; i < len; ++i) {
+			buffer[i] = '9';
+		}
+	}
 }
 
 inline void clearBlock(u16* base, int startX, int startY, int width, int height) {

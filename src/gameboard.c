@@ -157,7 +157,7 @@ static void updateScore(void) {
 	static char buffer[6] = "00000\0";
 
 	// TODO: Unhard-code these coordinates?
-	clearBlock(TILE_BASE_ADR(1), 184, 40, 64, 16);
+	//clearBlock(TILE_BASE_ADR(1), 184, 40, 64, 16);
 	formatNumber(buffer, 5, board.score);
 	renderText(buffer, &(Textarea) {
 		.destination = TILE_BASE_ADR(1),
@@ -168,7 +168,7 @@ static void updateScore(void) {
 		.baseline = 0
 	}, &largeFont);
 
-	clearBlock(TILE_BASE_ADR(1), 184, 72, 64, 16);
+	//clearBlock(TILE_BASE_ADR(1), 184, 72, 64, 16);
 	formatNumber(buffer, 5, board.lines);
 	renderText(buffer, &(Textarea) {
 		.destination = TILE_BASE_ADR(1),
@@ -237,20 +237,24 @@ static void removeRow(void) {
 	int x;
 	Row* row = &board.rows[board.activeY];
 	int color = row->color[row->width - 1];
+	int score = 0;
 	for (x = row->width - 1; x >= 0; --x) {
 		if (row->color[x] != color) {
 			break;
 		}
 		--row->width;
+		++score;
 	}
 	if (x < 0) {
 		++board.lines;
+		score *= 2;
 		int y;
 		for (y = board.activeY; y < GAMEBOARD_ROWS - 1; ++y) {
 			board.rows[y] = board.rows[y + 1];
 		}
 		genRow(GAMEBOARD_ROWS - 1);
 	}
+	board.score += score;
 }
 
 static void layBlock(void) {
@@ -262,9 +266,9 @@ static void layBlock(void) {
 	board.rows[board.activeY].width = i;
 	if (nextWidth >= GAMEBOARD_COLS) {
 		removeRow();
+		updateScore();
 	}
 
-	updateScore();
 	board.timer = 0;
 	genBlock();
 }
@@ -331,6 +335,8 @@ void gameBoardInit() {
 		.clipH = 16,
 		.baseline = 0
 	}, &largeFont);
+
+	updateScore();
 
 	REG_BG0CNT = CHAR_BASE(0) | SCREEN_BASE(1) | 2;
 	REG_BG0HOFS = -8;
