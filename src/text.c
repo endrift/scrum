@@ -321,6 +321,7 @@ const Font thinFont = {
 __attribute__((section(".iwram"), long_call))
 void renderText(const char* text, const Textarea* destination, const Font* font) {
 	int x = destination->clipX, y, i;
+	int lastX = 0;
 	u16* pixels = destination->destination;
 	size_t len = strlen(text);
 	for (i = 0; i < len; ++i) {
@@ -338,10 +339,13 @@ void renderText(const char* text, const Textarea* destination, const Font* font)
 				int swizzled = (innerY & 0x7) * 4; // Row
 				swizzled += (innerX & 0x7) >> 1; // Column
 				swizzled += (innerX >> 3) * 0x20 + (innerY >> 3) * 0x400; // Cell
-				pixels[swizzled >> 1] &= ~(0xF << (4 * (innerX & 3)));
+				if (innerX >= lastX) {
+					pixels[swizzled >> 1] &= ~(0xF << (4 * (innerX & 3)));
+				}
 				pixels[swizzled >> 1] |= glyphPixel << (4 * (innerX & 3));
 			}
 		}
+		lastX = startX + font->metrics->glyphs[(int) text[i]].clipWidth;
 		x = startX + font->metrics->glyphs[(int) text[i]].width;
 	}
 }
