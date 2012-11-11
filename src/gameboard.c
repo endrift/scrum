@@ -8,6 +8,7 @@
 
 #include "rng.h"
 #include "sprite.h"
+#include "key.h"
 #include "text.h"
 #include "util.h"
 
@@ -43,6 +44,15 @@ typedef struct GameBoard {
 } GameBoard;
 
 static GameBoard board;
+
+static void repeatHandler(KeyContext* context, int key);
+static KeyContext keyContext = {
+	.next = {},
+	.active = 0,
+	.startDelay = 15,
+	.repeatDelay = 10,
+	.repeatHandler = repeatHandler
+};
 
 static void drawBoard(void) {
 	u16* mapData = SCREEN_BASE_BLOCK(1);
@@ -365,6 +375,38 @@ static void layBlock(void) {
 	genBlock();
 }
 
+static void blockUp(void) {
+	--board.activeY;
+	if (board.activeY < 0) {
+		board.activeY = 0;
+	} else {
+		REG_SOUND1CNT_L = 0x0027;
+		REG_SOUND1CNT_H = 0xA2B4;
+		REG_SOUND1CNT_X = 0xC700;
+	}
+}
+
+static void blockDown(void) {
+	++board.activeY;
+	if (board.activeY >= GAMEBOARD_ROWS) {
+		board.activeY = GAMEBOARD_ROWS - 1;
+	} else {
+		REG_SOUND1CNT_L = 0x0027;
+		REG_SOUND1CNT_H = 0xA2B4;
+		REG_SOUND1CNT_X = 0xC6D0;
+	}
+}
+
+static void repeatHandler(KeyContext* context, int keys) {
+	(void) (context);
+	if (keys & KEY_UP) {
+		blockUp();
+	}
+	if (keys & KEY_DOWN) {
+		blockDown();
+	}
+}
+
 void gameBoardInit() {
 	DMA3COPY(tile_bluePal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 4));
 	DMA3COPY(tile_bluePal, &OBJ_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 4));
@@ -458,26 +500,23 @@ void gameBoardFrame(u32 framecount) {
 
 	scanKeys();
 	u16 keys = keysDown();
+	u16 unkeys = keysUp();
+
+	if (unkeys) {
+		stopRepeat(&keyContext, unkeys);
+	}
 
 	if (keys & KEY_UP) {
-		REG_SOUND1CNT_L = 0x0027;
-		REG_SOUND1CNT_H = 0xA2B4;
-		REG_SOUND1CNT_X = 0xC700;
-		--board.activeY;
-		if (board.activeY < 0) {
-			board.activeY = 0;
-		}
+		startRepeat(&keyContext, framecount, KEY_UP);
+		blockUp();
 	}
 
 	if (keys & KEY_DOWN) {
-		REG_SOUND1CNT_L = 0x0027;
-		REG_SOUND1CNT_H = 0xA2B4;
-		REG_SOUND1CNT_X = 0xC6D0;
-		++board.activeY;
-		if (board.activeY >= GAMEBOARD_ROWS) {
-			board.activeY = GAMEBOARD_ROWS - 1;
-		}
+		startRepeat(&keyContext, framecount, KEY_DOWN);
+		blockDown();
 	}
+
+	doRepeat(&keyContext, framecount);
 
 	if (keys & KEY_A) {
 		REG_SOUND1CNT_L = 0x001F;
