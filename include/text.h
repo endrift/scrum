@@ -25,6 +25,7 @@ typedef struct Metrics {
 } Metrics;
 
 extern const Font largeFont;
+extern const Font thinFont;
 
 extern u16 textPalLight[];
 extern unsigned int textPalLightLen;

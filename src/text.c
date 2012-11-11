@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "fontLarge_bin.h"
+#include "fontThin_bin.h"
 
 
 u16 textPalLight[4] = { 0x7C1F, 0x7FFF, 0x35E0, 0x1D08 };
@@ -241,12 +242,80 @@ const Metrics largeFontMetrics = {
 	.glyphs = largeFontGlyphs
 };
 
+const Glyph thinFontGlyphs[128] = {
+	{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
+	{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
+	{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
+	{ // 0
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // 1
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // 2
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // 3
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // 4
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // 5
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // 6
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // 7
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // 8
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // 9
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+};
+
+const Metrics thinFontMetrics = {
+	.glyphs = thinFontGlyphs
+};
+
 const Font largeFont = {
 	.gridW = 16,
 	.gridH = 16,
 	.baseline = 0,
 	.grid = (u16*) fontLarge_bin,
 	.metrics = &largeFontMetrics
+};
+
+const Font thinFont = {
+	.gridW = 8,
+	.gridH = 16,
+	.baseline = 0,
+	.grid = (u16*) fontThin_bin,
+	.metrics = &thinFontMetrics
 };
 
 __attribute__((section(".iwram"), long_call))

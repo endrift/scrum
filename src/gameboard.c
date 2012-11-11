@@ -221,21 +221,33 @@ static void resetBackdrop(void) {
 static void layBlock(void);
 
 static void updateScore(void) {
-	static char buffer[6] = "00000\0";
+	static char buffer[10] = "000000000\0";
 
 	// TODO: Unhard-code these coordinates?
-	formatNumber(buffer, 5, board.score);
-	renderText(buffer, &(Textarea) {
-		.destination = TILE_BASE_ADR(1),
-		.clipX = 185,
-		.clipY = 40,
-		.clipW = 64,
-		.clipH = 16,
-		.baseline = 0
-	}, &largeFont);
+	if (board.score > 99999) {
+		formatNumber(buffer, 9, board.score);
+		renderText(buffer, &(Textarea) {
+			.destination = TILE_BASE_ADR(1),
+			.clipX = 185,
+			.clipY = 40,
+			.clipW = 64,
+			.clipH = 16,
+			.baseline = 0
+		}, &thinFont);
+	} else {
+		formatNumber(&buffer[4], 5, board.score);
+		renderText(&buffer[4], &(Textarea) {
+			.destination = TILE_BASE_ADR(1),
+			.clipX = 185,
+			.clipY = 40,
+			.clipW = 64,
+			.clipH = 16,
+			.baseline = 0
+		}, &largeFont);
+	}
 
-	formatNumber(buffer, 5, board.lines);
-	renderText(buffer, &(Textarea) {
+	formatNumber(&buffer[4], 5, board.lines);
+	renderText(&buffer[4], &(Textarea) {
 		.destination = TILE_BASE_ADR(1),
 		.clipX = 185,
 		.clipY = 72,
@@ -244,8 +256,8 @@ static void updateScore(void) {
 		.baseline = 0
 	}, &largeFont);
 
-	formatNumber(&buffer[3], 2, board.bugs);
-	renderText(&buffer[3], &(Textarea) {
+	formatNumber(&buffer[7], 2, board.bugs);
+	renderText(&buffer[7], &(Textarea) {
 		.destination = TILE_BASE_ADR(1),
 		.clipX = 212,
 		.clipY = 136,
