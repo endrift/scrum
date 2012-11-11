@@ -19,7 +19,7 @@ include $(DEVKITARM)/gba_rules
 TARGET		:=	$(shell basename $(CURDIR))
 BUILD		:=	build
 SOURCES		:=	src
-DATA		:=
+DATA		:=  data
 GRAPHICS	:=	graphics
 INCLUDES	:=	include
 TITLE		:=	GHUB GAMEOFF

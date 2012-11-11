@@ -1,12 +1,13 @@
 #include "gameboard.h"
 
 #include <gba_dma.h>
-#include <gba_input.h>
+#include <gba_input.h>;
 #include <gba_sprites.h>
 #include <gba_video.h>
 
 #include "rng.h"
 #include "sprite.h"
+#include "text.h"
 
 #include "tile-palette.h"
 #include "tile-data.h"
@@ -267,11 +268,26 @@ void gameBoardInit() {
 
 	resetBackdrop();
 
-	REG_BG0CNT = CHAR_BASE(0) | SCREEN_BASE(1);
+	// TODO: Move this to a function
+	int i;
+	for (i = 0; i < 1024; ++i) {
+		((u16*) SCREEN_BASE_BLOCK(3))[i] = i;
+	}
+	renderText("SCORE", &(Textarea) {
+		.destination = TILE_BASE_ADR(1),
+		.clipX = 0,
+		.clipY = 0,
+		.clipW = 64,
+		.clipH = 16,
+		.baseline = 0
+	}, &largeFont);
+
+	REG_BG0CNT = CHAR_BASE(0) | SCREEN_BASE(1) | 2;
 	REG_BG0HOFS = -8;
 	REG_BG0VOFS = -24;
-	REG_BG3CNT = CHAR_BASE(0) | SCREEN_BASE(2);
-	REG_DISPCNT = MODE_0 | BG0_ON | BG3_ON | OBJ_ON | OBJ_1D_MAP;
+	REG_BG1CNT = CHAR_BASE(1) | SCREEN_BASE(3) | 1;
+	REG_BG3CNT = CHAR_BASE(0) | SCREEN_BASE(2) | 3;
+	REG_DISPCNT = MODE_0 | BG0_ON | BG1_ON | BG3_ON | OBJ_ON | OBJ_1D_MAP;
 	REG_BLDCNT = 0x0800;
 
 	resetBoard();
