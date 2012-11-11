@@ -72,6 +72,18 @@ static void resetBackdrop(void) {
 		((u16*) SCREEN_BASE_BLOCK(2))[y * 32 + 97 + 16] = 6 | CHAR_PALETTE(4);
 	}
 
+	for (y = 0; y < 16; ++y) {
+		for (x = 0; x < 6; ++x) {
+			if ((y & 3) == 3 && y != 15) {
+				((u16*) SCREEN_BASE_BLOCK(2))[x + y * 32 + 119] = 9 | CHAR_PALETTE(4);
+			} else if (y & 1 && y != 15) {
+				((u16*) SCREEN_BASE_BLOCK(2))[x + y * 32 + 119] = 8 | CHAR_PALETTE(4);
+			} else {
+				((u16*) SCREEN_BASE_BLOCK(2))[x + y * 32 + 119] = 7 | CHAR_PALETTE(4);
+			}
+		}
+	}
+
 	appendSprite(&(Sprite) {
 		.x = 0,
 		.y = 16,
@@ -129,6 +141,42 @@ static void resetBackdrop(void) {
 		});
 	}
 
+	appendSprite(&(Sprite) {
+		.x = 176,
+		.y = 16,
+		.base = 128,
+		.palette = 4,
+		.size = 2
+	});
+
+	appendSprite(&(Sprite) {
+		.x = 208,
+		.y = 16,
+		.base = 128,
+		.palette = 4,
+		.size = 2,
+		.hflip = 1
+	});
+
+	appendSprite(&(Sprite) {
+		.x = 176,
+		.y = 104,
+		.base = 132,
+		.palette = 4,
+		.shape = 2,
+		.size = 3
+	});
+
+	appendSprite(&(Sprite) {
+		.x = 208,
+		.y = 104,
+		.base = 132,
+		.palette = 4,
+		.shape = 2,
+		.size = 3,
+		.hflip = 1
+	});
+
 	for (y = 0; y < 3; ++y) {
 		appendSprite(&(Sprite) {
 			.x = 0,
@@ -148,6 +196,24 @@ static void resetBackdrop(void) {
 			.size = 2,
 			.hflip = 1
 		});
+		appendSprite(&(Sprite) {
+			.x = 176,
+			.y = 16 * y + 48,
+			.base = 132,
+			.palette = 4,
+			.shape = 0,
+			.size = 2
+		});
+
+		appendSprite(&(Sprite) {
+			.x = 208,
+			.y = 16 * y + 48,
+			.base = 132,
+			.palette = 4,
+			.shape = 0,
+			.size = 2,
+			.hflip = 1
+		});
 	}
 }
 
@@ -157,22 +223,20 @@ static void updateScore(void) {
 	static char buffer[6] = "00000\0";
 
 	// TODO: Unhard-code these coordinates?
-	//clearBlock(TILE_BASE_ADR(1), 184, 40, 64, 16);
 	formatNumber(buffer, 5, board.score);
 	renderText(buffer, &(Textarea) {
 		.destination = TILE_BASE_ADR(1),
-		.clipX = 184,
+		.clipX = 185,
 		.clipY = 40,
 		.clipW = 64,
 		.clipH = 16,
 		.baseline = 0
 	}, &largeFont);
 
-	//clearBlock(TILE_BASE_ADR(1), 184, 72, 64, 16);
 	formatNumber(buffer, 5, board.lines);
 	renderText(buffer, &(Textarea) {
 		.destination = TILE_BASE_ADR(1),
-		.clipX = 184,
+		.clipX = 185,
 		.clipY = 72,
 		.clipW = 64,
 		.clipH = 16,
@@ -286,6 +350,8 @@ void gameBoardInit() {
 	DMA3COPY(game_backdropPal, &BG_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | (game_backdropPalLen >> 1));
 	DMA3COPY(game_backdropTiles, TILE_BASE_ADR(0) + 64, DMA16 | DMA_IMMEDIATE | (game_backdropTilesLen >> 1));
 
+	DMA3COPY(textPalLight, &BG_COLORS[16 * 5], DMA16 | DMA_IMMEDIATE | (textPalLightLen >> 1));
+
 	DMA3COPY(framePal, &OBJ_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | (framePalLen >> 1));
 	DMA3COPY(frameTiles, TILE_BASE_ADR(4) + 128 * 32, DMA16 | DMA_IMMEDIATE | (frameTilesLen >> 1));
 
@@ -305,13 +371,13 @@ void gameBoardInit() {
 	// TODO: Move this to a function
 	int i;
 	for (i = 0; i < 1024; ++i) {
-		((u16*) SCREEN_BASE_BLOCK(3))[i] = i;
+		((u16*) SCREEN_BASE_BLOCK(3))[i] = i | 0x5000;
 	}
 
 	// TODO: Move to constants
 	renderText("SCORE", &(Textarea) {
 		.destination = TILE_BASE_ADR(1),
-		.clipX = 184,
+		.clipX = 186,
 		.clipY = 24,
 		.clipW = 64,
 		.clipH = 16,
@@ -320,7 +386,7 @@ void gameBoardInit() {
 
 	renderText("LINES", &(Textarea) {
 		.destination = TILE_BASE_ADR(1),
-		.clipX = 184,
+		.clipX = 192,
 		.clipY = 56,
 		.clipW = 64,
 		.clipH = 16,
@@ -329,7 +395,7 @@ void gameBoardInit() {
 
 	renderText("FUNC", &(Textarea) {
 		.destination = TILE_BASE_ADR(1),
-		.clipX = 184,
+		.clipX = 195,
 		.clipY = 88,
 		.clipW = 64,
 		.clipH = 16,

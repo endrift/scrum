@@ -4,6 +4,10 @@
 
 #include "fontLarge_bin.h"
 
+
+u16 textPalLight[4] = { 0x7C1F, 0x7FFF, 0x35E0, 0x1D08 };
+unsigned int textPalLightLen = 8;
+
 struct Font {
 	unsigned int gridW;
 	unsigned int gridH;
@@ -16,245 +20,220 @@ const Glyph largeFontGlyphs[128] = {
 	{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
 	{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
 	{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
-	{
-		.clipLeft = 03,
+	{ // 0
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // 1
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // 2
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // 3
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // 4
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // 5
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // 6
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // 7
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // 8
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // 9
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // :
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // ;
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // <
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // =
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // >
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // ?
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // @
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // A
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // B
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // C
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // D
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // E
+		.clipLeft = 3,
+		.clipWidth = 9,
+		.width = 8,
+	},
+	{ // F
+		.clipLeft = 3,
+		.clipWidth = 9,
+		.width = 8,
+	},
+	{ // G
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // H
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // I
+		.clipLeft = 5,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // J
+		.clipLeft = 4,
+		.clipWidth = 9,
+		.width = 8,
+	},
+	{ // K
+		.clipLeft = 4,
+		.clipWidth = 9,
+		.width = 8,
+	},
+	{ // L
+		.clipLeft = 4,
+		.clipWidth = 8,
+		.width = 7,
+	},
+	{ // M
+		.clipLeft = 2,
+		.clipWidth = 11,
+		.width = 10,
+	},
+	{ // N
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // O
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // P
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // Q
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // R
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // S
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // T
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // U
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // V
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // W
+		.clipLeft = 2,
+		.clipWidth = 11,
+		.width = 10,
+	},
+	{ // X
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
+	{ // Y
+		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9,
 	},
-	{
-		.clipLeft = 03,
-		.clipWidth = 10,
-		.width = 9,
-	},
-	{
-		.clipLeft = 03,
-		.clipWidth = 10,
-		.width = 9,
-	},
-	{
-		.clipLeft = 03,
-		.clipWidth = 10,
-		.width = 9,
-	},
-	{
-		.clipLeft = 03,
-		.clipWidth = 10,
-		.width = 9,
-	},
-	{
-		.clipLeft = 03,
-		.clipWidth = 10,
-		.width = 9,
-	},
-	{
-		.clipLeft = 03,
-		.clipWidth = 10,
-		.width = 9,
-	},
-	{
-		.clipLeft = 03,
-		.clipWidth = 10,
-		.width = 9,
-	},
-	{
-		.clipLeft = 03,
-		.clipWidth = 10,
-		.width = 9,
-	},
-	{
-		.clipLeft = 03,
-		.clipWidth = 10,
-		.width = 9,
-	},
-	{
-		.clipLeft = 03,
-		.clipWidth = 10,
-		.width = 9,
-	},
-	{
-		.clipLeft = 03,
-		.clipWidth = 10,
-		.width = 9,
-	},
-	{
-		.clipLeft = 03,
-		.clipWidth = 10,
-		.width = 9,
-	},
-	{
-		.clipLeft = 03,
-		.clipWidth = 10,
-		.width = 9,
-	},
-	{
-		.clipLeft = 03,
-		.clipWidth = 10,
-		.width = 9,
+	{ // Z
+		.clipLeft = 4,
+		.clipWidth = 8,
+		.width = 7,
 	},
 };
 

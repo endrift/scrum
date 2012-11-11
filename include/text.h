@@ -26,6 +26,9 @@ typedef struct Metrics {
 
 extern const Font largeFont;
 
+extern u16 textPalLight[];
+extern unsigned int textPalLightLen;
+
 void renderText(const char* text, const Textarea* destination, const Font* font);
 
 #endif
