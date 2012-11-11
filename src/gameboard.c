@@ -243,6 +243,16 @@ static void updateScore(void) {
 		.clipH = 16,
 		.baseline = 0
 	}, &largeFont);
+
+	formatNumber(&buffer[3], 2, board.bugs);
+	renderText(&buffer[3], &(Textarea) {
+		.destination = TILE_BASE_ADR(1),
+		.clipX = 212,
+		.clipY = 136,
+		.clipW = 64,
+		.clipH = 16,
+		.baseline = 0
+	}, &largeFont);
 }
 
 static void genBlock(void) {
@@ -303,6 +313,9 @@ static void removeRow(void) {
 	Row* row = &board.rows[board.activeY];
 	int color = row->color[row->width - 1];
 	int score = -board.activeWidth;
+	if (row->width > GAMEBOARD_COLS) {
+		board.bugs += row->width - GAMEBOARD_COLS;
+	}
 	for (x = row->width - 1; x >= 0; --x) {
 		if (row->color[x] != color) {
 			break;
