@@ -2,6 +2,7 @@
 
 #include <gba_dma.h>
 #include <gba_input.h>
+#include <gba_sound.h>
 #include <gba_sprites.h>
 #include <gba_video.h>
 
@@ -301,7 +302,7 @@ static void removeRow(void) {
 	int x;
 	Row* row = &board.rows[board.activeY];
 	int color = row->color[row->width - 1];
-	int score = 0;
+	int score = -board.activeWidth;
 	for (x = row->width - 1; x >= 0; --x) {
 		if (row->color[x] != color) {
 			break;
@@ -319,6 +320,8 @@ static void removeRow(void) {
 		genRow(GAMEBOARD_ROWS - 1);
 	}
 	board.score += score;
+	REG_SOUND4CNT_L = 0xB200;
+	REG_SOUND4CNT_H = 0x8062;
 }
 
 static void layBlock(void) {
@@ -412,6 +415,9 @@ void gameBoardInit() {
 	REG_DISPCNT = MODE_0 | BG0_ON | BG1_ON | BG3_ON | OBJ_ON | OBJ_1D_MAP;
 	REG_BLDCNT = 0x0800;
 
+	REG_SOUNDCNT_L = SND1_R_ENABLE | SND1_L_ENABLE | SND4_R_ENABLE | SND4_L_ENABLE | 0x33;
+	REG_SOUNDCNT_X = 0x80;
+
 	resetBoard();
 }
 
@@ -429,6 +435,9 @@ void gameBoardFrame(u32 framecount) {
 	u16 keys = keysDown();
 
 	if (keys & KEY_UP) {
+		REG_SOUND1CNT_L = 0x0027;
+		REG_SOUND1CNT_H = 0xA2B4;
+		REG_SOUND1CNT_X = 0xC700;
 		--board.activeY;
 		if (board.activeY < 0) {
 			board.activeY = 0;
@@ -436,6 +445,9 @@ void gameBoardFrame(u32 framecount) {
 	}
 
 	if (keys & KEY_DOWN) {
+		REG_SOUND1CNT_L = 0x0027;
+		REG_SOUND1CNT_H = 0xA2B4;
+		REG_SOUND1CNT_X = 0xC6D0;
 		++board.activeY;
 		if (board.activeY >= GAMEBOARD_ROWS) {
 			board.activeY = GAMEBOARD_ROWS - 1;
@@ -443,6 +455,9 @@ void gameBoardFrame(u32 framecount) {
 	}
 
 	if (keys & KEY_A) {
+		REG_SOUND1CNT_L = 0x001F;
+		REG_SOUND1CNT_H = 0xA2B4;
+		REG_SOUND1CNT_X = 0x8500;
 		layBlock();
 	}
 
