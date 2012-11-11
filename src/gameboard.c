@@ -273,10 +273,29 @@ void gameBoardInit() {
 	for (i = 0; i < 1024; ++i) {
 		((u16*) SCREEN_BASE_BLOCK(3))[i] = i;
 	}
+
 	renderText("SCORE", &(Textarea) {
 		.destination = TILE_BASE_ADR(1),
-		.clipX = 0,
-		.clipY = 0,
+		.clipX = 184,
+		.clipY = 24,
+		.clipW = 64,
+		.clipH = 16,
+		.baseline = 0
+	}, &largeFont);
+
+	renderText("LINES", &(Textarea) {
+		.destination = TILE_BASE_ADR(1),
+		.clipX = 184,
+		.clipY = 56,
+		.clipW = 64,
+		.clipH = 16,
+		.baseline = 0
+	}, &largeFont);
+
+	renderText("FUNC", &(Textarea) {
+		.destination = TILE_BASE_ADR(1),
+		.clipX = 184,
+		.clipY = 88,
 		.clipW = 64,
 		.clipH = 16,
 		.baseline = 0
