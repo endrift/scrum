@@ -249,7 +249,7 @@ static void updateScore(void) {
 		.destination = TILE_BASE_ADR(1),
 		.clipX = 212,
 		.clipY = 136,
-		.clipW = 64,
+		.clipW = 32,
 		.clipH = 16,
 		.baseline = 0
 	}, &largeFont);

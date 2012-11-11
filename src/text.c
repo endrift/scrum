@@ -249,6 +249,7 @@ const Font largeFont = {
 	.metrics = &largeFontMetrics
 };
 
+__attribute__((section(".iwram"), long_call))
 void renderText(const char* text, const Textarea* destination, const Font* font) {
 	int x = destination->clipX, y, i;
 	u16* pixels = destination->destination;
