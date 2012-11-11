@@ -446,10 +446,6 @@ void gameBoardFrame(u32 framecount) {
 		layBlock();
 	}
 
-	int alpha = (framecount / 5) & 0xF;
-	if (alpha & 0x8) {
-		alpha = 0xF - alpha;
-	}
-	REG_BLDALPHA = 0x0F00 | (alpha + 0x4);
+	REG_BLDALPHA = 0x0F0B;
 	board.activeBlockL.y = board.activeBlockR.y = 160 - 8 - 8 * GAMEBOARD_ROWS + (board.activeY << 3);
 }
