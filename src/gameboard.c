@@ -1,13 +1,14 @@
 #include "gameboard.h"
 
 #include <gba_dma.h>
-#include <gba_input.h>;
+#include <gba_input.h>
 #include <gba_sprites.h>
 #include <gba_video.h>
 
 #include "rng.h"
 #include "sprite.h"
 #include "text.h"
+#include "util.h"
 
 #include "tile-palette.h"
 #include "tile-data.h"
@@ -152,6 +153,33 @@ static void resetBackdrop(void) {
 
 static void layBlock(void);
 
+static void updateScore(void) {
+	static char buffer[6] = "00000\0";
+
+	// TODO: Unhard-code these coordinates?
+	clearBlock(TILE_BASE_ADR(1), 184, 40, 64, 16);
+	formatNumber(buffer, 5, board.score);
+	renderText(buffer, &(Textarea) {
+		.destination = TILE_BASE_ADR(1),
+		.clipX = 184,
+		.clipY = 40,
+		.clipW = 64,
+		.clipH = 16,
+		.baseline = 0
+	}, &largeFont);
+
+	clearBlock(TILE_BASE_ADR(1), 184, 72, 64, 16);
+	formatNumber(buffer, 5, board.lines);
+	renderText(buffer, &(Textarea) {
+		.destination = TILE_BASE_ADR(1),
+		.clipX = 184,
+		.clipY = 72,
+		.clipW = 64,
+		.clipH = 16,
+		.baseline = 0
+	}, &largeFont);
+}
+
 static void genBlock(void) {
 	u32 seed = rand() >> 16;
 	board.activeWidth = (seed & 3) + 1;
@@ -235,6 +263,8 @@ static void layBlock(void) {
 	if (nextWidth >= GAMEBOARD_COLS) {
 		removeRow();
 	}
+
+	updateScore();
 	board.timer = 0;
 	genBlock();
 }
@@ -274,6 +304,7 @@ void gameBoardInit() {
 		((u16*) SCREEN_BASE_BLOCK(3))[i] = i;
 	}
 
+	// TODO: Move to constants
 	renderText("SCORE", &(Textarea) {
 		.destination = TILE_BASE_ADR(1),
 		.clipX = 184,
@@ -316,6 +347,12 @@ void gameBoardDeinit() {
 }
 
 void gameBoardFrame(u32 framecount) {
+	// Draw the last frame so we can take forever on the next
+	drawBoard();
+	updateSprite(&board.activeBlockL, 0);
+	updateSprite(&board.activeBlockR, 1);
+	writeSpriteTable();
+
 	scanKeys();
 	u16 keys = keysDown();
 
@@ -343,9 +380,4 @@ void gameBoardFrame(u32 framecount) {
 	}
 	REG_BLDALPHA = 0x0F00 | (alpha + 0x4);
 	board.activeBlockL.y = board.activeBlockR.y = 160 - 8 - 8 * GAMEBOARD_ROWS + (board.activeY << 3);
-
-	drawBoard();
-	updateSprite(&board.activeBlockL, 0);
-	updateSprite(&board.activeBlockR, 1);
-	writeSpriteTable();
 }

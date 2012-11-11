@@ -272,7 +272,6 @@ const Font largeFont = {
 
 void renderText(const char* text, const Textarea* destination, const Font* font) {
 	int x = destination->clipX, y, i;
-	int clearedX = destination->clipX;
 	u16* pixels = destination->destination;
 	size_t len = strlen(text);
 	for (i = 0; i < len; ++i) {
@@ -285,13 +284,7 @@ void renderText(const char* text, const Textarea* destination, const Font* font)
 				gridPos += (text[i] & 0xF) * (font->gridW >> 1);
 				u16 glyphPixelBank = font->grid[(gridPos >> 1) + (innerX >> 2) + (y * font->gridW * 16 >> 2)];
 				int glyphPixel = (glyphPixelBank >> (4 * (1 ^ (innerX & 3)))) & 0xF;
-				//if (!glyphPixel) {
-					//if (x > clearedX) {
-					//	++clearedX;
-					//} else {
-					//	glyphPixel = (pixels[(x >> 2) + y * destination->stride] >> (x & 3)) & 0xF;
-					//}
-				//}
+
 				innerX = startX + x;
 				int swizzled = (innerY & 0x7) * 4; // Row
 				swizzled += (innerX & 0x7) >> 1; // Column
