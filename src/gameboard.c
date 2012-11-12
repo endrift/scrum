@@ -15,7 +15,7 @@
 #include "tile-palette.h"
 #include "tile-data.h"
 #include "game-backdrop.h"
-#include "frame.h"
+#include "hud-sprites.h"
 
 Runloop gameBoard = {
 	.init = gameBoardInit,
@@ -44,6 +44,24 @@ typedef struct GameBoard {
 } GameBoard;
 
 static GameBoard board;
+
+static Sprite bugSprite = {
+	.x = 209,
+	.y = 120,
+	.base = 186,
+	.shape = 1,
+	.size = 2,
+	.palette = 4
+};
+
+static Sprite timerSprite = {
+	.x = 188,
+	.y = 120,
+	.base = 184,
+	.shape = 0,
+	.size = 1,
+	.palette = 4
+};
 
 static void repeatHandler(KeyContext* context, int key);
 static KeyContext keyContext = {
@@ -98,7 +116,7 @@ static void resetBackdrop(void) {
 	appendSprite(&(Sprite) {
 		.x = 0,
 		.y = 16,
-		.base = 128,
+		.base = 248,
 		.palette = 4,
 		.size = 2
 	});
@@ -106,7 +124,7 @@ static void resetBackdrop(void) {
 	appendSprite(&(Sprite) {
 		.x = 144,
 		.y = 16,
-		.base = 128,
+		.base = 248,
 		.palette = 4,
 		.size = 2,
 		.hflip = 1
@@ -115,7 +133,7 @@ static void resetBackdrop(void) {
 	appendSprite(&(Sprite) {
 		.x = 0,
 		.y = 104,
-		.base = 132,
+		.base = 280,
 		.palette = 4,
 		.shape = 2,
 		.size = 3
@@ -124,7 +142,7 @@ static void resetBackdrop(void) {
 	appendSprite(&(Sprite) {
 		.x = 144,
 		.y = 104,
-		.base = 132,
+		.base = 280,
 		.palette = 4,
 		.shape = 2,
 		.size = 3,
@@ -136,7 +154,7 @@ static void resetBackdrop(void) {
 		appendSprite(&(Sprite) {
 			.x = 16 * x + 32,
 			.y = 16,
-			.base = 129,
+			.base = 249,
 			.palette = 4,
 			.shape = 1,
 			.size = 0
@@ -145,7 +163,7 @@ static void resetBackdrop(void) {
 		appendSprite(&(Sprite) {
 			.x = 16 * x + 32,
 			.y = 152,
-			.base = 158,
+			.base = 473,
 			.palette = 4,
 			.shape = 1,
 			.size = 0
@@ -155,7 +173,7 @@ static void resetBackdrop(void) {
 	appendSprite(&(Sprite) {
 		.x = 176,
 		.y = 16,
-		.base = 128,
+		.base = 248,
 		.palette = 4,
 		.size = 2
 	});
@@ -163,7 +181,7 @@ static void resetBackdrop(void) {
 	appendSprite(&(Sprite) {
 		.x = 208,
 		.y = 16,
-		.base = 128,
+		.base = 248,
 		.palette = 4,
 		.size = 2,
 		.hflip = 1
@@ -172,7 +190,7 @@ static void resetBackdrop(void) {
 	appendSprite(&(Sprite) {
 		.x = 176,
 		.y = 104,
-		.base = 132,
+		.base = 280,
 		.palette = 4,
 		.shape = 2,
 		.size = 3
@@ -181,7 +199,7 @@ static void resetBackdrop(void) {
 	appendSprite(&(Sprite) {
 		.x = 208,
 		.y = 104,
-		.base = 132,
+		.base = 280,
 		.palette = 4,
 		.shape = 2,
 		.size = 3,
@@ -192,7 +210,7 @@ static void resetBackdrop(void) {
 		appendSprite(&(Sprite) {
 			.x = 0,
 			.y = 16 * y + 48,
-			.base = 132,
+			.base = 280,
 			.palette = 4,
 			.shape = 0,
 			.size = 2
@@ -201,16 +219,17 @@ static void resetBackdrop(void) {
 		appendSprite(&(Sprite) {
 			.x = 144,
 			.y = 16 * y + 48,
-			.base = 132,
+			.base = 280,
 			.palette = 4,
 			.shape = 0,
 			.size = 2,
 			.hflip = 1
 		});
+
 		appendSprite(&(Sprite) {
 			.x = 176,
 			.y = 16 * y + 48,
-			.base = 132,
+			.base = 280,
 			.palette = 4,
 			.shape = 0,
 			.size = 2
@@ -219,7 +238,7 @@ static void resetBackdrop(void) {
 		appendSprite(&(Sprite) {
 			.x = 208,
 			.y = 16 * y + 48,
-			.base = 132,
+			.base = 280,
 			.palette = 4,
 			.shape = 0,
 			.size = 2,
@@ -237,7 +256,7 @@ static void updateScore(void) {
 	if (board.score > 99999) {
 		formatNumber(buffer, 9, board.score);
 		renderText(buffer, &(Textarea) {
-			.destination = TILE_BASE_ADR(1),
+			.destination = TILE_BASE_ADR(2),
 			.clipX = 185,
 			.clipY = 40,
 			.clipW = 64,
@@ -247,7 +266,7 @@ static void updateScore(void) {
 	} else {
 		formatNumber(&buffer[4], 5, board.score);
 		renderText(&buffer[4], &(Textarea) {
-			.destination = TILE_BASE_ADR(1),
+			.destination = TILE_BASE_ADR(2),
 			.clipX = 185,
 			.clipY = 40,
 			.clipW = 64,
@@ -258,7 +277,7 @@ static void updateScore(void) {
 
 	formatNumber(&buffer[4], 5, board.lines);
 	renderText(&buffer[4], &(Textarea) {
-		.destination = TILE_BASE_ADR(1),
+		.destination = TILE_BASE_ADR(2),
 		.clipX = 185,
 		.clipY = 72,
 		.clipW = 64,
@@ -268,7 +287,7 @@ static void updateScore(void) {
 
 	formatNumber(&buffer[7], 2, board.bugs);
 	renderText(&buffer[7], &(Textarea) {
-		.destination = TILE_BASE_ADR(1),
+		.destination = TILE_BASE_ADR(2),
 		.clipX = 212,
 		.clipY = 136,
 		.clipW = 32,
@@ -381,8 +400,8 @@ static void blockUp(void) {
 		board.activeY = 0;
 	} else {
 		REG_SOUND1CNT_L = 0x0027;
-		REG_SOUND1CNT_H = 0xA2B4;
-		REG_SOUND1CNT_X = 0xC700;
+		REG_SOUND1CNT_H = 0xA1B4;
+		REG_SOUND1CNT_X = 0x8500;
 	}
 }
 
@@ -392,8 +411,8 @@ static void blockDown(void) {
 		board.activeY = GAMEBOARD_ROWS - 1;
 	} else {
 		REG_SOUND1CNT_L = 0x0027;
-		REG_SOUND1CNT_H = 0xA2B4;
-		REG_SOUND1CNT_X = 0xC6D0;
+		REG_SOUND1CNT_H = 0xA1B4;
+		REG_SOUND1CNT_X = 0x8440;
 	}
 }
 
@@ -420,10 +439,9 @@ void gameBoardInit() {
 	DMA3COPY(game_backdropPal, &BG_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | (game_backdropPalLen >> 1));
 	DMA3COPY(game_backdropTiles, TILE_BASE_ADR(0) + 64, DMA16 | DMA_IMMEDIATE | (game_backdropTilesLen >> 1));
 
-	DMA3COPY(textPalLight, &BG_COLORS[16 * 5], DMA16 | DMA_IMMEDIATE | (textPalLightLen >> 1));
-
-	DMA3COPY(framePal, &OBJ_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | (framePalLen >> 1));
-	DMA3COPY(frameTiles, TILE_BASE_ADR(4) + 128 * 32, DMA16 | DMA_IMMEDIATE | (frameTilesLen >> 1));
+	DMA3COPY(hud_spritesPal, &BG_COLORS[16 * 5], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
+	DMA3COPY(hud_spritesPal, &OBJ_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 1));
+	DMA3COPY(hud_spritesTiles, TILE_BASE_ADR(4) + 0x1400, DMA16 | DMA_IMMEDIATE | (hud_spritesTilesLen >> 1));
 
 	clearSpriteTable();
 	board.activeBlockL.raw.a = 0x4400;
@@ -434,6 +452,8 @@ void gameBoardInit() {
 	board.activeBlockR.raw.c = 0x0000;
 	insertSprite(&board.activeBlockL, 0);
 	insertSprite(&board.activeBlockR, 1);
+	appendSprite(&timerSprite);
+	appendSprite(&bugSprite);
 	writeSpriteTable();
 
 	resetBackdrop();
@@ -446,7 +466,7 @@ void gameBoardInit() {
 
 	// TODO: Move to constants
 	renderText("SCORE", &(Textarea) {
-		.destination = TILE_BASE_ADR(1),
+		.destination = TILE_BASE_ADR(2),
 		.clipX = 186,
 		.clipY = 24,
 		.clipW = 64,
@@ -455,7 +475,7 @@ void gameBoardInit() {
 	}, &largeFont);
 
 	renderText("LINES", &(Textarea) {
-		.destination = TILE_BASE_ADR(1),
+		.destination = TILE_BASE_ADR(2),
 		.clipX = 192,
 		.clipY = 56,
 		.clipW = 64,
@@ -464,7 +484,7 @@ void gameBoardInit() {
 	}, &largeFont);
 
 	renderText("FUNC", &(Textarea) {
-		.destination = TILE_BASE_ADR(1),
+		.destination = TILE_BASE_ADR(2),
 		.clipX = 195,
 		.clipY = 88,
 		.clipW = 64,
@@ -477,13 +497,13 @@ void gameBoardInit() {
 	REG_BG0CNT = CHAR_BASE(0) | SCREEN_BASE(1) | 2;
 	REG_BG0HOFS = -8;
 	REG_BG0VOFS = -24;
-	REG_BG1CNT = CHAR_BASE(1) | SCREEN_BASE(3) | 1;
+	REG_BG1CNT = CHAR_BASE(2) | SCREEN_BASE(3) | 1;
 	REG_BG3CNT = CHAR_BASE(0) | SCREEN_BASE(2) | 3;
-	REG_DISPCNT = MODE_0 | BG0_ON | BG1_ON | BG3_ON | OBJ_ON | OBJ_1D_MAP;
+	REG_DISPCNT = MODE_0 | BG0_ON | BG1_ON | BG3_ON | OBJ_ON;
 	REG_BLDCNT = 0x0800;
 
-	REG_SOUNDCNT_L = SND1_R_ENABLE | SND1_L_ENABLE | SND4_R_ENABLE | SND4_L_ENABLE | 0x33;
 	REG_SOUNDCNT_X = 0x80;
+	REG_SOUNDCNT_L = SND1_R_ENABLE | SND1_L_ENABLE | SND4_R_ENABLE | SND4_L_ENABLE | 0x33;
 
 	resetBoard();
 }

@@ -5,10 +5,6 @@
 #include "fontLarge_bin.h"
 #include "fontThin_bin.h"
 
-
-u16 textPalLight[4] = { 0x7C1F, 0x7FFF, 0x35E0, 0x1D08 };
-unsigned int textPalLightLen = 8;
-
 struct Font {
 	unsigned int gridW;
 	unsigned int gridH;
