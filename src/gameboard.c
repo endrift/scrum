@@ -577,7 +577,7 @@ void gameBoardFrame(u32 framecount) {
 
 	doRepeat(&keyContext, framecount);
 
-	if (keys & KEY_A) {
+	if (keys & KEY_A && board.timer > 4) {
 		dropBlock();
 	}
 
