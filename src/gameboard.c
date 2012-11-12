@@ -314,7 +314,9 @@ static void updateScore(void) {
 static void genBlock(void) {
 	u32 seed = rand() >> 16;
 	board.active = board.next;
+	board.active.spriteL.mode = 1;
 	board.active.spriteL.x = 0x88;
+	board.active.spriteR.mode = 1;
 	board.active.spriteR.x = 0x98;
 	board.next.width = (seed & 3) + 1;
 	board.next.color = (seed >> 2) & 3;
@@ -484,8 +486,8 @@ void gameBoardInit() {
 	DMA3COPY(hud_spritesTiles, TILE_BASE_ADR(4) + 0x1400, DMA16 | DMA_IMMEDIATE | (hud_spritesTilesLen >> 1));
 
 	clearSpriteTable();
-	board.next.spriteL.raw.a = 0x448C;
-	board.next.spriteR.raw.a = 0x448C;
+	board.next.spriteL.raw.a = 0x408C;
+	board.next.spriteR.raw.a = 0x408C;
 	insertSprite(&board.next.spriteL, 0);
 	insertSprite(&board.next.spriteR, 1);
 	insertSprite(&board.next.spriteL, 2);
