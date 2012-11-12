@@ -349,9 +349,9 @@ static void genRow(int row) {
 	board.activeY = row;
 	board.rows[row].width = 0;
 	for (i = 0; i < 4; ++i) {
-		while (board.active.width == 4) {
+		do {
 			genBlock();
-		}
+		} while (board.active.width == 4);
 		layBlock();
 	}
 	board.activeY = y;
@@ -403,7 +403,6 @@ static void layBlock(void) {
 		board.rows[board.activeY].color[i] = board.active.color;
 	}
 	board.rows[board.activeY].width = i;
-	genBlock();
 }
 
 static void dropBlock(void) {
@@ -415,6 +414,7 @@ static void dropBlock(void) {
 		removeRow();
 		updateScore();
 	}
+	genBlock();
 
 	board.timer = 0;
 }
