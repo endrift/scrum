@@ -67,8 +67,8 @@ static void repeatHandler(KeyContext* context, int key);
 static KeyContext keyContext = {
 	.next = {},
 	.active = 0,
-	.startDelay = 15,
-	.repeatDelay = 10,
+	.startDelay = 12,
+	.repeatDelay = 8,
 	.repeatHandler = repeatHandler
 };
 
@@ -419,12 +419,13 @@ static void dropBlock(void) {
 	board.timer = 0;
 }
 
-static void updateTimer(u32 framecount) {
+static void updateTimer() {
+	++board.timer;
 	int i;
 	for (i = 0; i < 16; ++i) {
-		OBJ_COLORS[16 * 5 + i] = timerPalette[i] + ((framecount >> 3) & 0xF);
+		OBJ_COLORS[16 * 5 + i] = timerPalette[i] + ((board.timer >> 4) & 0xF);
 	}
-	if (!((framecount + 1) & 0x7F)) {
+	if (!((board.timer + 1) & 0xFF)) {
 		dropBlock();
 	}
 }
@@ -575,7 +576,7 @@ void gameBoardFrame(u32 framecount) {
 		dropBlock();
 	}
 
-	updateTimer(framecount);
+	updateTimer();
 
 	REG_BLDALPHA = 0x0F0B;
 	board.active.spriteL.y = board.active.spriteR.y = 160 - 8 - 8 * GAMEBOARD_ROWS + (board.activeY << 3);
