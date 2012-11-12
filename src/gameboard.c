@@ -28,14 +28,21 @@ typedef struct Row {
 	u8 width;
 } Row;
 
+typedef struct Block {
+	Sprite spriteL;
+	Sprite spriteR;
+	int indexL;
+	int indexR;
+	int width;
+	int color;
+} Block;
+
 typedef struct GameBoard {
 	Row rows[GAMEBOARD_ROWS];
 
-	Sprite activeBlockL;
-	Sprite activeBlockR;
+	Block active;
+	Block next;
 	int activeY;
-	int activeWidth;
-	int activeColor;
 	int timer;
 
 	int score;
@@ -46,20 +53,11 @@ typedef struct GameBoard {
 static GameBoard board;
 
 const static Sprite bugSprite = {
-	.x = 209,
-	.y = 120,
+	.x = 182,
+	.y = 119,
 	.base = 186,
 	.shape = 1,
 	.size = 2,
-	.palette = 4
-};
-
-const static Sprite timerSprite = {
-	.x = 188,
-	.y = 120,
-	.base = 184,
-	.shape = 0,
-	.size = 1,
 	.palette = 4
 };
 
@@ -306,7 +304,7 @@ static void updateScore(void) {
 	renderText(&buffer[7], &(Textarea) {
 		.destination = TILE_BASE_ADR(2),
 		.clipX = 212,
-		.clipY = 136,
+		.clipY = 120,
 		.clipW = 32,
 		.clipH = 16,
 		.baseline = 0
@@ -315,29 +313,32 @@ static void updateScore(void) {
 
 static void genBlock(void) {
 	u32 seed = rand() >> 16;
-	board.activeWidth = (seed & 3) + 1;
-	board.activeColor = (seed >> 2) & 3;
-	board.activeBlockL.palette = board.activeColor;
-	board.activeBlockR.palette = board.activeColor;
+	board.active = board.next;
+	board.active.spriteL.x = 0x88;
+	board.active.spriteR.x = 0x98;
+	board.next.width = (seed & 3) + 1;
+	board.next.color = (seed >> 2) & 3;
+	board.next.spriteL.palette = board.next.color;
+	board.next.spriteR.palette = board.next.color;
 
-	switch (board.activeWidth) {
+	switch (board.next.width) {
 	case 1:
-		board.activeBlockL.shape = 0;
-		board.activeBlockR.disable = 1;
+		board.next.spriteL.shape = 0;
+		board.next.spriteR.disable = 1;
 		break;
 	case 2:
-		board.activeBlockL.shape = 1;
-		board.activeBlockR.disable = 1;
+		board.next.spriteL.shape = 1;
+		board.next.spriteR.disable = 1;
 		break;
 	case 3:
-		board.activeBlockL.shape = 1;
-		board.activeBlockR.disable = 0;
-		board.activeBlockR.shape = 0;
+		board.next.spriteL.shape = 1;
+		board.next.spriteR.disable = 0;
+		board.next.spriteR.shape = 0;
 		break;
 	case 4:
-		board.activeBlockL.shape = 1;
-		board.activeBlockR.disable = 0;
-		board.activeBlockR.shape = 1;
+		board.next.spriteL.shape = 1;
+		board.next.spriteR.disable = 0;
+		board.next.spriteR.shape = 1;
 		break;
 	}
 }
@@ -348,7 +349,7 @@ static void genRow(int row) {
 	board.activeY = row;
 	board.rows[row].width = 0;
 	for (i = 0; i < 4; ++i) {
-		while (board.activeWidth == 4) {
+		while (board.active.width == 4) {
 			genBlock();
 		}
 		layBlock();
@@ -370,7 +371,7 @@ static void removeRow(void) {
 	int x;
 	Row* row = &board.rows[board.activeY];
 	int color = row->color[row->width - 1];
-	int score = -board.activeWidth;
+	int score = -board.active.width;
 	if (row->width > GAMEBOARD_COLS) {
 		board.bugs += row->width - GAMEBOARD_COLS;
 	}
@@ -396,10 +397,10 @@ static void removeRow(void) {
 }
 
 static void layBlock(void) {
-	int nextWidth = board.rows[board.activeY].width + board.activeWidth;
+	int nextWidth = board.rows[board.activeY].width + board.active.width;
 	int i;
 	for (i = board.rows[board.activeY].width; i < nextWidth; ++i) {
-		board.rows[board.activeY].color[i] = board.activeColor;
+		board.rows[board.activeY].color[i] = board.active.color;
 	}
 	board.rows[board.activeY].width = i;
 	genBlock();
@@ -423,7 +424,7 @@ static void updateTimer(u32 framecount) {
 	for (i = 0; i < 16; ++i) {
 		OBJ_COLORS[16 * 5 + i] = timerPalette[i] + ((framecount >> 3) & 0xF);
 	}
-	if (!(framecount & 0x7F)) {
+	if (!((framecount + 1) & 0x7F)) {
 		dropBlock();
 	}
 }
@@ -467,8 +468,6 @@ void gameBoardInit() {
 	DMA3COPY(tileTiles, TILE_BASE_ADR(0) + 32, DMA16 | DMA_IMMEDIATE | (tileTilesLen >> 1));
 	DMA3COPY(tileTiles, OBJ_BASE_ADR, DMA16 | DMA_IMMEDIATE | (tileTilesLen >> 1));
 	DMA3COPY(tileTiles, OBJ_BASE_ADR + 32, DMA16 | DMA_IMMEDIATE | (tileTilesLen >> 1));
-	DMA3COPY(tileTiles, OBJ_BASE_ADR + 64, DMA16 | DMA_IMMEDIATE | (tileTilesLen >> 1));
-	DMA3COPY(tileTiles, OBJ_BASE_ADR + 96, DMA16 | DMA_IMMEDIATE | (tileTilesLen >> 1));
 
 	DMA3COPY(game_backdropPal, &BG_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | (game_backdropPalLen >> 1));
 	DMA3COPY(game_backdropTiles, TILE_BASE_ADR(0) + 64, DMA16 | DMA_IMMEDIATE | (game_backdropTilesLen >> 1));
@@ -479,15 +478,12 @@ void gameBoardInit() {
 	DMA3COPY(hud_spritesTiles, TILE_BASE_ADR(4) + 0x1400, DMA16 | DMA_IMMEDIATE | (hud_spritesTilesLen >> 1));
 
 	clearSpriteTable();
-	board.activeBlockL.raw.a = 0x4400;
-	board.activeBlockL.raw.b = 0x0088;
-	board.activeBlockL.raw.c = 0x0000;
-	board.activeBlockR.raw.a = 0x4400;
-	board.activeBlockR.raw.b = 0x0098;
-	board.activeBlockR.raw.c = 0x0000;
-	insertSprite(&board.activeBlockL, 0);
-	insertSprite(&board.activeBlockR, 1);
-	appendSprite(&timerSprite);
+	board.next.spriteL.raw.a = 0x448C;
+	board.next.spriteR.raw.a = 0x448C;
+	insertSprite(&board.next.spriteL, 0);
+	insertSprite(&board.next.spriteR, 1);
+	insertSprite(&board.next.spriteL, 2);
+	insertSprite(&board.next.spriteR, 3);
 	appendSprite(&bugSprite);
 	writeSpriteTable();
 
@@ -549,8 +545,10 @@ void gameBoardDeinit() {
 void gameBoardFrame(u32 framecount) {
 	// Draw the last frame so we can take forever on the next
 	drawBoard();
-	updateSprite(&board.activeBlockL, 0);
-	updateSprite(&board.activeBlockR, 1);
+	updateSprite(&board.active.spriteL, 0);
+	updateSprite(&board.active.spriteR, 1);
+	updateSprite(&board.next.spriteL, 2);
+	updateSprite(&board.next.spriteR, 3);
 	writeSpriteTable();
 
 	scanKeys();
@@ -580,5 +578,7 @@ void gameBoardFrame(u32 framecount) {
 	updateTimer(framecount);
 
 	REG_BLDALPHA = 0x0F0B;
-	board.activeBlockL.y = board.activeBlockR.y = 160 - 8 - 8 * GAMEBOARD_ROWS + (board.activeY << 3);
+	board.active.spriteL.y = board.active.spriteR.y = 160 - 8 - 8 * GAMEBOARD_ROWS + (board.activeY << 3);
+	board.next.spriteL.x = 0xC4 + (3 - board.next.width) * 4;
+	board.next.spriteR.x = 0xD4 + (3 - board.next.width) * 4;
 }
