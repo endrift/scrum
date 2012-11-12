@@ -349,10 +349,14 @@ static void genRow(int row) {
 	board.activeY = row;
 	board.rows[row].width = 0;
 	for (i = 0; i < 4; ++i) {
-		do {
-			genBlock();
-		} while (board.active.width == 4);
-		layBlock();
+		u32 seed = rand() >> 16;
+		int width = (seed % 3) + 1;
+		int color = (seed >> 2) & 3;
+		int x;
+		for (x = 0; x < width; ++x) {
+			board.rows[row].color[x + board.rows[row].width] = color;
+		}
+		board.rows[row].width += width;
 	}
 	board.activeY = y;
 }
