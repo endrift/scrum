@@ -45,7 +45,7 @@ typedef struct GameBoard {
 
 static GameBoard board;
 
-static Sprite bugSprite = {
+const static Sprite bugSprite = {
 	.x = 209,
 	.y = 120,
 	.base = 186,
@@ -54,7 +54,7 @@ static Sprite bugSprite = {
 	.palette = 4
 };
 
-static Sprite timerSprite = {
+const static Sprite timerSprite = {
 	.x = 188,
 	.y = 120,
 	.base = 184,
@@ -62,6 +62,8 @@ static Sprite timerSprite = {
 	.size = 1,
 	.palette = 4
 };
+
+u16 timerPalette[16];
 
 static void repeatHandler(KeyContext* context, int key);
 static KeyContext keyContext = {
@@ -125,7 +127,7 @@ static void resetBackdrop(void) {
 		.x = 144,
 		.y = 16,
 		.base = 248,
-		.palette = 4,
+		.palette = 5,
 		.size = 2,
 		.hflip = 1
 	});
@@ -143,7 +145,7 @@ static void resetBackdrop(void) {
 		.x = 144,
 		.y = 104,
 		.base = 280,
-		.palette = 4,
+		.palette = 5,
 		.shape = 2,
 		.size = 3,
 		.hflip = 1
@@ -152,7 +154,7 @@ static void resetBackdrop(void) {
 
 	for (x = 0; x < 7; ++x) {
 		appendSprite(&(Sprite) {
-			.x = 16 * x + 32,
+			.x = 16 * x + 24,
 			.y = 16,
 			.base = 249,
 			.palette = 4,
@@ -161,7 +163,7 @@ static void resetBackdrop(void) {
 		});
 
 		appendSprite(&(Sprite) {
-			.x = 16 * x + 32,
+			.x = 16 * x + 24,
 			.y = 152,
 			.base = 473,
 			.palette = 4,
@@ -169,6 +171,21 @@ static void resetBackdrop(void) {
 			.size = 0
 		});
 	}
+
+
+	appendSprite(&(Sprite) {
+		.x = 136,
+		.y = 16,
+		.base = 249,
+		.palette = 5,
+	});
+
+	appendSprite(&(Sprite) {
+		.x = 136,
+		.y = 152,
+		.base = 473,
+		.palette = 5,
+	});
 
 	appendSprite(&(Sprite) {
 		.x = 176,
@@ -220,7 +237,7 @@ static void resetBackdrop(void) {
 			.x = 144,
 			.y = 16 * y + 48,
 			.base = 280,
-			.palette = 4,
+			.palette = 5,
 			.shape = 0,
 			.size = 2,
 			.hflip = 1
@@ -385,13 +402,30 @@ static void layBlock(void) {
 		board.rows[board.activeY].color[i] = board.activeColor;
 	}
 	board.rows[board.activeY].width = i;
-	if (nextWidth >= GAMEBOARD_COLS) {
+	genBlock();
+}
+
+static void dropBlock(void) {
+	REG_SOUND1CNT_L = 0x001F;
+	REG_SOUND1CNT_H = 0xA2B4;
+	REG_SOUND1CNT_X = 0x8500;
+	layBlock();
+	if (board.rows[board.activeY].width >= GAMEBOARD_COLS) {
 		removeRow();
 		updateScore();
 	}
 
 	board.timer = 0;
-	genBlock();
+}
+
+static void updateTimer(u32 framecount) {
+	int i;
+	for (i = 0; i < 16; ++i) {
+		OBJ_COLORS[16 * 5 + i] = timerPalette[i] + ((framecount >> 3) & 0xF);
+	}
+	if (!(framecount & 0x7F)) {
+		dropBlock();
+	}
 }
 
 static void blockUp(void) {
@@ -441,6 +475,7 @@ void gameBoardInit() {
 
 	DMA3COPY(hud_spritesPal, &BG_COLORS[16 * 5], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
 	DMA3COPY(hud_spritesPal, &OBJ_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 1));
+	DMA3COPY(hud_spritesPal, timerPalette, DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 1));
 	DMA3COPY(hud_spritesTiles, TILE_BASE_ADR(4) + 0x1400, DMA16 | DMA_IMMEDIATE | (hud_spritesTilesLen >> 1));
 
 	clearSpriteTable();
@@ -539,11 +574,10 @@ void gameBoardFrame(u32 framecount) {
 	doRepeat(&keyContext, framecount);
 
 	if (keys & KEY_A) {
-		REG_SOUND1CNT_L = 0x001F;
-		REG_SOUND1CNT_H = 0xA2B4;
-		REG_SOUND1CNT_X = 0x8500;
-		layBlock();
+		dropBlock();
 	}
+
+	updateTimer(framecount);
 
 	REG_BLDALPHA = 0x0F0B;
 	board.activeBlockL.y = board.activeBlockR.y = 160 - 8 - 8 * GAMEBOARD_ROWS + (board.activeY << 3);
