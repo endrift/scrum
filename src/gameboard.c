@@ -364,6 +364,7 @@ static void genRow(int row) {
 static void resetBoard(void) {
 	srand(42);
 	genBlock();
+	genBlock(); // Ensure that a block is actually queued
 	int y;
 	for (y = 0; y < GAMEBOARD_ROWS; ++y) {
 		board.rows[y].width = 0;
