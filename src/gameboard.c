@@ -405,7 +405,7 @@ static void removeRow(void) {
 		genRow(GAMEBOARD_ROWS - 1);
 	}
 	board.score += score;
-	REG_SOUND4CNT_L = 0xB200;
+	REG_SOUND4CNT_L = 0xF200;
 	REG_SOUND4CNT_H = 0x8062;
 }
 
@@ -420,7 +420,7 @@ static void layBlock(void) {
 
 static void dropBlock(void) {
 	REG_SOUND1CNT_L = 0x001F;
-	REG_SOUND1CNT_H = 0xA2B4;
+	REG_SOUND1CNT_H = 0xE2B4;
 	REG_SOUND1CNT_X = 0x8500;
 	layBlock();
 	if (board.rows[board.activeY].width >= GAMEBOARD_COLS) {
