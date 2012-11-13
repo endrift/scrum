@@ -471,7 +471,6 @@ static void repeatHandler(KeyContext* context, int keys) {
 }
 
 void gameBoardInit() {
-	DMA3COPY(tile_bluePal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 4));
 	DMA3COPY(tile_bluePal, &OBJ_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 4));
 	// TODO: store this in RAM so we don't have to copy it out of the cart each time
 	DMA3COPY(tileTiles, TILE_BASE_ADR(0) + 32, DMA16 | DMA_IMMEDIATE | (tileTilesLen >> 1));
@@ -587,6 +586,8 @@ void gameBoardFrame(u32 framecount) {
 }
 
 void gameBoardSetup(void) {
+	DMA3COPY(tile_bluePal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 4));
+
 	REG_BG0CNT = CHAR_BASE(0) | SCREEN_BASE(2) | 3;
 	REG_BG1CNT = CHAR_BASE(2) | SCREEN_BASE(3) | 1;
 	REG_BG2CNT = CHAR_BASE(0) | SCREEN_BASE(1) | 2;
