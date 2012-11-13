@@ -99,7 +99,7 @@ void minigameInit() {
 	camPos.y = 64 << 8;
 	camPos.z = 256 << 8;
 
-	mapText(SCREEN_BASE_BLOCK(3), 20, 32, 17, 20);
+	mapText(SCREEN_BASE_BLOCK(3), 20, 32, 17, 20, 5);
 
 	int x, y, offset;
 	int xcell, ycell;

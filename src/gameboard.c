@@ -514,7 +514,7 @@ void gameBoardInit(u32 framecount) {
 
 	resetBackdrop();
 
-	mapText(SCREEN_BASE_BLOCK(3), 20, 32, 0, 17);
+	mapText(SCREEN_BASE_BLOCK(3), 20, 32, 0, 17, 5);
 
 	// TODO: Move to constants
 	renderText("SCORE", &(Textarea) {
