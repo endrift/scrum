@@ -13,6 +13,8 @@ void gameBoardInit(void);
 void gameBoardDeinit(void);
 void gameBoardFrame(u32 framecount);
 
+void gameBoardSetup(void);
+
 extern Runloop gameBoard;
 
 #endif

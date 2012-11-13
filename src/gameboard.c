@@ -9,6 +9,7 @@
 #include "rng.h"
 #include "sprite.h"
 #include "key.h"
+#include "minigame.h"
 #include "text.h"
 #include "util.h"
 
@@ -532,18 +533,7 @@ void gameBoardInit() {
 	}, &largeFont);
 
 	updateScore();
-
-	REG_BG0CNT = CHAR_BASE(0) | SCREEN_BASE(1) | 2;
-	REG_BG0HOFS = -8;
-	REG_BG0VOFS = -24;
-	REG_BG1CNT = CHAR_BASE(2) | SCREEN_BASE(3) | 1;
-	REG_BG2CNT = CHAR_BASE(0) | SCREEN_BASE(2) | 3;
-	REG_DISPCNT = MODE_0 | BG0_ON | BG1_ON | BG2_ON | OBJ_ON;
-	REG_BLDCNT = 0x0400;
-
-	REG_SOUNDCNT_X = 0x80;
-	REG_SOUNDCNT_L = SND1_R_ENABLE | SND1_L_ENABLE | SND4_R_ENABLE | SND4_L_ENABLE | 0x33;
-
+	gameBoardSetup();
 	resetBoard();
 }
 
@@ -589,4 +579,27 @@ void gameBoardFrame(u32 framecount) {
 	board.active.spriteL.y = board.active.spriteR.y = 160 - 8 - 8 * GAMEBOARD_ROWS + (board.activeY << 3);
 	board.next.spriteL.x = 0xC4 + (3 - board.next.width) * 4;
 	board.next.spriteR.x = 0xD4 + (3 - board.next.width) * 4;
+
+	if (keys & KEY_B) {
+		gameBoard.frame = minigameFrame;
+		minigameInit();
+	}
+}
+
+void gameBoardSetup(void) {
+	REG_BG0CNT = CHAR_BASE(0) | SCREEN_BASE(2) | 3;
+	REG_BG1CNT = CHAR_BASE(2) | SCREEN_BASE(3) | 1;
+	REG_BG2CNT = CHAR_BASE(0) | SCREEN_BASE(1) | 2;
+	REG_BG2HOFS = -8;
+	REG_BG2VOFS = -24;
+	REG_DISPCNT = MODE_0 | BG0_ON | BG1_ON | BG2_ON | OBJ_ON | WIN0_ON;
+	REG_BLDCNT = 0x0400;
+
+	REG_WIN0H = 0x08A8;
+	REG_WIN0V = 0x1898;
+	REG_WININ = 0x001F;
+	REG_WINOUT = 0x001B;
+
+	REG_SOUNDCNT_X = 0x80;
+	REG_SOUNDCNT_L = SND1_R_ENABLE | SND1_L_ENABLE | SND4_R_ENABLE | SND4_L_ENABLE | 0x33;
 }
