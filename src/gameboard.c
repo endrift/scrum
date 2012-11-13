@@ -54,7 +54,7 @@ typedef struct GameBoard {
 static GameBoard board;
 
 const static Sprite bugSprite = {
-	.x = 182,
+	.x = 183,
 	.y = 119,
 	.base = 186,
 	.shape = 1,
@@ -301,10 +301,10 @@ static void updateScore(void) {
 		.baseline = 0
 	}, &largeFont);
 
-	formatNumber(&buffer[7], 2, board.bugs);
-	renderText(&buffer[7], &(Textarea) {
+	formatNumber(&buffer[6], 3, board.bugs);
+	renderText(&buffer[6], &(Textarea) {
 		.destination = TILE_BASE_ADR(2),
-		.clipX = 212,
+		.clipX = 203,
 		.clipY = 120,
 		.clipW = 32,
 		.clipH = 16,
