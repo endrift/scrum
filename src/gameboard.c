@@ -514,13 +514,7 @@ void gameBoardInit() {
 
 	resetBackdrop();
 
-	// TODO: Move this to a function
-	int x, y;
-	for (y = 0; y < 17; ++y) {
-		for (x = 20; x < 32; ++x) {
-			((u16*) SCREEN_BASE_BLOCK(3))[x + y * 32] = (x + y * 32) | 0x5000;
-		}
-	}
+	mapText(SCREEN_BASE_BLOCK(3), 20, 32, 0, 17);
 
 	// TODO: Move to constants
 	renderText("SCORE", &(Textarea) {
