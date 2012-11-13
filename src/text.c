@@ -345,3 +345,12 @@ void renderText(const char* text, const Textarea* destination, const Font* font)
 		x = startX + font->metrics->glyphs[(int) text[i]].width;
 	}
 }
+
+void mapText(u16* mapData, int startX, int endX, int startY, int endY) {
+	int x, y;
+	for (y = startY; y < endY; ++y) {
+		for (x = startX; x < endX; ++x) {
+			mapData[x + y * 32] = (x + y * 32) | 0x5000;
+		}
+	}
+}

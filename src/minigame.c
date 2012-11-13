@@ -6,6 +6,7 @@
 #include <gba_video.h>
 
 #include "gameboard.h"
+#include "text.h"
 
 #include "pcb.h"
 
@@ -18,7 +19,16 @@ static struct CameraPosition {
 static s32 gCos = 237;
 static s32 gSin = 98;
 static s32 DIV16[278];
-static s32 M7_D = 128;
+static s32 M7_D = 256;
+
+static void hideMinigame(void) {
+	int x, y;
+	for (y = 17; y < 20; ++y) {
+		for (x = 20; x < 32; ++x) {
+			((u16*) SCREEN_BASE_BLOCK(3))[x + y * 32] = 0;
+		}
+	}
+}
 
 void minigameInit() {
 	DMA3COPY(pcbPal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 4));
@@ -31,6 +41,8 @@ void minigameInit() {
 	camPos.x = 256 << 8;
 	camPos.y = 64 << 8;
 	camPos.z = 256 << 8;
+
+	mapText(SCREEN_BASE_BLOCK(3), 20, 32, 17, 20);
 
 	int x, y, offset;
 	int xcell, ycell;
@@ -56,6 +68,7 @@ void minigameFrame(u32 framecount) {
 
 	if (keys & KEY_B) {
 		irqDisable(IRQ_HBLANK);
+		hideMinigame();
 		gameBoard.frame = gameBoardFrame;
 		gameBoardSetup();
 	}

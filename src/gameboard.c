@@ -312,6 +312,32 @@ static void updateScore(void) {
 	}, &largeFont);
 }
 
+static void updateBlockSprite(Block* block) {
+	block->spriteL.palette = block->color;
+	block->spriteR.palette = block->color;
+
+	switch (block->width) {
+	case 1:
+		block->spriteL.shape = 0;
+		block->spriteR.disable = 1;
+		break;
+	case 2:
+		block->spriteL.shape = 1;
+		block->spriteR.disable = 1;
+		break;
+	case 3:
+		block->spriteL.shape = 1;
+		block->spriteR.disable = 0;
+		block->spriteR.shape = 0;
+		break;
+	case 4:
+		block->spriteL.shape = 1;
+		block->spriteR.disable = 0;
+		block->spriteR.shape = 1;
+		break;
+	}
+}
+
 static void genBlock(void) {
 	u32 seed = rand() >> 16;
 	board.active = board.next;
@@ -320,30 +346,9 @@ static void genBlock(void) {
 	board.active.spriteR.mode = 1;
 	board.active.spriteR.x = 0x98;
 	board.next.width = (seed & 3) + 1;
-	board.next.color = (seed >> 2) & 3;
-	board.next.spriteL.palette = board.next.color;
-	board.next.spriteR.palette = board.next.color;
+	board.next.color = (seed >> 2) & 3;;
 
-	switch (board.next.width) {
-	case 1:
-		board.next.spriteL.shape = 0;
-		board.next.spriteR.disable = 1;
-		break;
-	case 2:
-		board.next.spriteL.shape = 1;
-		board.next.spriteR.disable = 1;
-		break;
-	case 3:
-		board.next.spriteL.shape = 1;
-		board.next.spriteR.disable = 0;
-		board.next.spriteR.shape = 0;
-		break;
-	case 4:
-		board.next.spriteL.shape = 1;
-		board.next.spriteR.disable = 0;
-		board.next.spriteR.shape = 1;
-		break;
-	}
+	updateBlockSprite(&board.next);
 }
 
 static void genRow(int row) {
@@ -460,6 +465,18 @@ static void blockDown(void) {
 	}
 }
 
+static void hideBoard(void) {
+	board.active.spriteL.disable = 1;
+	board.active.spriteR.disable = 1;
+	board.next.spriteL.disable = 1;
+	board.next.spriteR.disable = 1;
+	updateSprite(&board.active.spriteL, 0);
+	updateSprite(&board.active.spriteR, 1);
+	updateSprite(&board.next.spriteL, 2);
+	updateSprite(&board.next.spriteR, 3);
+	writeSpriteTable();
+}
+
 static void repeatHandler(KeyContext* context, int keys) {
 	(void) (context);
 	if (keys & KEY_UP) {
@@ -498,9 +515,11 @@ void gameBoardInit() {
 	resetBackdrop();
 
 	// TODO: Move this to a function
-	int i;
-	for (i = 0; i < 1024; ++i) {
-		((u16*) SCREEN_BASE_BLOCK(3))[i] = i | 0x5000;
+	int x, y;
+	for (y = 0; y < 17; ++y) {
+		for (x = 20; x < 32; ++x) {
+			((u16*) SCREEN_BASE_BLOCK(3))[x + y * 32] = (x + y * 32) | 0x5000;
+		}
 	}
 
 	// TODO: Move to constants
@@ -526,6 +545,15 @@ void gameBoardInit() {
 		.destination = TILE_BASE_ADR(2),
 		.clipX = 195,
 		.clipY = 88,
+		.clipW = 64,
+		.clipH = 16,
+		.baseline = 0
+	}, &largeFont);
+
+	renderText("DEBUG", &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 186,
+		.clipY = 136,
 		.clipW = 64,
 		.clipH = 16,
 		.baseline = 0
@@ -581,6 +609,7 @@ void gameBoardFrame(u32 framecount) {
 
 	if (keys & KEY_B) {
 		gameBoard.frame = minigameFrame;
+		hideBoard();
 		minigameInit();
 	}
 }
@@ -600,6 +629,12 @@ void gameBoardSetup(void) {
 	REG_WIN0V = 0x1898;
 	REG_WININ = 0x001F;
 	REG_WINOUT = 0x001B;
+
+	board.active.spriteL.disable = 0;
+	board.next.spriteL.disable = 0;
+	updateBlockSprite(&board.active);
+	updateBlockSprite(&board.next);
+	writeSpriteTable();
 
 	REG_SOUNDCNT_X = 0x80;
 	REG_SOUNDCNT_L = SND1_R_ENABLE | SND1_L_ENABLE | SND4_R_ENABLE | SND4_L_ENABLE | 0x33;
