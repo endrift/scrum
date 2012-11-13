@@ -487,7 +487,7 @@ static void repeatHandler(KeyContext* context, int keys) {
 	}
 }
 
-void gameBoardInit() {
+void gameBoardInit(u32 framecount) {
 	DMA3COPY(tile_bluePal, &OBJ_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 4));
 	// TODO: store this in RAM so we don't have to copy it out of the cart each time
 	DMA3COPY(tileTiles, TILE_BASE_ADR(0) + 32, DMA16 | DMA_IMMEDIATE | (tileTilesLen >> 1));

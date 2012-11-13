@@ -9,7 +9,7 @@
 #define GAMEBOARD_COLS 16
 #define GAMEBOARD_DEADZONE 4
 
-void gameBoardInit(void);
+void gameBoardInit(u32 framecount);
 void gameBoardDeinit(void);
 void gameBoardFrame(u32 framecount);
 

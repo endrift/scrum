@@ -4,7 +4,7 @@
 #include <gba_types.h>
 
 typedef struct Runloop {
-	void (*init)(void);
+	void (*init)(u32 framecount);
 	void (*deinit)(void);
 	void (*frame)(u32 framecount);
 } Runloop;

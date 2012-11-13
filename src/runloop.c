@@ -8,7 +8,7 @@ void setRunloop(Runloop* runloop) {
 		currentRunloop->deinit();
 	}
 	currentRunloop = runloop;
-	currentRunloop->init();
+	currentRunloop->init(frame);
 }
 
 void incrementRunloop() {

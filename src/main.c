@@ -2,18 +2,17 @@
 #include <gba_systemcalls.h>
 #include <gba_video.h>
 
-#include "gameboard.h"
+#include "intro.h"
 #include "runloop.h"
 
 int main(void) {
 	irqInit();
 
-	REG_DISPCNT = LCDC_OFF;
 	irqEnable(IRQ_VBLANK);
 	REG_IME = 1;
 
 	VBlankIntrWait();
-	setRunloop(&gameBoard);
+	setRunloop(&intro);
 
 	for (;;) {
 		VBlankIntrWait();
