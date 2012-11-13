@@ -21,6 +21,61 @@ static s32 gSin = 98;
 static s32 DIV16[278];
 static s32 M7_D = 256;
 
+static s16 bgFade[160] = {
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000F,
+	0x000E,
+	0x000E,
+	0x000E,
+	0x000D,
+	0x000D,
+	0x000D,
+	0x000C,
+	0x000C,
+	0x000C,
+	0x000B,
+	0x000B,
+	0x000A,
+	0x000A,
+	0x0008,
+	0x0008,
+	0x0007,
+	0x0007,
+	0x0006,
+	0x0006,
+	0x0005,
+	0x0004,
+	0x0003,
+	0x0002,
+	0x0001
+};
+
 static void hideMinigame(void) {
 	int x, y;
 	for (y = 17; y < 20; ++y) {
@@ -36,6 +91,8 @@ void minigameInit() {
 
 	REG_DISPCNT = MODE_1 | BG0_ON | BG1_ON | BG2_ON | OBJ_ON | WIN0_ON;
 	REG_BG2CNT = CHAR_BASE(1) | SCREEN_BASE(4) | 0x6002;
+	REG_BLDCNT = 0x00CF;
+
 	irqSet(IRQ_HBLANK, m7);
 	irqEnable(IRQ_HBLANK);
 	camPos.x = 256 << 8;
@@ -84,6 +141,7 @@ __attribute__((section(".iwram"), long_call))
 static void m7() {
 	s32 lam, lcf, lsf, lxr, lyr;
 
+	REG_BLDY = bgFade[REG_VCOUNT];
 
 	lam = camPos.y * DIV16[REG_VCOUNT] >> 12;
 	lcf = lam * gCos >> 8;

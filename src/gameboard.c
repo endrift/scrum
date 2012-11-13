@@ -621,7 +621,7 @@ void gameBoardSetup(void) {
 
 	REG_WIN0H = 0x08A8;
 	REG_WIN0V = 0x1898;
-	REG_WININ = 0x001F;
+	REG_WININ = 0x003F;
 	REG_WINOUT = 0x001B;
 
 	board.active.spriteL.disable = 0;
