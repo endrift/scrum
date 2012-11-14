@@ -20,6 +20,7 @@ static enum {
 	LOGO_FADE_IN,
 	LOGO_IDLE,
 	LOGO_FADE_OUT,
+	TITLE_FADE_IN,
 	PRESS_START
 } state = LOGO_FADE_IN;
 
@@ -37,26 +38,17 @@ static void switchState(int nextState, u32 framecount) {
 }
 
 static void endIntro(u32 framecount) {
-	switchState(PRESS_START, framecount);
-	REG_DISPCNT = LCDC_OFF;
-	REG_BG1CNT = CHAR_BASE(1) | SCREEN_BASE(0) | 1;
-	RegisterRamReset(1 << 3);
+	switchState(TITLE_FADE_IN, framecount);
+	REG_BG1CNT = CHAR_BASE(2) | SCREEN_BASE(1) | 1;
+	RegisterRamReset(0xC);
 	DMA3COPY(hud_spritesPal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
-	REG_BLDCNT = 0;
-	mapText(SCREEN_BASE_BLOCK(0), 0, 32, 0, 24, 0);
+	BG_COLORS[0] = 0;
+	mapText(SCREEN_BASE_BLOCK(1), 0, 32, 0, 24, 0);
 	renderText("THIS GAME NEEDS A NAME", &(Textarea) {
-		.destination = TILE_BASE_ADR(1),
+		.destination = TILE_BASE_ADR(2),
 		.clipX = 26,
 		.clipY = 40,
 		.clipW = 192,
-		.clipH = 16
-	}, &largeFont);
-
-	renderText("PRESS START", &(Textarea) {
-		.destination = TILE_BASE_ADR(1),
-		.clipX = 74,
-		.clipY = 100,
-		.clipW = 80,
 		.clipH = 16
 	}, &largeFont);
 	REG_DISPCNT = MODE_0 | BG1_ON;
@@ -70,6 +62,7 @@ void introInit(u32 framecount) {
 
 	LZ77UnCompVram((void*) endriftBitmap, (void*) VRAM);
 	REG_DISPCNT = MODE_3 | BG2_ON;
+	BG_COLORS[0] = 0x7FFF;
 }
 
 void introDeinit(void) {
@@ -87,28 +80,46 @@ void introFrame(u32 framecount) {
 	switch (state) {
 	case LOGO_FADE_IN:
 		if (framecount - introStart < 64) {
-			REG_BLDALPHA = (framecount - introStart) >> 2 | 0x0F00;
+			int value = (framecount - introStart) >> 2;
+			REG_BLDALPHA = value | (0xF - value) << 8;
 		} else {
 			switchState(LOGO_IDLE, framecount);
 		}
 		break;
 	case LOGO_IDLE:
 		if (framecount - introStart > 120) {
-			BG_COLORS[0] = 0x7FFF;
+			BG_COLORS[0] = 0x0;
 			switchState(LOGO_FADE_OUT, framecount);
 		} else {
 			break;
 		}
 	case LOGO_FADE_OUT:
-		REG_BLDALPHA = (framecount - introStart) << 7 | 0x000F;
-		if (framecount - introStart > 32) {
+		if (framecount - introStart >= 32) {
 			endIntro(framecount);
+		} else {
+			int value = (framecount - introStart) >> 1;
+			REG_BLDALPHA = (0xF - value) | value << 8;
+		}
+		break;
+	case TITLE_FADE_IN:
+		if (framecount - introStart <= 64) {
+			int value = (framecount - introStart) >> 2;
+			REG_BLDALPHA = value | (0xF - value) << 8;
+		} else {
+			renderText("PRESS START", &(Textarea) {
+				.destination = TILE_BASE_ADR(2),
+				.clipX = 74,
+				.clipY = 100,
+				.clipW = 80,
+				.clipH = 16
+			}, &largeFont);
+			REG_BLDCNT = 0;
 			switchState(PRESS_START, framecount);
 		}
 		break;
 	case PRESS_START:
 		if (keys & KEY_START) {
-			RegisterRamReset(1 << 3);
+			RegisterRamReset(0xC);
 			setRunloop(&gameBoard);
 		}
 		break;
