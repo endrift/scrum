@@ -52,4 +52,6 @@ void updateSprite(const Sprite* sprite, int at);
 void insertSprite(const Sprite* sprite, int at);
 void removeSprite(int at);
 
+void* affineTable(int index);
+
 #endif

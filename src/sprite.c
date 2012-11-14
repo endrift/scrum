@@ -67,3 +67,7 @@ void insertSprite(const Sprite* sprite, int at) {
 	spriteTable.obj[at].attr = *sprite;
 	++numActiveSprites;
 }
+
+void* affineTable(int index) {
+	return &spriteTable.matrix[index].a;
+}

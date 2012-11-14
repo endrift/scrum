@@ -1,14 +1,17 @@
 #include "minigame.h"
 
+#include <gba_affine.h>
 #include <gba_dma.h>
 #include <gba_input.h>
 #include <gba_interrupt.h>
 #include <gba_video.h>
 
 #include "gameboard.h"
+#include "sprite.h"
 #include "text.h"
 
 #include "pcb.h"
+#include "spaceship.h"
 
 static void m7();
 
@@ -20,6 +23,28 @@ static s32 gCos = 256;
 static s32 gSin = 0;
 static s32 DIV16[278];
 static s32 M7_D = 80;
+
+static struct {
+	Sprite sprite;
+	int id;
+	ObjAffineSource affine;
+} spaceship = {
+	.sprite = {
+		.x = 56,
+		.y = 72,
+		.base = 160,
+		.shape = 1,
+		.size = 2,
+		.palette = 6,
+		.transformed = 1
+	},
+	.id = -1,
+	.affine = {
+		.sX = 1 << 8,
+		.sY = 1 << 8,
+		.theta = 0
+	}
+};
 
 static s16 bgFade[160] = {
 	0x0000,
@@ -145,8 +170,12 @@ static void calcMap(int startX, int startY, int endX, int endY, int xOffset, int
 }
 
 void minigameInit() {
-	DMA3COPY(pcbPal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 4));
+	DMA3COPY(pcbPal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 2));
 	DMA3COPY(pcbTiles, TILE_BASE_ADR(1), DMA16 | DMA_IMMEDIATE | (pcbTilesLen >> 1));
+	DMA3COPY(spaceshipPal, &OBJ_COLORS[16 * 6], DMA16 | DMA_IMMEDIATE | 16);
+	DMA3COPY(spaceshipTiles, TILE_BASE_ADR(4) + 0x1400, DMA16 | DMA_IMMEDIATE | (spaceshipTilesLen >> 2));
+	// Sigh. Maybe I should go back to 1-D mapping
+	DMA3COPY(spaceshipTiles + 0x20, TILE_BASE_ADR(4) + 0x1800, DMA16 | DMA_IMMEDIATE | (spaceshipTilesLen >> 2));
 
 	REG_DISPCNT = MODE_1 | BG0_ON | BG1_ON | BG2_ON | OBJ_ON | WIN0_ON;
 	REG_BG2CNT = CHAR_BASE(1) | SCREEN_BASE(4) | 0xA002;
@@ -164,6 +193,14 @@ void minigameInit() {
 	for(i = 0; i < 160; ++i) {
 		DIV16[i] = ((1 << 24) / (i - 64)) >> 8;
 	}
+
+	if (spaceship.id < 0) {
+		spaceship.sprite.doublesize = 1;
+		spaceship.sprite.transformGroup = 0;
+		spaceship.id = appendSprite(&spaceship.sprite);
+	}
+	ObjAffineSet(&spaceship.affine, affineTable(0), 1, 8);
+	writeSpriteTable();
 }
 
 void minigameFrame(u32 framecount) {
@@ -182,7 +219,7 @@ void minigameFrame(u32 framecount) {
 	} else if (~REG_KEYINPUT & KEY_RIGHT) {
 		offsets.x = offsets.x + 512 - (offsets.x >> 5);
 	} else {
-		offsets.x -= offsets.x >> 4;
+		offsets.x -= (offsets.x >> 4) + 16;
 	}
 
 	if (~REG_KEYINPUT & KEY_DOWN) {
@@ -203,6 +240,14 @@ void minigameFrame(u32 framecount) {
 	camPos.x = (256 << 8) + offsets.x;
 	camPos.y = (64 << 8) + offsets.y;
 	camPos.z = (256 << 8) + offsets.z;
+
+	spaceship.affine.theta = -offsets.x >> 2;
+	spaceship.affine.sX = spaceship.affine.sY = (offsets.y >> 7) + 256;
+	spaceship.sprite.x = 56 - (offsets.x >> 10);
+	spaceship.sprite.y = 72 - (offsets.y >> 9);
+	updateSprite(&spaceship.sprite, spaceship.id);
+	ObjAffineSet(&spaceship.affine, affineTable(0), 1, 8);
+	writeSpriteTable();
 }
 
 #define M7_W ((240 - 72 + 8) >> 1)
