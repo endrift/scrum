@@ -14,36 +14,77 @@ static void m7();
 
 static struct CameraPosition {
 	s32 x, y, z;
-} camPos;
+} camPos, offsets;
 
-static s32 gCos = 237;
-static s32 gSin = 98;
+static s32 gCos = 256;
+static s32 gSin = 0;
 static s32 DIV16[278];
-static s32 M7_D = 256;
+static s32 M7_D = 80;
 
 static s16 bgFade[160] = {
-	0x000F,
-	0x000F,
-	0x000F,
-	0x000F,
-	0x000F,
-	0x000F,
-	0x000F,
-	0x000F,
-	0x000F,
-	0x000F,
-	0x000F,
-	0x000F,
-	0x000F,
-	0x000F,
-	0x000F,
-	0x000F,
-	0x000F,
-	0x000F,
-	0x000F,
-	0x000F,
-	0x000F,
-	0x000F,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
+	0x0000,
 	0x000F,
 
 	0x000F,
@@ -85,37 +126,43 @@ static void hideMinigame(void) {
 	}
 }
 
+static void calcMap(int startX, int startY, int endX, int endY, int xOffset, int yOffset) {
+	startX <<= 1;
+	endX <<= 1;
+	startY <<= 2;
+	endY <<= 2;
+	int x, y, offset;
+	int xcell, ycell;
+	for (y = startY; y < endY; ++y) {
+		ycell = (y >> 2) + yOffset;
+		for (x = startX; x < endX; ++x) {
+			xcell = (x >> 1) + xOffset;
+			offset = 3 + ((7 * (9 * xcell + 5) * (7 * ycell + 3) * xcell * ycell) >> 6);
+			offset = ((x & 1) + (offset << 1)) & 7;
+			((u16*) SCREEN_BASE_BLOCK(4))[x + y * 32] = (offset << 1) | (offset << 9) | 0x100 | ((y & 3) << 4) | ((y & 3) << 12);
+		}
+	}
+}
+
 void minigameInit() {
 	DMA3COPY(pcbPal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 4));
 	DMA3COPY(pcbTiles, TILE_BASE_ADR(1), DMA16 | DMA_IMMEDIATE | (pcbTilesLen >> 1));
 
 	REG_DISPCNT = MODE_1 | BG0_ON | BG1_ON | BG2_ON | OBJ_ON | WIN0_ON;
-	REG_BG2CNT = CHAR_BASE(1) | SCREEN_BASE(4) | 0x6002;
+	REG_BG2CNT = CHAR_BASE(1) | SCREEN_BASE(4) | 0xA002;
 	REG_BLDCNT = 0x00CF;
+	REG_WIN0V = 0x4098;
 
 	irqSet(IRQ_HBLANK, m7);
 	irqEnable(IRQ_HBLANK);
-	camPos.x = 256 << 8;
-	camPos.y = 64 << 8;
-	camPos.z = 256 << 8;
 
 	mapText(SCREEN_BASE_BLOCK(3), 20, 32, 17, 20, 5);
 
-	int x, y, offset;
-	int xcell, ycell;
-	for (y = 0; y < 32; ++y) {
-		ycell = y >> 2;
-		for (x = 0; x < 16; ++x) {
-			xcell = x >> 1;
-			offset = 1 - ((105 * xcell * ycell * (ycell - 4) * (xcell - 4)) >> 6);
-			offset = ((x & 1) + (offset << 1)) & 7;
-			((u16*) SCREEN_BASE_BLOCK(4))[x + y * 16] = (offset << 1) | (offset << 9) | 0x100 | ((y & 3) << 4) | ((y & 3) << 12);
-		}
-	}
+	calcMap(0, 0, 16, 16, 0, 0);
 
 	int i;
 	for(i = 0; i < 160; ++i) {
-		DIV16[i] = ((1 << 24) / (1 + i)) >> 8;
+		DIV16[i] = ((1 << 24) / (i - 64)) >> 8;
 	}
 }
 
@@ -130,8 +177,32 @@ void minigameFrame(u32 framecount) {
 		gameBoardSetup();
 	}
 
-	camPos.z -= gCos;
-	camPos.x += gSin;
+	if (~REG_KEYINPUT & KEY_LEFT) {
+		offsets.x = offsets.x - 512 - (offsets.x >> 5);
+	} else if (~REG_KEYINPUT & KEY_RIGHT) {
+		offsets.x = offsets.x + 512 - (offsets.x >> 5);
+	} else {
+		offsets.x -= offsets.x >> 4;
+	}
+
+	if (~REG_KEYINPUT & KEY_DOWN) {
+		offsets.y = offsets.y - 384 - (offsets.y >> 5);
+	} else if (~REG_KEYINPUT & KEY_UP) {
+		offsets.y = offsets.y + 384 - (offsets.y >> 5);
+	} else {
+		offsets.y -= offsets.y >> 4;
+	}
+
+	offsets.z -= 256;
+
+	if (!((offsets.z >> 9) & 0xF)) {
+		int range = ((offsets.z >> 13) + 8) & 0xF;
+		calcMap(0, range, 16, range + 1, 0, offsets.z >> 13);
+	}
+
+	camPos.x = (256 << 8) + offsets.x;
+	camPos.y = (64 << 8) + offsets.y;
+	camPos.z = (256 << 8) + offsets.z;
 }
 
 #define M7_W ((240 - 72 + 8) >> 1)
