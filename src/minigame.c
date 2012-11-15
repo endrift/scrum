@@ -191,9 +191,9 @@ void minigameInit() {
 	DMA3COPY(spaceshipTiles, TILE_BASE_ADR(4) + 0x1400, DMA16 | DMA_IMMEDIATE | (spaceshipTilesLen >> 2));
 	DMA3COPY(spaceshipTiles + 0x20, TILE_BASE_ADR(4) + 0x1800, DMA16 | DMA_IMMEDIATE | (spaceshipTilesLen >> 2));
 	DMA3COPY(bugTiles, TILE_BASE_ADR(4) + 0x1480, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
-	DMA3COPY(bugTiles + 0x20, TILE_BASE_ADR(4) + 0x1880, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
-	DMA3COPY(bugTiles + 0x40, TILE_BASE_ADR(4) + 0x1C80, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
-	DMA3COPY(bugTiles + 0x60, TILE_BASE_ADR(4) + 0x2080, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
+	DMA3COPY(bugTiles + (bugTilesLen >> 4), TILE_BASE_ADR(4) + 0x1880, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
+	DMA3COPY(bugTiles + (bugTilesLen >> 3), TILE_BASE_ADR(4) + 0x1C80, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
+	DMA3COPY(bugTiles + 3 * (bugTilesLen >> 4), TILE_BASE_ADR(4) + 0x2080, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
 	BG_COLORS[0] = game_backdropPal[15];
 
 
@@ -300,12 +300,14 @@ void minigameFrame(u32 framecount) {
 	spaceship.sprite.x = 56 - (offsets.x >> 10);
 	spaceship.sprite.y = 72 - (offsets.y >> 9);
 	bugs[0].sprite.y = 40 + (offsets.z >> 11);
+	bugs[0].sprite.base ^= 0xC;
 	bugs[0].affine.sX = bugs[0].affine.sY = 2048 + (M7_D >> 3) * (offsets.z >> 8);
 	unsigned int blend;
 	if (bugs[0].affine.sX < 128) {
 		bugs[0].sprite.transformed = 0;
 		blend = 0;
 	} else if (bugs[0].affine.sX < 192) {
+		bugs[0].sprite.transformed ^= 1;
 		blend = ((bugs[0].affine.sX - 128) >> 2);
 	} else {
 		blend = 0xF - (bugs[0].affine.sX >> 7);
