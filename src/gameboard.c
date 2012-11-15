@@ -87,6 +87,16 @@ static void drawBoard(void) {
 	}
 }
 
+static void resetPlayfield(void) {
+	int x, y;
+	for (y = 0; y < GAMEBOARD_ROWS; ++y) {
+		for (x = 0; x < GAMEBOARD_COLS + GAMEBOARD_DEADZONE; ++x) {
+			((u16*) SCREEN_BASE_BLOCK(2))[x + y * 32 + 97] = 5 | CHAR_PALETTE(4);
+		}
+		((u16*) SCREEN_BASE_BLOCK(2))[y * 32 + 97 + 16] = 6 | CHAR_PALETTE(4);
+	}
+}
+
 static void resetBackdrop(void) {
 	int x, y;
 	for (y = 0; y < 20; ++y) {
@@ -95,12 +105,7 @@ static void resetBackdrop(void) {
 		}
 	}
 
-	for (y = 0; y < GAMEBOARD_ROWS; ++y) {
-		for (x = 0; x < GAMEBOARD_COLS + GAMEBOARD_DEADZONE; ++x) {
-			((u16*) SCREEN_BASE_BLOCK(2))[x + y * 32 + 97] = 5 | CHAR_PALETTE(4);
-		}
-		((u16*) SCREEN_BASE_BLOCK(2))[y * 32 + 97 + 16] = 6 | CHAR_PALETTE(4);
-	}
+	resetPlayfield();
 
 	for (y = 0; y < 16; ++y) {
 		for (x = 0; x < 6; ++x) {
@@ -613,6 +618,7 @@ void gameBoardFrame(u32 framecount) {
 
 void gameBoardSetup(void) {
 	DMA3COPY(tile_bluePal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 4));
+	resetPlayfield();
 
 	REG_BG0CNT = CHAR_BASE(0) | SCREEN_BASE(2) | 3;
 	REG_BG1CNT = CHAR_BASE(2) | SCREEN_BASE(3) | 1;
@@ -624,7 +630,7 @@ void gameBoardSetup(void) {
 
 	REG_WIN0H = 0x08A8;
 	REG_WIN0V = 0x1898;
-	REG_WININ = 0x003F;
+	REG_WININ = 0x3B3F;
 	REG_WINOUT = 0x001B;
 
 	board.active.spriteL.disable = 0;

@@ -65,51 +65,51 @@ static s16 bgFade[160] = {
 	0x0000,
 	0x0000,
 	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
-	0x0000,
+	0x0001,
+	0x0001,
+	0x0001,
+	0x0002,
+	0x0002,
+	0x0002,
+	0x0003,
+	0x0003,
+	0x0003,
+	0x0004,
+	0x0004,
+	0x0004,
+	0x0005,
+	0x0005,
+	0x0005,
+	0x0006,
+	0x0006,
+	0x0006,
+	0x0007,
+	0x0007,
+	0x0007,
+	0x0008,
+	0x0008,
+	0x0008,
+	0x0009,
+	0x0009,
+	0x0009,
+	0x000A,
+	0x000A,
+	0x000A,
+	0x000B,
+	0x000B,
+	0x000B,
+	0x000C,
+	0x000C,
+	0x000C,
+	0x000D,
+	0x000D,
+	0x000D,
+	0x000E,
+	0x000E,
+	0x000E,
+	0x000F,
+	0x000F,
+	0x000F,
 	0x000F,
 
 	0x000F,
@@ -149,6 +149,7 @@ static void hideMinigame(void) {
 			((u16*) SCREEN_BASE_BLOCK(3))[x + y * 32] = 0;
 		}
 	}
+	spaceship.sprite.transformed = 0; // Doublesize == disabled, so this disables it
 }
 
 static void calcMap(int startX, int startY, int endX, int endY, int xOffset, int yOffset) {
@@ -177,10 +178,12 @@ void minigameInit() {
 	// Sigh. Maybe I should go back to 1-D mapping
 	DMA3COPY(spaceshipTiles + 0x20, TILE_BASE_ADR(4) + 0x1800, DMA16 | DMA_IMMEDIATE | (spaceshipTilesLen >> 2));
 
-	REG_DISPCNT = MODE_1 | BG0_ON | BG1_ON | BG2_ON | OBJ_ON | WIN0_ON;
+	REG_DISPCNT = MODE_1 | BG0_ON | BG1_ON | BG2_ON | OBJ_ON | WIN0_ON | WIN1_ON;
 	REG_BG2CNT = CHAR_BASE(1) | SCREEN_BASE(4) | 0xA002;
-	REG_BLDCNT = 0x00CF;
+	REG_BLDCNT = 0x05CF;
 	REG_WIN0V = 0x4098;
+	REG_WIN1H = 0x08A8;
+	REG_WIN1V = 0x1840;
 
 	irqSet(IRQ_HBLANK, m7);
 	irqEnable(IRQ_HBLANK);
@@ -189,15 +192,27 @@ void minigameInit() {
 
 	calcMap(0, 0, 16, 16, 0, 0);
 
+	int x, y;
+	for (y = 0; y < 5; ++y) {
+		for (x = 0; x < GAMEBOARD_COLS + GAMEBOARD_DEADZONE; ++x) {
+			((u16*) SCREEN_BASE_BLOCK(2))[x + y * 32 + 97] = 12 | CHAR_PALETTE(4);
+		}
+	}
+
 	int i;
 	for(i = 0; i < 160; ++i) {
-		DIV16[i] = ((1 << 24) / (i - 64)) >> 8;
+		if (i == 66) {
+			continue;
+		}
+		DIV16[i] = ((1 << 24) / (i - 66)) >> 8;
 	}
 
 	if (spaceship.id < 0) {
 		spaceship.sprite.doublesize = 1;
 		spaceship.sprite.transformGroup = 0;
 		spaceship.id = appendSprite(&spaceship.sprite);
+	} else {
+		spaceship.sprite.transformed = 1;
 	}
 	ObjAffineSet(&spaceship.affine, affineTable(0), 1, 8);
 	writeSpriteTable();

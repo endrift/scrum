@@ -72,7 +72,7 @@ void introFrame(u32 framecount) {
 	scanKeys();
 	u32 keys = keysDown();
 
-	if (keys & KEY_START && state != PRESS_START) {
+	if (keys & KEY_START && state < TITLE_FADE_IN) {
 			endIntro(framecount);
 		return;
 	}
