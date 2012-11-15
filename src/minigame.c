@@ -7,6 +7,7 @@
 #include <gba_video.h>
 
 #include "gameboard.h"
+#include "rng.h"
 #include "sprite.h"
 #include "text.h"
 
@@ -17,9 +18,10 @@
 
 static void m7();
 
-static struct CameraPosition {
+typedef struct Coordinates {
 	s32 x, y, z;
-} camPos, offsets;
+} Coordinates;
+static Coordinates camPos, offsets;
 
 static s32 gCos = 256;
 static s32 gSin = 0;
@@ -50,12 +52,39 @@ static AffineSprite spaceship = {
 	}
 };
 
-static AffineSprite bugs[5] = {
-	{ .id = -1 },
-	{ .id = -1 },
-	{ .id = -1 },
-	{ .id = -1 },
-	{ .id = -1 }
+
+typedef struct Bug {
+	AffineSprite sprite;
+	Coordinates coords;
+	int active;
+} Bug;
+
+static Bug bug = {
+	.sprite = {
+		.sprite = {
+			.disable = 1,
+			.x = 56,
+			.y = 40,
+			.mode = 1,
+			.base = 164,
+			.shape = 0,
+			.size = 2,
+			.palette = 7,
+			.priority = 3,
+			.transformed = 1
+		},
+		.affine = {
+			.sX = 1 << 8,
+			.sY = 1 << 8,
+			.theta = 0
+		},
+		.id = -1
+	},
+	.coords = {
+		.x = 0 << 8,
+		.y = 0 << 8,
+		.z = 0
+	}
 };
 
 static s16 bgFade[160] = {
@@ -182,6 +211,80 @@ static void calcMap(int startX, int startY, int endX, int endY, int xOffset, int
 	}
 }
 
+static void generateBug(void) {
+	bug.coords.z = offsets.z;
+	bug.active = 1;
+	bug.sprite.sprite.transformed = 1;
+	s32 seed = rand();
+	switch (seed & 0x7000) {
+		case 0x0000:
+			bug.coords.x = -256;
+			bug.coords.y = -256;
+			break;
+		case 0x1000:
+			bug.coords.x = 0;
+			bug.coords.y = -256;
+			break;
+		case 0x2000:
+			bug.coords.x = 256;
+			bug.coords.y = -256;
+			break;
+		case 0x3000:
+			bug.coords.x = -256;
+			bug.coords.y = 0;
+			break;
+		case 0x4000:
+			bug.coords.x = 256;
+			bug.coords.y = 0;
+			break;
+		case 0x5000:
+			bug.coords.x = -256;
+			bug.coords.y = 256;
+			break;
+		case 0x6000:
+			bug.coords.x = 0;
+			bug.coords.y = 256;
+			break;
+		case 0x7000:
+			bug.coords.x = 256;
+			bug.coords.y = 256;
+			break;
+	}
+}
+
+static void updateBug(void) {
+	if (!bug.active) {
+		if ((rand() & 0x7F0000) == 0x7F0000) {
+			generateBug();
+		} else {
+			return;
+		}
+	}
+	s32 advance = offsets.z - bug.coords.z;
+	// TODO: clean this up
+	bug.sprite.sprite.y = 24 + ((((((offsets.y >> 6) - bug.coords.y) >> 3) + 16) * (-advance >> 9)) >> 6);
+	bug.sprite.sprite.x = 56 + ((((3 * (-offsets.x >> 7) - bug.coords.x) >> 3) * (-advance >> 9)) >> 6);
+	bug.sprite.sprite.base ^= 0xC;
+	bug.sprite.affine.sX = bug.sprite.affine.sY = 2048 + (advance >> 4);
+	unsigned int blend;
+	if (bug.sprite.affine.sX < 128) {
+		bug.sprite.sprite.transformed = 0;
+		blend = 0;
+		bug.active = 0;
+	} else if (bug.sprite.affine.sX < 256) {
+		bug.sprite.sprite.transformed ^= 1;
+		blend = ((bug.sprite.affine.sX - 128) >> 3);
+	} else {
+		blend = 0xF - (bug.sprite.affine.sX >> 7);
+	}
+	if (blend < 0 || blend > 0xF) {
+		blend = 0;			
+	}
+	REG_BLDALPHA = blend;
+	updateSprite(&bug.sprite.sprite, bug.sprite.id);
+	ObjAffineSet(&bug.sprite.affine, affineTable(1), 1, 8);
+}
+
 void minigameInit() {
 	DMA3COPY(pcbPal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 2));
 	DMA3COPY(pcbTiles, TILE_BASE_ADR(1), DMA16 | DMA_IMMEDIATE | (pcbTilesLen >> 1));
@@ -209,7 +312,6 @@ void minigameInit() {
 
 	mapText(SCREEN_BASE_BLOCK(3), 20, 32, 17, 20, 5);
 
-
 	calcMap(0, 0, 16, 16, 0, 0);
 
 	int x, y;
@@ -235,25 +337,13 @@ void minigameInit() {
 		spaceship.sprite.transformed = 1;
 	}
 
-	if (bugs[0].id < 0) {
-		bugs[0].sprite.doublesize = 1;
-		bugs[0].sprite.x = 56;
-		bugs[0].sprite.y = 40;
-		bugs[0].sprite.mode = 1;
-		bugs[0].sprite.base = 164;
-		bugs[0].sprite.shape = 0;
-		bugs[0].sprite.size = 2;
-		bugs[0].sprite.palette = 7;
-		bugs[0].sprite.priority = 3;
-		bugs[0].sprite.transformed = 1;
-		bugs[0].sprite.transformGroup = 1;
-		bugs[0].affine.sX = 1 << 12;
-		bugs[0].affine.sY = 1 << 12;
-		bugs[0].affine.theta = 0;
-		bugs[0].id = appendSprite(&bugs[0].sprite);
+	if (bug.sprite.id < 0) {
+		bug.sprite.sprite.transformGroup = 1;
+		bug.sprite.id = appendSprite(&bug.sprite.sprite);
+		generateBug();
 	}
 	ObjAffineSet(&spaceship.affine, affineTable(0), 1, 8);
-	ObjAffineSet(&bugs[0].affine, affineTable(1), 1, 8);
+	ObjAffineSet(&bug.sprite.affine, affineTable(1), 1, 8);
 	writeSpriteTable();
 }
 
@@ -299,27 +389,9 @@ void minigameFrame(u32 framecount) {
 	spaceship.affine.sX = spaceship.affine.sY = (offsets.y >> 8) + 256;
 	spaceship.sprite.x = 56 - (offsets.x >> 10);
 	spaceship.sprite.y = 72 - (offsets.y >> 9);
-	bugs[0].sprite.y = 40 + (offsets.z >> 11);
-	bugs[0].sprite.base ^= 0xC;
-	bugs[0].affine.sX = bugs[0].affine.sY = 2048 + (M7_D >> 3) * (offsets.z >> 8);
-	unsigned int blend;
-	if (bugs[0].affine.sX < 128) {
-		bugs[0].sprite.transformed = 0;
-		blend = 0;
-	} else if (bugs[0].affine.sX < 192) {
-		bugs[0].sprite.transformed ^= 1;
-		blend = ((bugs[0].affine.sX - 128) >> 2);
-	} else {
-		blend = 0xF - (bugs[0].affine.sX >> 7);
-	}
-	if (blend < 0) {
-		blend = 0;			
-	}
-	REG_BLDALPHA = blend;
 	updateSprite(&spaceship.sprite, spaceship.id);
-	updateSprite(&bugs[0].sprite, bugs[0].id);
 	ObjAffineSet(&spaceship.affine, affineTable(0), 1, 8);
-	ObjAffineSet(&bugs[0].affine, affineTable(1), 1, 8);
+	updateBug();
 	writeSpriteTable();
 }
 
