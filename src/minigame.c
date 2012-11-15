@@ -10,6 +10,8 @@
 #include "sprite.h"
 #include "text.h"
 
+#include "bug.h"
+#include "game-backdrop.h"
 #include "pcb.h"
 #include "spaceship.h"
 
@@ -24,11 +26,13 @@ static s32 gSin = 0;
 static s32 DIV16[278];
 static s32 M7_D = 80;
 
-static struct {
+typedef struct AffineSprite {
 	Sprite sprite;
 	int id;
 	ObjAffineSource affine;
-} spaceship = {
+} AffineSprite;
+
+static AffineSprite spaceship = {
 	.sprite = {
 		.x = 56,
 		.y = 72,
@@ -44,6 +48,14 @@ static struct {
 		.sY = 1 << 8,
 		.theta = 0
 	}
+};
+
+static AffineSprite bugs[5] = {
+	{ .id = -1 },
+	{ .id = -1 },
+	{ .id = -1 },
+	{ .id = -1 },
+	{ .id = -1 }
 };
 
 static s16 bgFade[160] = {
@@ -174,13 +186,20 @@ void minigameInit() {
 	DMA3COPY(pcbPal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 2));
 	DMA3COPY(pcbTiles, TILE_BASE_ADR(1), DMA16 | DMA_IMMEDIATE | (pcbTilesLen >> 1));
 	DMA3COPY(spaceshipPal, &OBJ_COLORS[16 * 6], DMA16 | DMA_IMMEDIATE | 16);
-	DMA3COPY(spaceshipTiles, TILE_BASE_ADR(4) + 0x1400, DMA16 | DMA_IMMEDIATE | (spaceshipTilesLen >> 2));
+	DMA3COPY(bugPal, &OBJ_COLORS[16 * 7], DMA16 | DMA_IMMEDIATE | 16);
 	// Sigh. Maybe I should go back to 1-D mapping
+	DMA3COPY(spaceshipTiles, TILE_BASE_ADR(4) + 0x1400, DMA16 | DMA_IMMEDIATE | (spaceshipTilesLen >> 2));
 	DMA3COPY(spaceshipTiles + 0x20, TILE_BASE_ADR(4) + 0x1800, DMA16 | DMA_IMMEDIATE | (spaceshipTilesLen >> 2));
+	DMA3COPY(bugTiles, TILE_BASE_ADR(4) + 0x1480, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
+	DMA3COPY(bugTiles + 0x20, TILE_BASE_ADR(4) + 0x1880, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
+	DMA3COPY(bugTiles + 0x40, TILE_BASE_ADR(4) + 0x1C80, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
+	DMA3COPY(bugTiles + 0x60, TILE_BASE_ADR(4) + 0x2080, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
+	BG_COLORS[0] = game_backdropPal[15];
+
 
 	REG_DISPCNT = MODE_1 | BG0_ON | BG1_ON | BG2_ON | OBJ_ON | WIN0_ON | WIN1_ON;
-	REG_BG2CNT = CHAR_BASE(1) | SCREEN_BASE(4) | 0xA002;
-	REG_BLDCNT = 0x05CF;
+	REG_BG2CNT = CHAR_BASE(1) | SCREEN_BASE(4) | 0xA003;
+	REG_BLDCNT = 0x24EF;
 	REG_WIN0V = 0x4098;
 	REG_WIN1H = 0x08A8;
 	REG_WIN1V = 0x1840;
@@ -190,12 +209,13 @@ void minigameInit() {
 
 	mapText(SCREEN_BASE_BLOCK(3), 20, 32, 17, 20, 5);
 
+
 	calcMap(0, 0, 16, 16, 0, 0);
 
 	int x, y;
-	for (y = 0; y < 5; ++y) {
+	for (y = 0; y < 16; ++y) {
 		for (x = 0; x < GAMEBOARD_COLS + GAMEBOARD_DEADZONE; ++x) {
-			((u16*) SCREEN_BASE_BLOCK(2))[x + y * 32 + 97] = 12 | CHAR_PALETTE(4);
+			((u16*) SCREEN_BASE_BLOCK(2))[x + y * 32 + 97] = 0;
 		}
 	}
 
@@ -214,7 +234,26 @@ void minigameInit() {
 	} else {
 		spaceship.sprite.transformed = 1;
 	}
+
+	if (bugs[0].id < 0) {
+		bugs[0].sprite.doublesize = 1;
+		bugs[0].sprite.x = 56;
+		bugs[0].sprite.y = 40;
+		bugs[0].sprite.mode = 1;
+		bugs[0].sprite.base = 164;
+		bugs[0].sprite.shape = 0;
+		bugs[0].sprite.size = 2;
+		bugs[0].sprite.palette = 7;
+		bugs[0].sprite.priority = 3;
+		bugs[0].sprite.transformed = 1;
+		bugs[0].sprite.transformGroup = 1;
+		bugs[0].affine.sX = 1 << 12;
+		bugs[0].affine.sY = 1 << 12;
+		bugs[0].affine.theta = 0;
+		bugs[0].id = appendSprite(&bugs[0].sprite);
+	}
 	ObjAffineSet(&spaceship.affine, affineTable(0), 1, 8);
+	ObjAffineSet(&bugs[0].affine, affineTable(1), 1, 8);
 	writeSpriteTable();
 }
 
@@ -257,11 +296,28 @@ void minigameFrame(u32 framecount) {
 	camPos.z = (256 << 8) + offsets.z;
 
 	spaceship.affine.theta = -offsets.x >> 2;
-	spaceship.affine.sX = spaceship.affine.sY = (offsets.y >> 7) + 256;
+	spaceship.affine.sX = spaceship.affine.sY = (offsets.y >> 8) + 256;
 	spaceship.sprite.x = 56 - (offsets.x >> 10);
 	spaceship.sprite.y = 72 - (offsets.y >> 9);
+	bugs[0].sprite.y = 40 + (offsets.z >> 11);
+	bugs[0].affine.sX = bugs[0].affine.sY = 2048 + (M7_D >> 3) * (offsets.z >> 8);
+	unsigned int blend;
+	if (bugs[0].affine.sX < 128) {
+		bugs[0].sprite.transformed = 0;
+		blend = 0;
+	} else if (bugs[0].affine.sX < 192) {
+		blend = ((bugs[0].affine.sX - 128) >> 2);
+	} else {
+		blend = 0xF - (bugs[0].affine.sX >> 7);
+	}
+	if (blend < 0) {
+		blend = 0;			
+	}
+	REG_BLDALPHA = blend;
 	updateSprite(&spaceship.sprite, spaceship.id);
+	updateSprite(&bugs[0].sprite, bugs[0].id);
 	ObjAffineSet(&spaceship.affine, affineTable(0), 1, 8);
+	ObjAffineSet(&bugs[0].affine, affineTable(1), 1, 8);
 	writeSpriteTable();
 }
 
