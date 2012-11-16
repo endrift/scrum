@@ -21,7 +21,8 @@ static enum {
 	LOGO_IDLE,
 	LOGO_FADE_OUT,
 	TITLE_FADE_IN,
-	PRESS_START
+	PRESS_START,
+	TITLE_FADE_OUT
 } state = LOGO_FADE_IN;
 
 Runloop intro = {
@@ -86,12 +87,14 @@ void introFrame(u32 framecount) {
 			REG_BLDALPHA = value | (0xF - value) << 8;
 		} else {
 			switchState(LOGO_IDLE, framecount);
+			REG_BLDCNT = 0;
 		}
 		break;
 	case LOGO_IDLE:
 		if (framecount - introStart > 120) {
 			BG_COLORS[0] = 0x0;
 			switchState(LOGO_FADE_OUT, framecount);
+			REG_BLDCNT = 0x3F7F;
 		} else {
 			break;
 		}
@@ -121,8 +124,18 @@ void introFrame(u32 framecount) {
 		break;
 	case PRESS_START:
 		if (keys & KEY_START) {
+			switchState(TITLE_FADE_OUT, framecount);
+			REG_BLDCNT = 0x3F7F;
+		}
+		break;
+	case TITLE_FADE_OUT:
+		if (framecount - introStart >= 32) {
+			REG_DISPCNT = 0;
 			RegisterRamReset(0xC);
 			setRunloop(&gameBoard);
+		} else {
+			int value = (framecount - introStart) >> 1;
+			REG_BLDALPHA = (0xF - value) | value << 8;
 		}
 		break;
 	}
