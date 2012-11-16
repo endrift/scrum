@@ -39,8 +39,10 @@ static void switchState(int nextState, u32 framecount) {
 
 static void endIntro(u32 framecount) {
 	switchState(TITLE_FADE_IN, framecount);
-	REG_BG1CNT = CHAR_BASE(2) | SCREEN_BASE(1) | 1;
+	REG_DISPCNT = 0;
+	REG_BLDALPHA = 0x0F00;
 	RegisterRamReset(0xC);
+	REG_BG1CNT = CHAR_BASE(2) | SCREEN_BASE(1) | 1;
 	DMA3COPY(hud_spritesPal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
 	BG_COLORS[0] = 0;
 	mapText(SCREEN_BASE_BLOCK(1), 0, 32, 0, 24, 0);
@@ -73,7 +75,7 @@ void introFrame(u32 framecount) {
 	u32 keys = keysDown();
 
 	if (keys & KEY_START && state < TITLE_FADE_IN) {
-			endIntro(framecount);
+		endIntro(framecount);
 		return;
 	}
 
