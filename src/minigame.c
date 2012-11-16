@@ -70,6 +70,7 @@ static struct {
 typedef struct Bug {
 	AffineSprite sprite;
 	Coordinates coords;
+	Coordinates fakeoutCoords;
 	int active;
 } Bug;
 
@@ -232,45 +233,51 @@ static void calcMap(int startX, int startY, int endX, int endY, int xOffset, int
 	}
 }
 
+static void genOctant(int seed, Coordinates* coords) {
+		switch (seed & 0x7) {
+		case 0x0:
+			coords->x = -256;
+			coords->y = -256;
+			break;
+		case 0x1:
+			coords->x = 0;
+			coords->y = -256;
+			break;
+		case 0x2:
+			coords->x = 256;
+			coords->y = -256;
+			break;
+		case 0x3:
+			coords->x = -256;
+			coords->y = 0;
+			break;
+		case 0x4:
+			coords->x = 256;
+			coords->y = 0;
+			break;
+		case 0x5:
+			coords->x = -256;
+			coords->y = 256;
+			break;
+		case 0x6:
+			coords->x = 0;
+			coords->y = 256;
+			break;
+		case 0x7:
+			coords->x = 256;
+			coords->y = 256;
+			break;
+	}
+
+}
+
 static void generateBug(void) {
 	bug.coords.z = offsets.z;
 	bug.active = 1;
 	bug.sprite.sprite.transformed = 1;
 	s32 seed = rand();
-	switch (seed & 0x7000) {
-		case 0x0000:
-			bug.coords.x = -256;
-			bug.coords.y = -256;
-			break;
-		case 0x1000:
-			bug.coords.x = 0;
-			bug.coords.y = -256;
-			break;
-		case 0x2000:
-			bug.coords.x = 256;
-			bug.coords.y = -256;
-			break;
-		case 0x3000:
-			bug.coords.x = -256;
-			bug.coords.y = 0;
-			break;
-		case 0x4000:
-			bug.coords.x = 256;
-			bug.coords.y = 0;
-			break;
-		case 0x5000:
-			bug.coords.x = -256;
-			bug.coords.y = 256;
-			break;
-		case 0x6000:
-			bug.coords.x = 0;
-			bug.coords.y = 256;
-			break;
-		case 0x7000:
-			bug.coords.x = 256;
-			bug.coords.y = 256;
-			break;
-	}
+	genOctant(seed >> 12, &bug.coords);
+	genOctant(seed >> 15, &bug.fakeoutCoords);
 }
 
 static void updateBug(void) {
@@ -282,11 +289,14 @@ static void updateBug(void) {
 		}
 	}
 	s32 advance = offsets.z - bug.coords.z;
+	s32 period = bug.sprite.affine.sX - 256;
 	// TODO: clean this up
-	bug.sprite.sprite.y = 24 + ((((((offsets.y >> 6) - bug.coords.y) >> 3) + 16) * (-advance >> 9)) >> 6);
-	bug.sprite.sprite.x = 56 + ((((3 * (-offsets.x >> 7) - bug.coords.x) >> 3) * (-advance >> 9)) >> 6);
-	bug.sprite.sprite.base ^= 0xC;
 	bug.sprite.affine.sX = bug.sprite.affine.sY = 2048 + (advance >> 4);
+	s32 x = period > 0 ? (bug.coords.x * (2048 - period) + bug.fakeoutCoords.x * period) >> 11 : bug.coords.x;
+	s32 y = period > 0 ? (bug.coords.y * (2048 - period) + bug.fakeoutCoords.y * period) >> 11 : bug.coords.y;
+	bug.sprite.sprite.y = 24 + ((((((y >> 6) - y) >> 3) + 32) * (-advance >> 9)) >> 6);
+	bug.sprite.sprite.x = 56 + ((((3 * (-offsets.x >> 7) - x) >> 3) * (-advance >> 9)) >> 6);
+	bug.sprite.sprite.base ^= 0xC;
 	unsigned int blend;
 	if (bug.sprite.affine.sX < 128) {
 		bug.sprite.sprite.transformed = 0;
