@@ -612,7 +612,7 @@ void gameBoardFrame(u32 framecount) {
 	if (keys & KEY_B) {
 		gameBoard.frame = minigameFrame;
 		hideBoard();
-		minigameInit();
+		minigameInit(framecount);
 	}
 }
 

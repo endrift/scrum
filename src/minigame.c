@@ -18,6 +18,13 @@
 
 static void m7();
 
+static enum {
+	FLYING_INTRO,
+	FLYING_GAMEPLAY
+} state = FLYING_INTRO;
+
+static u32 startFrame;
+
 typedef struct Coordinates {
 	s32 x, y, z;
 } Coordinates;
@@ -34,21 +41,28 @@ typedef struct AffineSprite {
 	ObjAffineSource affine;
 } AffineSprite;
 
-static AffineSprite spaceship = {
+static struct {
+	AffineSprite sprite;
+	s32 offsetY;
+} spaceship = {
 	.sprite = {
-		.x = 56,
-		.y = 72,
-		.base = 160,
-		.shape = 1,
-		.size = 2,
-		.palette = 6,
-		.transformed = 1
-	},
-	.id = -1,
-	.affine = {
-		.sX = 1 << 8,
-		.sY = 1 << 8,
-		.theta = 0
+		.sprite = {
+			.x = 56,
+			.y = 72,
+			.mode = 1,
+			.base = 160,
+			.shape = 1,
+			.size = 2,
+			.palette = 6,
+			.priority = 3,
+			.transformed = 1
+		},
+		.id = -1,
+		.affine = {
+			.sX = 1 << 8,
+			.sY = 1 << 8,
+			.theta = 0
+		}
 	}
 };
 
@@ -71,7 +85,7 @@ static Bug bug = {
 			.size = 2,
 			.palette = 7,
 			.priority = 3,
-			.transformed = 1
+			.transformed = 0
 		},
 		.affine = {
 			.sX = 1 << 8,
@@ -183,6 +197,13 @@ static s16 bgFade[160] = {
 	0x0001
 };
 
+static s16 fadeOffset = 0;
+
+static void switchState(int nextState, u32 framecount) {
+	state = nextState;
+	startFrame = framecount;
+}
+
 static void hideMinigame(void) {
 	int x, y;
 	for (y = 17; y < 20; ++y) {
@@ -190,7 +211,7 @@ static void hideMinigame(void) {
 			((u16*) SCREEN_BASE_BLOCK(3))[x + y * 32] = 0;
 		}
 	}
-	spaceship.sprite.transformed = 0; // Doublesize == disabled, so this disables it
+	spaceship.sprite.sprite.transformed = 0; // Doublesize == disabled, so this disables it
 }
 
 static void calcMap(int startX, int startY, int endX, int endY, int xOffset, int yOffset) {
@@ -285,7 +306,19 @@ static void updateBug(void) {
 	ObjAffineSet(&bug.sprite.affine, affineTable(1), 1, 8);
 }
 
-void minigameInit() {
+void minigameInit(u32 framecount) {
+	int i;
+	for(i = 0; i < 160; ++i) {
+		if (i == 66) {
+			continue;
+		}
+		DIV16[i] = ((1 << 24) / (i - 66)) >> 8;
+	}
+	fadeOffset = 16;
+
+	irqSet(IRQ_HBLANK, m7);
+	irqEnable(IRQ_HBLANK);
+
 	DMA3COPY(pcbPal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 2));
 	DMA3COPY(pcbTiles, TILE_BASE_ADR(1), DMA16 | DMA_IMMEDIATE | (pcbTilesLen >> 1));
 	DMA3COPY(spaceshipPal, &OBJ_COLORS[16 * 6], DMA16 | DMA_IMMEDIATE | 16);
@@ -299,16 +332,12 @@ void minigameInit() {
 	DMA3COPY(bugTiles + 3 * (bugTilesLen >> 4), TILE_BASE_ADR(4) + 0x2080, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
 	BG_COLORS[0] = game_backdropPal[15];
 
-
 	REG_DISPCNT = MODE_1 | BG0_ON | BG1_ON | BG2_ON | OBJ_ON | WIN0_ON | WIN1_ON;
 	REG_BG2CNT = CHAR_BASE(1) | SCREEN_BASE(4) | 0xA003;
 	REG_BLDCNT = 0x24EF;
 	REG_WIN0V = 0x4098;
 	REG_WIN1H = 0x08A8;
 	REG_WIN1V = 0x1840;
-
-	irqSet(IRQ_HBLANK, m7);
-	irqEnable(IRQ_HBLANK);
 
 	mapText(SCREEN_BASE_BLOCK(3), 20, 32, 17, 20, 5);
 
@@ -321,28 +350,30 @@ void minigameInit() {
 		}
 	}
 
-	int i;
-	for(i = 0; i < 160; ++i) {
-		if (i == 66) {
-			continue;
-		}
-		DIV16[i] = ((1 << 24) / (i - 66)) >> 8;
-	}
+	startFrame = framecount;
+	state = FLYING_INTRO;
+	offsets.x = 0;
+	offsets.y = -32 << 8;
+	offsets.z = 0;
+	spaceship.offsetY = -(64 << 9);
+	spaceship.sprite.sprite.mode = 1;
 
-	if (spaceship.id < 0) {
-		spaceship.sprite.doublesize = 1;
-		spaceship.sprite.transformGroup = 0;
-		spaceship.id = appendSprite(&spaceship.sprite);
+	if (spaceship.sprite.id < 0) {
+		spaceship.sprite.sprite.doublesize = 1;
+		spaceship.sprite.sprite.transformGroup = 0;
+		spaceship.sprite.id = appendSprite(&spaceship.sprite.sprite);
 	} else {
-		spaceship.sprite.transformed = 1;
+		spaceship.sprite.sprite.transformed = 1;
 	}
 
 	if (bug.sprite.id < 0) {
 		bug.sprite.sprite.transformGroup = 1;
 		bug.sprite.id = appendSprite(&bug.sprite.sprite);
-		generateBug();
+	} else {
+		bug.sprite.sprite.transformed = 0;
+		updateSprite(&bug.sprite.sprite, bug.sprite.id);
 	}
-	ObjAffineSet(&spaceship.affine, affineTable(0), 1, 8);
+	ObjAffineSet(&spaceship.sprite.affine, affineTable(0), 1, 8);
 	ObjAffineSet(&bug.sprite.affine, affineTable(1), 1, 8);
 	writeSpriteTable();
 }
@@ -358,22 +389,6 @@ void minigameFrame(u32 framecount) {
 		gameBoardSetup();
 	}
 
-	if (~REG_KEYINPUT & KEY_LEFT) {
-		offsets.x = offsets.x - 512 - (offsets.x >> 5);
-	} else if (~REG_KEYINPUT & KEY_RIGHT) {
-		offsets.x = offsets.x + 512 - (offsets.x >> 5);
-	} else {
-		offsets.x -= (offsets.x >> 4) + 16;
-	}
-
-	if (~REG_KEYINPUT & KEY_DOWN) {
-		offsets.y = offsets.y - 384 - (offsets.y >> 5);
-	} else if (~REG_KEYINPUT & KEY_UP) {
-		offsets.y = offsets.y + 384 - (offsets.y >> 5);
-	} else {
-		offsets.y -= offsets.y >> 4;
-	}
-
 	offsets.z -= 256;
 
 	if (!((offsets.z >> 9) & 0xF)) {
@@ -381,17 +396,51 @@ void minigameFrame(u32 framecount) {
 		calcMap(0, range, 16, range + 1, 0, offsets.z >> 13);
 	}
 
+	switch (state) {
+	case FLYING_INTRO:
+		if ((framecount - startFrame) >= 64) {
+			switchState(FLYING_GAMEPLAY, framecount);
+			spaceship.sprite.sprite.mode = 0;
+			generateBug();
+		} else {
+			REG_BLDALPHA = (framecount - startFrame) >> 2;
+			spaceship.offsetY -= spaceship.offsetY >> 5;
+			offsets.y -= offsets.y >> 4;
+			if (((framecount - startFrame) & 0x3) == 0x3) {
+				--fadeOffset;
+			}
+		}
+		break;
+	case FLYING_GAMEPLAY:
+		if (~REG_KEYINPUT & KEY_LEFT) {
+			offsets.x = offsets.x - 512 - (offsets.x >> 5);
+		} else if (~REG_KEYINPUT & KEY_RIGHT) {
+			offsets.x = offsets.x + 512 - (offsets.x >> 5);
+		} else {
+			offsets.x -= (offsets.x >> 4);
+		}
+
+		if (~REG_KEYINPUT & KEY_DOWN) {
+			offsets.y = offsets.y - 384 - (offsets.y >> 5);
+		} else if (~REG_KEYINPUT & KEY_UP) {
+			offsets.y = offsets.y + 384 - (offsets.y >> 5);
+		} else {
+			offsets.y -= offsets.y >> 4;
+		}
+		updateBug();
+	};
+
 	camPos.x = (256 << 8) + offsets.x;
 	camPos.y = (64 << 8) + offsets.y;
 	camPos.z = (256 << 8) + offsets.z;
+	int shipOffsetY = spaceship.offsetY + offsets.y;
 
-	spaceship.affine.theta = -offsets.x >> 2;
-	spaceship.affine.sX = spaceship.affine.sY = (offsets.y >> 8) + 256;
-	spaceship.sprite.x = 56 - (offsets.x >> 10);
-	spaceship.sprite.y = 72 - (offsets.y >> 9);
-	updateSprite(&spaceship.sprite, spaceship.id);
-	ObjAffineSet(&spaceship.affine, affineTable(0), 1, 8);
-	updateBug();
+	spaceship.sprite.affine.theta = -offsets.x >> 2;
+	spaceship.sprite.affine.sX = spaceship.sprite.affine.sY = (shipOffsetY >> 8) + 256;
+	spaceship.sprite.sprite.x = 56 - (offsets.x >> 10);
+	spaceship.sprite.sprite.y = 72 - (shipOffsetY >> 9);
+	updateSprite(&spaceship.sprite.sprite, spaceship.sprite.id);
+	ObjAffineSet(&spaceship.sprite.affine, affineTable(0), 1, 8);
 	writeSpriteTable();
 }
 
@@ -402,7 +451,12 @@ __attribute__((section(".iwram"), long_call))
 static void m7() {
 	s32 lam, lcf, lsf, lxr, lyr;
 
-	REG_BLDY = bgFade[REG_VCOUNT];
+	s16 fade = bgFade[REG_VCOUNT] + fadeOffset;
+	if (fade > 0xF) {
+		REG_BLDY = 0xF;
+	} else {
+		REG_BLDY = fade;
+	}
 
 	lam = camPos.y * DIV16[REG_VCOUNT] >> 12;
 	lcf = lam * gCos >> 8;

@@ -3,7 +3,7 @@
 
 #include <gba_types.h>
 
-void minigameInit(void);
+void minigameInit(u32 framecount);
 void minigameFrame(u32 framecount);
 
 #endif
