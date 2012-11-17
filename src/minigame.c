@@ -107,7 +107,8 @@ typedef struct Bullet {
 	Coordinates coords;
 } Bullet;
 
-static Bullet friendlyBullets[8];
+#define FRIENDLY_BULLETS_MAX 2
+static Bullet friendlyBullets[FRIENDLY_BULLETS_MAX];
 static int activeBullets;
 
 static s16 bgFade[160] = {
@@ -325,42 +326,52 @@ static void updateBug(void) {
 }
 
 static void fireFriendly(void) {
+	int i;
+	// We must prepend the sprite to get layer ordering right
+	if (activeBullets == FRIENDLY_BULLETS_MAX) {
+		return;
+	}
+	for (i = activeBullets; i > 0; --i) {
+		Bullet* bullet = &friendlyBullets[i];
+		Bullet* prevBullet = &friendlyBullets[i - 1];
+		int id = bullet->sprite.id;
+		int transformGroup = bullet->sprite.sprite.transformGroup;
+		bullet->coords = prevBullet->coords;
+		bullet->sprite = prevBullet->sprite;
+		bullet->sprite.id = id;
+		bullet->sprite.sprite.transformGroup = transformGroup;
+		updateSprite(&bullet->sprite.sprite, bullet->sprite.id);
+	}
+
 	Bullet* bullet = &friendlyBullets[0];
 	bullet->coords.x = offsets.x;
 	bullet->coords.y = offsets.y;
 	bullet->coords.z = 0;
-	// TODO: initialize table at the beginning
-	if (bullet->sprite.id == 0) {
-		bullet->sprite.sprite.base = 224;
-		bullet->sprite.sprite.palette = 3;
-		bullet->sprite.sprite.size = 1;
-		bullet->sprite.sprite.transformed = 1;
-		bullet->sprite.sprite.transformGroup = 2;
-		bullet->sprite.sprite.doublesize = 0;
-		bullet->sprite.sprite.priority = 3;
-		bullet->sprite.id = appendSprite(&bullet->sprite.sprite);
-	} else {
-		bullet->sprite.sprite.transformed = 1;
-		bullet->sprite.sprite.disable = 0;
-		updateSprite(&bullet->sprite.sprite, bullet->sprite.id);
-	}
+	bullet->sprite.sprite.transformed = 1;
+	bullet->sprite.sprite.disable = 0;
+	updateSprite(&bullet->sprite.sprite, bullet->sprite.id);
+	++activeBullets;
 }
 
 static void updateBullets(void) {
-	Bullet* bullet = &friendlyBullets[0];
-	if (bullet->sprite.id) {
-		bullet->coords.z -= 256;
-		if (bullet->coords.z < -8192) {
-			bullet->sprite.sprite.transformed = 0;
-			bullet->sprite.sprite.disable = 1;
-		} else {
-			bullet->sprite.affine.sX = bullet->sprite.affine.sY = 256 - (bullet->coords.z >> 3);
-			bullet->sprite.sprite.base ^= 2;
-			bullet->sprite.sprite.y = (((82 - (bullet->coords.y >> 8) + (offsets.y >> 9)) * ((1024 << 5) + bullet->coords.z) + (-((128 + (bullet->coords.y << 1) - offsets.y) << 15) * bullet->coords.z))) >> 15;
-			bullet->sprite.sprite.x = 80 - (((bullet->coords.x >> 11) - (offsets.x >> 12)) * ((256 << 5) + bullet->coords.z) >> 13);
-			ObjAffineSet(&bullet->sprite.affine, affineTable(2), 1, 8);
+	int i;
+	for (i = 0; i < activeBullets; ++i) {
+		Bullet* bullet = &friendlyBullets[i];
+		if (bullet->sprite.id) {
+			bullet->coords.z -= 256;
+			if (bullet->coords.z < -8192) {
+				bullet->sprite.sprite.transformed = 0;
+				bullet->sprite.sprite.disable = 1;
+				--activeBullets;
+			} else {
+				bullet->sprite.affine.sX = bullet->sprite.affine.sY = 256 - (bullet->coords.z >> 3);
+				bullet->sprite.sprite.base ^= 2;
+				bullet->sprite.sprite.y = (((82 - (bullet->coords.y >> 8) + (offsets.y >> 9)) * ((1024 << 5) + bullet->coords.z) + (-((128 + (bullet->coords.y << 1) - offsets.y) << 15) * bullet->coords.z))) >> 15;
+				bullet->sprite.sprite.x = 80 - (((bullet->coords.x >> 11) - (offsets.x >> 12)) * ((256 << 5) + bullet->coords.z) >> 13);
+				ObjAffineSet(&bullet->sprite.affine, affineTable(bullet->sprite.sprite.transformGroup), 1, 8);
+			}
+			updateSprite(&bullet->sprite.sprite, bullet->sprite.id);
 		}
-		updateSprite(&bullet->sprite.sprite, bullet->sprite.id);
 	}
 }
 
@@ -377,6 +388,20 @@ void minigameInit(u32 framecount) {
 	spaceship.sprite.sprite.doublesize = 1;
 	spaceship.sprite.sprite.transformGroup = 0;
 	spaceship.sprite.id = appendSprite(&spaceship.sprite.sprite);
+
+	activeBullets = 0;
+	for (i = 0; i < FRIENDLY_BULLETS_MAX; ++i) {
+		Bullet* bullet = &friendlyBullets[i];
+		bullet->sprite.sprite.base = 224;
+		bullet->sprite.sprite.palette = 3;
+		bullet->sprite.sprite.size = 1;
+		bullet->sprite.sprite.transformed = 0;
+		bullet->sprite.sprite.transformGroup = 2 + i;
+		bullet->sprite.sprite.disable = 1;
+		bullet->sprite.sprite.priority = 3;
+		bullet->sprite.id = appendSprite(&bullet->sprite.sprite);
+	}
+
 	bug.sprite.sprite.transformGroup = 1;
 	bug.sprite.id = appendSprite(&bug.sprite.sprite);
 }
