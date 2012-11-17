@@ -12,6 +12,7 @@
 #include "text.h"
 
 #include "bug.h"
+#include "bullet.h"
 #include "game-backdrop.h"
 #include "pcb.h"
 #include "spaceship.h"
@@ -53,7 +54,7 @@ static struct {
 			.base = 160,
 			.shape = 1,
 			.size = 2,
-			.palette = 6,
+			.palette = 1,
 			.priority = 3,
 			.transformed = 1
 		},
@@ -65,7 +66,6 @@ static struct {
 		}
 	}
 };
-
 
 typedef struct Bug {
 	AffineSprite sprite;
@@ -84,7 +84,7 @@ static Bug bug = {
 			.base = 164,
 			.shape = 0,
 			.size = 2,
-			.palette = 7,
+			.palette = 2,
 			.priority = 3,
 			.transformed = 0
 		},
@@ -101,6 +101,14 @@ static Bug bug = {
 		.z = 0
 	}
 };
+
+typedef struct Bullet {
+	AffineSprite sprite;
+	Coordinates coords;
+} Bullet;
+
+static Bullet friendlyBullets[8];
+static int activeBullets;
 
 static s16 bgFade[160] = {
 	0x0000,
@@ -316,6 +324,46 @@ static void updateBug(void) {
 	ObjAffineSet(&bug.sprite.affine, affineTable(1), 1, 8);
 }
 
+static void fireFriendly(void) {
+	Bullet* bullet = &friendlyBullets[0];
+	bullet->coords.x = offsets.x;
+	bullet->coords.y = offsets.y;
+	bullet->coords.z = 0;
+	// TODO: initialize table at the beginning
+	if (bullet->sprite.id == 0) {
+		bullet->sprite.sprite.base = 224;
+		bullet->sprite.sprite.palette = 3;
+		bullet->sprite.sprite.size = 1;
+		bullet->sprite.sprite.transformed = 1;
+		bullet->sprite.sprite.transformGroup = 2;
+		bullet->sprite.sprite.doublesize = 0;
+		bullet->sprite.sprite.priority = 3;
+		bullet->sprite.id = appendSprite(&bullet->sprite.sprite);
+	} else {
+		bullet->sprite.sprite.transformed = 1;
+		bullet->sprite.sprite.disable = 0;
+		updateSprite(&bullet->sprite.sprite, bullet->sprite.id);
+	}
+}
+
+static void updateBullets(void) {
+	Bullet* bullet = &friendlyBullets[0];
+	if (bullet->sprite.id) {
+		bullet->coords.z -= 256;
+		if (bullet->coords.z < -8192) {
+			bullet->sprite.sprite.transformed = 0;
+			bullet->sprite.sprite.disable = 1;
+		} else {
+			bullet->sprite.affine.sX = bullet->sprite.affine.sY = 256 - (bullet->coords.z >> 3);
+			bullet->sprite.sprite.base ^= 2;
+			bullet->sprite.sprite.y = (((82 - (bullet->coords.y >> 8) + (offsets.y >> 9)) * ((1024 << 5) + bullet->coords.z) + (-((128 + (bullet->coords.y << 1) - offsets.y) << 15) * bullet->coords.z))) >> 15;
+			bullet->sprite.sprite.x = 80 - (((bullet->coords.x >> 10) - (offsets.x >> 11)) * ((256 << 5) + bullet->coords.z) >> 13);
+			ObjAffineSet(&bullet->sprite.affine, affineTable(2), 1, 8);
+		}
+		updateSprite(&bullet->sprite.sprite, bullet->sprite.id);
+	}
+}
+
 void minigameInit(u32 framecount) {
 	int i;
 	for(i = 0; i < 160; ++i) {
@@ -331,8 +379,9 @@ void minigameInit(u32 framecount) {
 
 	DMA3COPY(pcbPal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 2));
 	DMA3COPY(pcbTiles, TILE_BASE_ADR(1), DMA16 | DMA_IMMEDIATE | (pcbTilesLen >> 1));
-	DMA3COPY(spaceshipPal, &OBJ_COLORS[16 * 6], DMA16 | DMA_IMMEDIATE | 16);
-	DMA3COPY(bugPal, &OBJ_COLORS[16 * 7], DMA16 | DMA_IMMEDIATE | 16);
+	DMA3COPY(spaceshipPal, &OBJ_COLORS[16], DMA16 | DMA_IMMEDIATE | 16);
+	DMA3COPY(bugPal, &OBJ_COLORS[16 * 2], DMA16 | DMA_IMMEDIATE | 16);
+	DMA3COPY(bulletPal, &OBJ_COLORS[16 * 3], DMA16 | DMA_IMMEDIATE | 16);
 	// Sigh. Maybe I should go back to 1-D mapping
 	DMA3COPY(spaceshipTiles, TILE_BASE_ADR(4) + 0x1400, DMA16 | DMA_IMMEDIATE | (spaceshipTilesLen >> 2));
 	DMA3COPY(spaceshipTiles + 0x20, TILE_BASE_ADR(4) + 0x1800, DMA16 | DMA_IMMEDIATE | (spaceshipTilesLen >> 2));
@@ -340,6 +389,9 @@ void minigameInit(u32 framecount) {
 	DMA3COPY(bugTiles + (bugTilesLen >> 4), TILE_BASE_ADR(4) + 0x1880, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
 	DMA3COPY(bugTiles + (bugTilesLen >> 3), TILE_BASE_ADR(4) + 0x1C80, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
 	DMA3COPY(bugTiles + 3 * (bugTilesLen >> 4), TILE_BASE_ADR(4) + 0x2080, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
+	DMA3COPY(bulletTiles, TILE_BASE_ADR(4) + 0x1C00, DMA16 | DMA_IMMEDIATE | (bulletTilesLen >> 2));
+	DMA3COPY(bulletTiles + (bulletTilesLen >> 3), TILE_BASE_ADR(4) + 0x2000, DMA16 | DMA_IMMEDIATE | (bulletTilesLen >> 2));
+
 	BG_COLORS[0] = game_backdropPal[15];
 
 	REG_DISPCNT = MODE_1 | BG0_ON | BG1_ON | BG2_ON | OBJ_ON | WIN0_ON | WIN1_ON;
@@ -437,6 +489,10 @@ void minigameFrame(u32 framecount) {
 		} else {
 			offsets.y -= offsets.y >> 4;
 		}
+
+		if (keys & KEY_A) {
+			fireFriendly();
+		}
 		updateBug();
 	};
 
@@ -451,6 +507,7 @@ void minigameFrame(u32 framecount) {
 	spaceship.sprite.sprite.y = 72 - (shipOffsetY >> 9);
 	updateSprite(&spaceship.sprite.sprite, spaceship.sprite.id);
 	ObjAffineSet(&spaceship.sprite.affine, affineTable(0), 1, 8);
+	updateBullets();
 	writeSpriteTable();
 }
 
