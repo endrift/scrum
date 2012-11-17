@@ -383,7 +383,6 @@ void minigameInit(u32 framecount) {
 		}
 		DIV16[i] = ((1 << 24) / (i - 66)) >> 8;
 	}
-	fadeOffset = 16;
 
 	spaceship.sprite.sprite.doublesize = 1;
 	spaceship.sprite.sprite.transformGroup = 0;
@@ -407,6 +406,7 @@ void minigameInit(u32 framecount) {
 }
 
 void showMinigame(u32 framecount) {
+	fadeOffset = 16;
 	irqSet(IRQ_HBLANK, m7);
 	irqEnable(IRQ_HBLANK);
 
