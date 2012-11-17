@@ -108,7 +108,9 @@ typedef struct Bullet {
 } Bullet;
 
 #define FRIENDLY_BULLETS_MAX 2
+#define FRIENDLY_COOLDOWN_TIME 20
 static Bullet friendlyBullets[FRIENDLY_BULLETS_MAX];
+static u32 friendlyCooldown = 0;
 static int activeBullets;
 
 static s16 bgFade[160] = {
@@ -325,12 +327,13 @@ static void updateBug(void) {
 	ObjAffineSet(&bug.sprite.affine, affineTable(1), 1, 8);
 }
 
-static void fireFriendly(void) {
+static void fireFriendly(u32 framecount) {
 	int i;
 	// We must prepend the sprite to get layer ordering right
-	if (activeBullets == FRIENDLY_BULLETS_MAX) {
+	if (activeBullets == FRIENDLY_BULLETS_MAX || friendlyCooldown + FRIENDLY_COOLDOWN_TIME > framecount) {
 		return;
 	}
+	friendlyCooldown = framecount;
 	for (i = activeBullets; i > 0; --i) {
 		Bullet* bullet = &friendlyBullets[i];
 		Bullet* prevBullet = &friendlyBullets[i - 1];
@@ -512,7 +515,7 @@ void minigameFrame(u32 framecount) {
 		}
 
 		if (keys & KEY_A) {
-			fireFriendly();
+			fireFriendly(framecount);
 		}
 		updateBug();
 	};
