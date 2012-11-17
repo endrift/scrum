@@ -560,7 +560,6 @@ void gameBoardInit(u32 framecount) {
 
 	gameBoardFrame(framecount); // We need to realign things twice; this is the easiest way
 
-	DMA3COPY(tile_bluePal, &OBJ_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 4));
 	DMA3COPY(game_backdropPal, &BG_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | (game_backdropPalLen >> 1));
 	DMA3COPY(hud_spritesPal, &BG_COLORS[16 * 5], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
 	DMA3COPY(hud_spritesPal, &OBJ_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 1));
@@ -619,6 +618,7 @@ void gameBoardFrame(u32 framecount) {
 
 void gameBoardSetup(void) {
 	DMA3COPY(tile_bluePal + 1, &BG_COLORS[1], DMA16 | DMA_IMMEDIATE | (16 * 4 - 1));
+	DMA3COPY(tile_bluePal, &OBJ_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 4));
 	resetPlayfield();
 
 	REG_BG0CNT = CHAR_BASE(0) | SCREEN_BASE(2) | 2;

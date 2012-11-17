@@ -84,7 +84,7 @@ void introFrame(u32 framecount) {
 	case LOGO_FADE_IN:
 		if (framecount - introStart < 64) {
 			int value = (framecount - introStart) >> 2;
-			REG_BLDALPHA = value | (0xF - value) << 8;
+			REG_BLDALPHA = (value + 1) | (16 - value) << 8;
 		} else {
 			switchState(LOGO_IDLE, framecount);
 			REG_BLDCNT = 0;
@@ -103,13 +103,13 @@ void introFrame(u32 framecount) {
 			endIntro(framecount);
 		} else {
 			int value = (framecount - introStart) >> 1;
-			REG_BLDALPHA = (0xF - value) | value << 8;
+			REG_BLDALPHA = (16 - value) | value << 8;
 		}
 		break;
 	case TITLE_FADE_IN:
 		if (framecount - introStart <= 64) {
 			int value = (framecount - introStart) >> 2;
-			REG_BLDALPHA = value | (0xF - value) << 8;
+			REG_BLDALPHA = value | (16 - value) << 8;
 		} else {
 			renderText("PRESS START", &(Textarea) {
 				.destination = TILE_BASE_ADR(2),
@@ -135,7 +135,7 @@ void introFrame(u32 framecount) {
 			setRunloop(&gameBoard);
 		} else {
 			int value = (framecount - introStart) >> 1;
-			REG_BLDALPHA = (0xF - value) | value << 8;
+			REG_BLDALPHA = (16 - value) | value << 8;
 		}
 		break;
 	}
