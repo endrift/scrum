@@ -374,6 +374,14 @@ void minigameInit(u32 framecount) {
 	}
 	fadeOffset = 16;
 
+	spaceship.sprite.sprite.doublesize = 1;
+	spaceship.sprite.sprite.transformGroup = 0;
+	spaceship.sprite.id = appendSprite(&spaceship.sprite.sprite);
+	bug.sprite.sprite.transformGroup = 1;
+	bug.sprite.id = appendSprite(&bug.sprite.sprite);
+}
+
+void showMinigame(u32 framecount) {
 	irqSet(IRQ_HBLANK, m7);
 	irqEnable(IRQ_HBLANK);
 
@@ -419,22 +427,10 @@ void minigameInit(u32 framecount) {
 	offsets.z = 0;
 	spaceship.offsetY = -(64 << 9);
 	spaceship.sprite.sprite.mode = 1;
+	spaceship.sprite.sprite.transformed = 1;
 
-	if (spaceship.sprite.id < 0) {
-		spaceship.sprite.sprite.doublesize = 1;
-		spaceship.sprite.sprite.transformGroup = 0;
-		spaceship.sprite.id = appendSprite(&spaceship.sprite.sprite);
-	} else {
-		spaceship.sprite.sprite.transformed = 1;
-	}
-
-	if (bug.sprite.id < 0) {
-		bug.sprite.sprite.transformGroup = 1;
-		bug.sprite.id = appendSprite(&bug.sprite.sprite);
-	} else {
-		bug.sprite.sprite.transformed = 0;
-		updateSprite(&bug.sprite.sprite, bug.sprite.id);
-	}
+	bug.sprite.sprite.transformed = 0;
+	updateSprite(&bug.sprite.sprite, bug.sprite.id);
 	ObjAffineSet(&spaceship.sprite.affine, affineTable(0), 1, 8);
 	ObjAffineSet(&bug.sprite.affine, affineTable(1), 1, 8);
 	writeSpriteTable();

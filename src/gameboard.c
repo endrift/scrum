@@ -554,6 +554,7 @@ void gameBoardInit(u32 framecount) {
 
 	srand(framecount);
 	updateScore();
+	minigameInit(framecount);
 	gameBoardFrame(framecount);
 	gameBoardSetup();
 	resetBoard();
@@ -612,7 +613,7 @@ void gameBoardFrame(u32 framecount) {
 	if (keys & KEY_B) {
 		gameBoard.frame = minigameFrame;
 		hideBoard();
-		minigameInit(framecount);
+		showMinigame(framecount);
 	}
 }
 
