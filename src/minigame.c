@@ -357,7 +357,7 @@ static void updateBullets(void) {
 			bullet->sprite.affine.sX = bullet->sprite.affine.sY = 256 - (bullet->coords.z >> 3);
 			bullet->sprite.sprite.base ^= 2;
 			bullet->sprite.sprite.y = (((82 - (bullet->coords.y >> 8) + (offsets.y >> 9)) * ((1024 << 5) + bullet->coords.z) + (-((128 + (bullet->coords.y << 1) - offsets.y) << 15) * bullet->coords.z))) >> 15;
-			bullet->sprite.sprite.x = 80 - (((bullet->coords.x >> 10) - (offsets.x >> 11)) * ((256 << 5) + bullet->coords.z) >> 13);
+			bullet->sprite.sprite.x = 80 - (((bullet->coords.x >> 11) - (offsets.x >> 12)) * ((256 << 5) + bullet->coords.z) >> 13);
 			ObjAffineSet(&bullet->sprite.affine, affineTable(2), 1, 8);
 		}
 		updateSprite(&bullet->sprite.sprite, bullet->sprite.id);
@@ -503,7 +503,7 @@ void minigameFrame(u32 framecount) {
 
 	spaceship.sprite.affine.theta = -offsets.x >> 2;
 	spaceship.sprite.affine.sX = spaceship.sprite.affine.sY = (shipOffsetY >> 8) + 256;
-	spaceship.sprite.sprite.x = 56 - (offsets.x >> 10);
+	spaceship.sprite.sprite.x = 56 - (offsets.x >> 11);
 	spaceship.sprite.sprite.y = 72 - (shipOffsetY >> 9);
 	updateSprite(&spaceship.sprite.sprite, spaceship.sprite.id);
 	ObjAffineSet(&spaceship.sprite.affine, affineTable(0), 1, 8);
