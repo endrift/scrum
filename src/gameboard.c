@@ -53,6 +53,8 @@ typedef struct GameBoard {
 
 static GameBoard board;
 
+static int paused = 0;
+
 const static Sprite bugSprite = {
 	.x = 183,
 	.y = 119,
@@ -432,6 +434,7 @@ static void dropBlock(void) {
 		updateScore();
 	}
 	genBlock();
+	drawBoard();
 
 	board.timer = 0;
 }
@@ -450,7 +453,7 @@ static void updateTimer() {
 static void blockUp(void) {
 	--board.activeY;
 	if (board.activeY < 0) {
-		board.activeY = 0;
+		board.activeY = GAMEBOARD_ROWS - 1;
 	} else {
 		REG_SOUND1CNT_L = 0x0027;
 		REG_SOUND1CNT_H = 0xA1B4;
@@ -461,7 +464,7 @@ static void blockUp(void) {
 static void blockDown(void) {
 	++board.activeY;
 	if (board.activeY >= GAMEBOARD_ROWS) {
-		board.activeY = GAMEBOARD_ROWS - 1;
+		board.activeY = 0;
 	} else {
 		REG_SOUND1CNT_L = 0x0027;
 		REG_SOUND1CNT_H = 0xA1B4;
@@ -560,6 +563,7 @@ void gameBoardInit(u32 framecount) {
 	resetBoard();
 
 	gameBoardFrame(framecount); // We need to realign things twice; this is the easiest way
+	drawBoard();
 
 	DMA3COPY(game_backdropPal, &BG_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | (game_backdropPalLen >> 1));
 	DMA3COPY(hud_spritesPal, &BG_COLORS[16 * 5], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
@@ -571,56 +575,75 @@ void gameBoardDeinit() {
 }
 
 void gameBoardFrame(u32 framecount) {
-	// Draw the last frame so we can take forever on the next
-	drawBoard();
+	scanKeys();
+	u16 keys = keysDown();
+	u16 unkeys = keysUp();
+
+	if (paused) {
+		if (keys & KEY_START) {
+			board.active.spriteL.mode = 1;
+			board.active.spriteR.mode = 1;
+			REG_BLDCNT = 0x0100;
+			REG_WINOUT = 0x001B;
+			paused = 0;
+		}
+	} else {
+		if (unkeys) {
+			stopRepeat(&keyContext, unkeys);
+		}
+
+		if (keys & KEY_START) {
+			board.active.spriteL.mode = 0;
+			board.active.spriteR.mode = 0;
+			REG_BLDCNT = 0x01FF;
+			REG_WINOUT = 0x003B;
+			REG_BLDY = 0x000A;
+			paused = 1;
+			stopRepeat(&keyContext, 0x3FF);
+		}
+
+		if (keys & KEY_UP) {
+			startRepeat(&keyContext, framecount, KEY_UP);
+			blockUp();
+		}
+
+		if (keys & KEY_DOWN) {
+			startRepeat(&keyContext, framecount, KEY_DOWN);
+			blockDown();
+		}
+
+		doRepeat(&keyContext, framecount);
+
+		if (keys & KEY_A && board.timer > 4) {
+			dropBlock();
+		}
+
+		updateTimer();
+
+		board.active.spriteL.y = board.active.spriteR.y = 160 - 8 - 8 * GAMEBOARD_ROWS + (board.activeY << 3);
+		board.next.spriteL.x = 0xC4 + (3 - board.next.width) * 4;
+		board.next.spriteR.x = 0xD4 + (3 - board.next.width) * 4;
+
+		if (keys & KEY_B) {
+			gameBoard.frame = minigameFrame;
+			hideBoard();
+			showMinigame(framecount);
+		}
+	}
+
+	REG_BLDALPHA = 0x0F0B;
 	updateSprite(&board.active.spriteL, 0);
 	updateSprite(&board.active.spriteR, 1);
 	updateSprite(&board.next.spriteL, 2);
 	updateSprite(&board.next.spriteR, 3);
 	writeSpriteTable();
-
-	scanKeys();
-	u16 keys = keysDown();
-	u16 unkeys = keysUp();
-
-	if (unkeys) {
-		stopRepeat(&keyContext, unkeys);
-	}
-
-	if (keys & KEY_UP) {
-		startRepeat(&keyContext, framecount, KEY_UP);
-		blockUp();
-	}
-
-	if (keys & KEY_DOWN) {
-		startRepeat(&keyContext, framecount, KEY_DOWN);
-		blockDown();
-	}
-
-	doRepeat(&keyContext, framecount);
-
-	if (keys & KEY_A && board.timer > 4) {
-		dropBlock();
-	}
-
-	updateTimer();
-
-	REG_BLDALPHA = 0x0F0B;
-	board.active.spriteL.y = board.active.spriteR.y = 160 - 8 - 8 * GAMEBOARD_ROWS + (board.activeY << 3);
-	board.next.spriteL.x = 0xC4 + (3 - board.next.width) * 4;
-	board.next.spriteR.x = 0xD4 + (3 - board.next.width) * 4;
-
-	if (keys & KEY_B) {
-		gameBoard.frame = minigameFrame;
-		hideBoard();
-		showMinigame(framecount);
-	}
 }
 
 void gameBoardSetup(void) {
 	DMA3COPY(tile_bluePal + 1, &BG_COLORS[1], DMA16 | DMA_IMMEDIATE | (16 * 4 - 1));
 	DMA3COPY(tile_bluePal, &OBJ_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 4));
 	resetPlayfield();
+	drawBoard();
 
 	REG_BG0CNT = CHAR_BASE(0) | SCREEN_BASE(2) | 2;
 	REG_BG1CNT = CHAR_BASE(2) | SCREEN_BASE(3) | 1;
