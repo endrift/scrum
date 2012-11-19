@@ -584,7 +584,6 @@ void gameBoardFrame(u32 framecount) {
 			board.active.spriteL.mode = 1;
 			board.active.spriteR.mode = 1;
 			REG_BLDCNT = 0x0100;
-			REG_WINOUT = 0x001B;
 			paused = 0;
 		}
 	} else {
@@ -596,7 +595,6 @@ void gameBoardFrame(u32 framecount) {
 			board.active.spriteL.mode = 0;
 			board.active.spriteR.mode = 0;
 			REG_BLDCNT = 0x01FF;
-			REG_WINOUT = 0x003B;
 			REG_BLDY = 0x000A;
 			paused = 1;
 			stopRepeat(&keyContext, 0x3FF);

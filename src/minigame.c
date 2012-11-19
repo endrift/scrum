@@ -251,14 +251,18 @@ static void calcMap(int startX, int startY, int endX, int endY, int xOffset, int
 static inline int bulletHit(Bullet* bullet, Bug* bug) {
 	int bugDiffX = bug->currentCoords.x + (bullet->coords.x >> 6);
 	int bugDiffY = 3 * bug->currentCoords.y - (bullet->coords.y >> 4);
-	int bugDiffZ = (128 << 8) + (bullet->coords.z << 2) + bug->currentCoords.z;
-	if (bugDiffZ < -0x1000 || bugDiffZ > 0x1000) {
+	int bugDiffZ = (192 << 8) + (bullet->coords.z << 2) + bug->currentCoords.z;
+	int scatter = bullet->coords.z >> 8;
+	int scatterZ = 128 * scatter;
+	int scatterX = 4 * scatter;
+	int scatterY = 16 * scatter;
+	if (bugDiffZ < -(0x1000 - scatterZ) || bugDiffZ > 0x1000 - scatterZ) {
 		return 0;
 	}
-	if (bugDiffX < -64 || bugDiffX > 64) {
+	if (bugDiffX < -(64 - scatterX) || bugDiffX > 64 - scatterX) {
 		return 0;
 	}
-	if (bugDiffY < -256 || bugDiffY > 256) {
+	if (bugDiffY < -(256 - scatterY) || bugDiffY > 256 - scatterY) {
 		return 0;
 	}
 
@@ -390,31 +394,31 @@ static void updateBullets(void) {
 				bullet->sprite.sprite.transformed = 0;
 				bullet->sprite.sprite.disable = 1;
 				--activeBullets;
-			} else {
-				if (bug.active && bulletHit(bullet, &bug)) {
-					renderText("YHIT", &(Textarea) {
-						.destination = TILE_BASE_ADR(2),
-						.clipX = 185,
-						.clipY = 104,
-						.clipW = 64,
-						.clipH = 16,
-						.baseline = 0
-					}, &largeFont);
-				} else {
-					renderText("NHIT", &(Textarea) {
-						.destination = TILE_BASE_ADR(2),
-						.clipX = 185,
-						.clipY = 104,
-						.clipW = 64,
-						.clipH = 16,
-						.baseline = 0
-					}, &largeFont);
-					bullet->sprite.affine.sX = bullet->sprite.affine.sY = 256 - (bullet->coords.z >> 3);
-					bullet->sprite.sprite.base ^= 2;
-					bullet->sprite.sprite.y = (((82 - (bullet->coords.y >> 8) + (offsets.y >> 9)) * ((1024 << 5) + bullet->coords.z) + (-((128 + (bullet->coords.y << 1) - offsets.y) << 15) * bullet->coords.z))) >> 15;
-					bullet->sprite.sprite.x = 80 - (((bullet->coords.x >> 11) - (offsets.x >> 12)) * ((256 << 5) + bullet->coords.z) >> 13);
-					ObjAffineSet(&bullet->sprite.affine, affineTable(bullet->sprite.sprite.transformGroup), 1, 8);
+			} else if (bug.active && bulletHit(bullet, &bug)) {
+				bug.sprite.sprite.transformed = 0;
+				REG_BLDALPHA = 0;
+				bug.active = 0;
+				int inner;
+				for (inner = i + 1; inner > activeBullets; ++inner) {
+					bullet = &friendlyBullets[i];
+					Bullet* prevBullet = &friendlyBullets[i - 1];
+					int id = prevBullet->sprite.id;
+					int transformGroup = prevBullet->sprite.sprite.transformGroup;
+					prevBullet->coords = bullet->coords;
+					prevBullet->sprite = bullet->sprite;
+					prevBullet->sprite.id = id;
+					prevBullet->sprite.sprite.transformGroup = transformGroup;
+					updateSprite(&prevBullet->sprite.sprite, prevBullet->sprite.id);
 				}
+				bullet->sprite.sprite.transformed = 0;
+				bullet->sprite.sprite.disable = 1;
+				--activeBullets;
+			} else {
+				bullet->sprite.affine.sX = bullet->sprite.affine.sY = 256 - (bullet->coords.z >> 3);
+				bullet->sprite.sprite.base ^= 2;
+				bullet->sprite.sprite.y = (((82 - (bullet->coords.y >> 8) + (offsets.y >> 9)) * ((1024 << 5) + bullet->coords.z) + (-((128 + (bullet->coords.y << 1) - offsets.y) << 15) * bullet->coords.z))) >> 15;
+				bullet->sprite.sprite.x = 80 - (((bullet->coords.x >> 11) - (offsets.x >> 12)) * ((256 << 5) + bullet->coords.z) >> 13);
+				ObjAffineSet(&bullet->sprite.affine, affineTable(bullet->sprite.sprite.transformGroup), 1, 8);
 			}
 			updateSprite(&bullet->sprite.sprite, bullet->sprite.id);
 		}
