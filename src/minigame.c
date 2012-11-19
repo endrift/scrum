@@ -17,6 +17,9 @@
 #include "pcb.h"
 #include "spaceship.h"
 
+// ABANDON HOPE, ALL YE WHO ENTER HERE
+// This logic is horribly hard-coded and I am very sorry.
+
 static void m7();
 
 static enum {
@@ -71,6 +74,7 @@ typedef struct Bug {
 	AffineSprite sprite;
 	Coordinates coords;
 	Coordinates fakeoutCoords;
+	Coordinates currentCoords;
 	int active;
 } Bug;
 
@@ -244,6 +248,23 @@ static void calcMap(int startX, int startY, int endX, int endY, int xOffset, int
 	}
 }
 
+static inline int bulletHit(Bullet* bullet, Bug* bug) {
+	int bugDiffX = bug->currentCoords.x + (bullet->coords.x >> 6);
+	int bugDiffY = 3 * bug->currentCoords.y - (bullet->coords.y >> 4);
+	int bugDiffZ = (128 << 8) + (bullet->coords.z << 2) + bug->currentCoords.z;
+	if (bugDiffZ < -0x1000 || bugDiffZ > 0x1000) {
+		return 0;
+	}
+	if (bugDiffX < -64 || bugDiffX > 64) {
+		return 0;
+	}
+	if (bugDiffY < -256 || bugDiffY > 256) {
+		return 0;
+	}
+
+	return 1;
+}
+
 static void genOctant(int seed, Coordinates* coords) {
 		switch (seed & 0x7) {
 		case 0x0:
@@ -288,12 +309,12 @@ static void generateBug(void) {
 	bug.sprite.sprite.transformed = 1;
 	s32 seed = rand();
 	genOctant(seed >> 12, &bug.coords);
-	genOctant(seed >> 15, &bug.fakeoutCoords);
+	genOctant(seed >> 12, &bug.fakeoutCoords);
 }
 
 static void updateBug(void) {
 	if (!bug.active) {
-		if ((rand() & 0x7F0000) == 0x7F0000) {
+		if ((rand() & 0xF0000) == 0xF0000) {
 			generateBug();
 		} else {
 			return;
@@ -305,8 +326,11 @@ static void updateBug(void) {
 	bug.sprite.affine.sX = bug.sprite.affine.sY = 2048 + (advance >> 4);
 	s32 x = period > 0 ? (bug.coords.x * (2048 - period) + bug.fakeoutCoords.x * period) >> 11 : bug.coords.x;
 	s32 y = period > 0 ? (bug.coords.y * (2048 - period) + bug.fakeoutCoords.y * period) >> 11 : bug.coords.y;
+	bug.currentCoords.x = x;
+	bug.currentCoords.y = y;
+	bug.currentCoords.z = advance;
 	bug.sprite.sprite.y = 24 + ((((((y >> 6) - y) >> 3) + 32) * (-advance >> 9)) >> 6);
-	bug.sprite.sprite.x = 56 + ((((3 * (-offsets.x >> 7) - x) >> 3) * (-advance >> 9)) >> 6);
+	bug.sprite.sprite.x = 56 + (((((-offsets.x >> 6) - x) >> 3) * (-advance >> 9)) >> 6);
 	bug.sprite.sprite.base ^= 0xC;
 	unsigned int blend;
 	if (bug.sprite.affine.sX < 128) {
@@ -367,11 +391,30 @@ static void updateBullets(void) {
 				bullet->sprite.sprite.disable = 1;
 				--activeBullets;
 			} else {
-				bullet->sprite.affine.sX = bullet->sprite.affine.sY = 256 - (bullet->coords.z >> 3);
-				bullet->sprite.sprite.base ^= 2;
-				bullet->sprite.sprite.y = (((82 - (bullet->coords.y >> 8) + (offsets.y >> 9)) * ((1024 << 5) + bullet->coords.z) + (-((128 + (bullet->coords.y << 1) - offsets.y) << 15) * bullet->coords.z))) >> 15;
-				bullet->sprite.sprite.x = 80 - (((bullet->coords.x >> 11) - (offsets.x >> 12)) * ((256 << 5) + bullet->coords.z) >> 13);
-				ObjAffineSet(&bullet->sprite.affine, affineTable(bullet->sprite.sprite.transformGroup), 1, 8);
+				if (bug.active && bulletHit(bullet, &bug)) {
+					renderText("YHIT", &(Textarea) {
+						.destination = TILE_BASE_ADR(2),
+						.clipX = 185,
+						.clipY = 104,
+						.clipW = 64,
+						.clipH = 16,
+						.baseline = 0
+					}, &largeFont);
+				} else {
+					renderText("NHIT", &(Textarea) {
+						.destination = TILE_BASE_ADR(2),
+						.clipX = 185,
+						.clipY = 104,
+						.clipW = 64,
+						.clipH = 16,
+						.baseline = 0
+					}, &largeFont);
+					bullet->sprite.affine.sX = bullet->sprite.affine.sY = 256 - (bullet->coords.z >> 3);
+					bullet->sprite.sprite.base ^= 2;
+					bullet->sprite.sprite.y = (((82 - (bullet->coords.y >> 8) + (offsets.y >> 9)) * ((1024 << 5) + bullet->coords.z) + (-((128 + (bullet->coords.y << 1) - offsets.y) << 15) * bullet->coords.z))) >> 15;
+					bullet->sprite.sprite.x = 80 - (((bullet->coords.x >> 11) - (offsets.x >> 12)) * ((256 << 5) + bullet->coords.z) >> 13);
+					ObjAffineSet(&bullet->sprite.affine, affineTable(bullet->sprite.sprite.transformGroup), 1, 8);
+				}
 			}
 			updateSprite(&bullet->sprite.sprite, bullet->sprite.id);
 		}
@@ -475,7 +518,7 @@ void minigameFrame(u32 framecount) {
 		gameBoardSetup();
 	}
 
-	offsets.z -= 256;
+	offsets.z -= 128;
 
 	if (!((offsets.z >> 9) & 0xF)) {
 		int range = ((offsets.z >> 13) + 8) & 0xF;
