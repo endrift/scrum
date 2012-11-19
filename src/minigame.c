@@ -76,6 +76,7 @@ typedef struct Bug {
 	Coordinates fakeoutCoords;
 	Coordinates currentCoords;
 	int active;
+	int dead;
 } Bug;
 
 static Bug bug = {
@@ -252,7 +253,7 @@ static inline int bulletHit(Bullet* bullet, Bug* bug) {
 	int bugDiffX = bug->currentCoords.x + (bullet->coords.x >> 6);
 	int bugDiffY = 3 * bug->currentCoords.y - (bullet->coords.y >> 4);
 	int bugDiffZ = (192 << 8) + (bullet->coords.z << 2) + bug->currentCoords.z;
-	int scatter = bullet->coords.z >> 8;
+	int scatter = bullet->coords.z >> 10;
 	int scatterZ = 128 * scatter;
 	int scatterX = 4 * scatter;
 	int scatterY = 16 * scatter;
@@ -262,7 +263,7 @@ static inline int bulletHit(Bullet* bullet, Bug* bug) {
 	if (bugDiffX < -(64 - scatterX) || bugDiffX > 64 - scatterX) {
 		return 0;
 	}
-	if (bugDiffY < -(256 - scatterY) || bugDiffY > 256 - scatterY) {
+	if (bugDiffY < -(192 - scatterY) || bugDiffY > 192 - scatterY) {
 		return 0;
 	}
 
@@ -313,10 +314,17 @@ static void generateBug(void) {
 	bug.sprite.sprite.transformed = 1;
 	s32 seed = rand();
 	genOctant(seed >> 12, &bug.coords);
-	genOctant(seed >> 12, &bug.fakeoutCoords);
+	genOctant(seed >> 15, &bug.fakeoutCoords);
 }
 
 static void updateBug(void) {
+	if (bug.dead > 63) {
+		bug.dead = 0;
+		bug.sprite.sprite.transformed = 0;
+		REG_BLDALPHA = 0;
+		bug.active = 0;
+		updateSprite(&bug.sprite.sprite, bug.sprite.id);
+	}
 	if (!bug.active) {
 		if ((rand() & 0xF0000) == 0xF0000) {
 			generateBug();
@@ -325,27 +333,36 @@ static void updateBug(void) {
 		}
 	}
 	s32 advance = offsets.z - bug.coords.z;
-	s32 period = bug.sprite.affine.sX - 256;
 	// TODO: clean this up
 	bug.sprite.affine.sX = bug.sprite.affine.sY = 2048 + (advance >> 4);
+	s32 period = bug.sprite.affine.sX - 256;
 	s32 x = period > 0 ? (bug.coords.x * (2048 - period) + bug.fakeoutCoords.x * period) >> 11 : bug.coords.x;
 	s32 y = period > 0 ? (bug.coords.y * (2048 - period) + bug.fakeoutCoords.y * period) >> 11 : bug.coords.y;
+	y += (bug.dead * bug.dead * advance) >> 18;
 	bug.currentCoords.x = x;
 	bug.currentCoords.y = y;
 	bug.currentCoords.z = advance;
 	bug.sprite.sprite.y = 24 + ((((((y >> 6) - y) >> 3) + 32) * (-advance >> 9)) >> 6);
 	bug.sprite.sprite.x = 56 + (((((-offsets.x >> 6) - x) >> 3) * (-advance >> 9)) >> 6);
-	bug.sprite.sprite.base ^= 0xC;
-	unsigned int blend;
+	unsigned int blend = 0;
+	if (bug.dead) {
+		blend = -bug.dead >> 2;
+		bug.sprite.sprite.transformed ^= 1;
+		++bug.dead;
+	} else {
+		bug.sprite.sprite.base ^= 0xC;
+	}
 	if (bug.sprite.affine.sX < 128) {
 		bug.sprite.sprite.transformed = 0;
 		blend = 0;
 		bug.active = 0;
-	} else if (bug.sprite.affine.sX < 256) {
-		bug.sprite.sprite.transformed ^= 1;
-		blend = ((bug.sprite.affine.sX - 128) >> 3);
+	} if (bug.sprite.affine.sX < 256) {
+		if (!bug.dead) {
+			bug.sprite.sprite.transformed ^= 1;
+		}
+		blend += ((bug.sprite.affine.sX - 128) >> 3);
 	} else {
-		blend = 0xF - (bug.sprite.affine.sX >> 7);
+		blend += 0xF - (bug.sprite.affine.sX >> 7);
 	}
 	if (blend < 0 || blend > 0xF) {
 		blend = 0;			
@@ -394,10 +411,10 @@ static void updateBullets(void) {
 				bullet->sprite.sprite.transformed = 0;
 				bullet->sprite.sprite.disable = 1;
 				--activeBullets;
-			} else if (bug.active && bulletHit(bullet, &bug)) {
-				bug.sprite.sprite.transformed = 0;
-				REG_BLDALPHA = 0;
-				bug.active = 0;
+			} else if (!bug.dead && bulletHit(bullet, &bug)) {
+				bug.dead = 1;
+				--board.bugs;
+				updateScore();
 				int inner;
 				for (inner = i + 1; inner > activeBullets; ++inner) {
 					bullet = &friendlyBullets[i];
@@ -522,7 +539,7 @@ void minigameFrame(u32 framecount) {
 		gameBoardSetup();
 	}
 
-	offsets.z -= 128;
+	offsets.z -= 192;
 
 	if (!((offsets.z >> 9) & 0xF)) {
 		int range = ((offsets.z >> 13) + 8) & 0xF;

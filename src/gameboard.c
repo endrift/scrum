@@ -7,7 +7,6 @@
 #include <gba_video.h>
 
 #include "rng.h"
-#include "sprite.h"
 #include "key.h"
 #include "minigame.h"
 #include "text.h"
@@ -24,34 +23,7 @@ Runloop gameBoard = {
 	.frame = gameBoardFrame
 };
 
-typedef struct Row {
-	u8 color[GAMEBOARD_COLS + GAMEBOARD_DEADZONE];
-	u8 width;
-} Row;
-
-typedef struct Block {
-	Sprite spriteL;
-	Sprite spriteR;
-	int indexL;
-	int indexR;
-	int width;
-	int color;
-} Block;
-
-typedef struct GameBoard {
-	Row rows[GAMEBOARD_ROWS];
-
-	Block active;
-	Block next;
-	int activeY;
-	int timer;
-
-	int score;
-	int lines;
-	int bugs;
-} GameBoard;
-
-static GameBoard board;
+GameBoard board;
 
 static int paused = 0;
 
@@ -272,7 +244,7 @@ static void resetBackdrop(void) {
 
 static void layBlock(void);
 
-static void updateScore(void) {
+void updateScore(void) {
 	static char buffer[10] = "000000000\0";
 
 	// TODO: Unhard-code these coordinates?
