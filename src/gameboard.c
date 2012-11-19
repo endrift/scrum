@@ -390,6 +390,10 @@ static void removeRow(void) {
 static void layBlock(void) {
 	int nextWidth = board.rows[board.activeY].width + board.active.width;
 	int i;
+	if (board.rows[board.activeY].color[board.rows[board.activeY].width - 1] != board.active.color) {
+		++board.bugs;
+		updateScore();
+	}
 	for (i = board.rows[board.activeY].width; i < nextWidth; ++i) {
 		board.rows[board.activeY].color[i] = board.active.color;
 	}
