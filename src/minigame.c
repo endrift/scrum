@@ -604,6 +604,9 @@ void minigameFrame(u32 framecount) {
 // From Tonc
 __attribute__((section(".iwram"), long_call))
 static void m7() {
+	if (REG_VCOUNT > 160) {
+		return;
+	}
 	s32 lam, lcf, lsf, lxr, lyr;
 
 	s16 fade = bgFade[REG_VCOUNT] + fadeOffset;

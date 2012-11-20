@@ -34,9 +34,9 @@ const static Sprite bugSprite = {
 	.palette = 4
 };
 
-u16 timerPalette[16];
+static u16 timerPalette[16];
 
-u16 stupidShinyTransitionStates[160] = {};
+static u16 stupidShinyTransitionStates[160] = {};
 
 static void repeatHandler(KeyContext* context, int key);
 static KeyContext keyContext = {
@@ -619,13 +619,13 @@ void gameBoardFrame(u32 framecount) {
 		break;
 	case GAMEPLAY_FADE_FOR_MINIGAME:
 		REG_DMA0CNT = 0;
-		if (framecount - startFrame < 64) {
+		if (framecount - startFrame < 48) {
 			REG_WININ = 0x3B00;
 			REG_WINOUT = 0x003F;
 			int i;
 			for (i = 16; i < 152; ++i) {
 				if (i & 1) {
-					int state = 4 * (framecount - startFrame) + (i >> 1);
+					int state = 6 * (framecount - startFrame) + (i >> 1);
 					state -= 72;
 					if (state < 8) {
 						state = 8;
@@ -635,7 +635,7 @@ void gameBoardFrame(u32 framecount) {
 					}
 					stupidShinyTransitionStates[i] = 0x0800 + state;
 				} else {
-					int state = 4 * (framecount - startFrame) - (i >> 1);
+					int state = 6 * (framecount - startFrame) - (i >> 1);
 					state = 168 - state;
 					if (state < 8) {
 						state = 8;
