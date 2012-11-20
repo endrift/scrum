@@ -311,6 +311,7 @@ static void genOctant(int seed, Coordinates* coords) {
 static void generateBug(void) {
 	bug.coords.z = offsets.z;
 	bug.active = 1;
+	bug.dead = 0;
 	bug.sprite.sprite.transformed = 1;
 	s32 seed = rand();
 	genOctant(seed >> 12, &bug.coords);
@@ -356,7 +357,7 @@ static void updateBug(void) {
 		bug.sprite.sprite.transformed = 0;
 		blend = 0;
 		bug.active = 0;
-	} if (bug.sprite.affine.sX < 256) {
+	} else if (bug.sprite.affine.sX < 256) {
 		if (!bug.dead) {
 			bug.sprite.sprite.transformed ^= 1;
 		}
