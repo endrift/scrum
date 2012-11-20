@@ -25,8 +25,6 @@ Runloop gameBoard = {
 
 GameBoard board;
 
-static int paused = 0;
-
 const static Sprite bugSprite = {
 	.x = 183,
 	.y = 119,
@@ -38,6 +36,8 @@ const static Sprite bugSprite = {
 
 u16 timerPalette[16];
 
+u16 stupidShinyTransitionStates[160] = {};
+
 static void repeatHandler(KeyContext* context, int key);
 static KeyContext keyContext = {
 	.next = {},
@@ -46,6 +46,19 @@ static KeyContext keyContext = {
 	.repeatDelay = 8,
 	.repeatHandler = repeatHandler
 };
+
+static enum {
+	GAMEPLAY,
+	GAMEPLAY_PAUSED,
+	GAMEPLAY_FADE_FOR_MINIGAME
+} state = GAMEPLAY;
+static u32 startFrame;
+
+static void switchState(int nextState, u32 framecount) {
+	state = nextState;
+	startFrame = framecount;
+	stopRepeat(&keyContext, 0x3FF);
+}
 
 static void drawBoard(void) {
 	u16* mapData = SCREEN_BASE_BLOCK(1);
@@ -555,14 +568,16 @@ void gameBoardFrame(u32 framecount) {
 	u16 keys = keysDown();
 	u16 unkeys = keysUp();
 
-	if (paused) {
+	switch (state) {
+	case GAMEPLAY_PAUSED:
 		if (keys & KEY_START) {
 			board.active.spriteL.mode = 1;
 			board.active.spriteR.mode = 1;
 			REG_BLDCNT = 0x0100;
-			paused = 0;
+			switchState(GAMEPLAY, framecount);
 		}
-	} else {
+		break;
+	case GAMEPLAY:
 		if (unkeys) {
 			stopRepeat(&keyContext, unkeys);
 		}
@@ -572,8 +587,7 @@ void gameBoardFrame(u32 framecount) {
 			board.active.spriteR.mode = 0;
 			REG_BLDCNT = 0x01FF;
 			REG_BLDY = 0x000A;
-			paused = 1;
-			stopRepeat(&keyContext, 0x3FF);
+			switchState(GAMEPLAY_PAUSED, framecount);
 		}
 
 		if (keys & KEY_UP) {
@@ -599,10 +613,49 @@ void gameBoardFrame(u32 framecount) {
 		board.next.spriteR.x = 0xD4 + (3 - board.next.width) * 4;
 
 		if (keys & KEY_B) {
+			BG_COLORS[0] = 0;
+			switchState(GAMEPLAY_FADE_FOR_MINIGAME, framecount);
+		}
+		break;
+	case GAMEPLAY_FADE_FOR_MINIGAME:
+		REG_DMA0CNT = 0;
+		if (framecount - startFrame < 64) {
+			REG_WININ = 0x3B00;
+			REG_WINOUT = 0x003F;
+			int i;
+			for (i = 16; i < 152; ++i) {
+				if (i & 1) {
+					int state = 4 * (framecount - startFrame) + (i >> 1);
+					state -= 72;
+					if (state < 8) {
+						state = 8;
+					}
+					if (state > 168) {
+						state = 168;
+					}
+					stupidShinyTransitionStates[i] = 0x0800 + state;
+				} else {
+					int state = 4 * (framecount - startFrame) - (i >> 1);
+					state = 168 - state;
+					if (state < 8) {
+						state = 8;
+					}
+					if (state > 168) {
+						state = 168;
+					}
+					stupidShinyTransitionStates[i] = 0x00A8 + (state << 8);
+				}
+			}
+			DMA0COPY(stupidShinyTransitionStates, &REG_WIN0H, DMA16 | DMA_REPEAT | DMA_HBLANK | DMA_SRC_INC | DMA_DST_FIXED | 1);
+		} else {
+			REG_WININ = 0x3B3F;
+			REG_WINOUT = 0x001B;
+			REG_WIN0H = 0x08A8;
 			gameBoard.frame = minigameFrame;
 			hideBoard();
 			showMinigame(framecount);
 		}
+		break;
 	}
 
 	REG_BLDALPHA = 0x0F0B;
@@ -631,6 +684,8 @@ void gameBoardSetup(void) {
 	REG_WIN0V = 0x1898;
 	REG_WININ = 0x3B3F;
 	REG_WINOUT = 0x001B;
+
+	switchState(GAMEPLAY, 0);
 
 	board.active.spriteL.disable = 0;
 	board.next.spriteL.disable = 0;
