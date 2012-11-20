@@ -605,7 +605,7 @@ void minigameFrame(u32 framecount) {
 // From Tonc
 __attribute__((section(".iwram"), long_call))
 static void m7() {
-	if (REG_VCOUNT > 160) {
+	if (REG_VCOUNT >= 152 || REG_VCOUNT < 16) {
 		return;
 	}
 	s32 lam, lcf, lsf, lxr, lyr;
