@@ -40,7 +40,7 @@ void clearSpriteTable(void) {
 }
 
 void writeSpriteTable(void) {
-	DMA1COPY(&spriteTable, OAM, DMA16 | DMA_IMMEDIATE | 512);
+	DMA2COPY(&spriteTable, OAM, DMA16 | DMA_IMMEDIATE | 512);
 }
 
 int appendSprite(const Sprite* sprite) {

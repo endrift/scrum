@@ -34,10 +34,9 @@ typedef struct Coordinates {
 } Coordinates;
 static Coordinates camPos, offsets;
 
-static s32 gCos = 256;
-static s32 gSin = 0;
 static s32 DIV16[278];
 static s32 M7_D = 80;
+static s32 M7_W = ((240 - 72 + 8) >> 1);
 
 typedef struct AffineSprite {
 	Sprite sprite;
@@ -600,39 +599,33 @@ void minigameFrame(u32 framecount) {
 	writeSpriteTable();
 }
 
-#define M7_W ((240 - 72 + 8) >> 1)
-
 // From Tonc
 __attribute__((section(".iwram"), long_call))
 static void m7() {
-	if (REG_VCOUNT >= 152 || REG_VCOUNT < 16) {
+	int vcount = REG_VCOUNT;
+	if (vcount >= 152 || vcount < 16) {
 		return;
 	}
-	s32 lam, lcf, lsf, lxr, lyr;
+	s32 lcf, lxr, lyr;
 
-	s16 fade = bgFade[REG_VCOUNT] + fadeOffset;
+	s16 fade = bgFade[vcount] + fadeOffset;
 	if (fade > 0xF) {
 		REG_BLDY = 0xF;
 	} else {
 		REG_BLDY = fade;
 	}
 
-	lam = camPos.y * DIV16[REG_VCOUNT] >> 12;
-	lcf = lam * gCos >> 8;
-	lsf = lam * gSin >> 8;
-
+	lcf = camPos.y * DIV16[vcount] >> 12;
+	
 	REG_BG2PA = lcf >> 4;
-	REG_BG2PC = lsf >> 4;
 
 	// Horizontal offset
 	lxr = M7_W * (lcf >> 4);
-	lyr = (M7_D * lsf) >> 4;
-	REG_BG2X = camPos.x - lxr + lyr;
+	REG_BG2X = camPos.x - lxr;
 
 	// Vertical offset
-	lxr = M7_W * (lsf >> 4);
 	lyr = (M7_D * lcf) >> 4; 
-	REG_BG2Y = camPos.z - lxr - lyr;
+	REG_BG2Y = camPos.z - lyr;
 
 	REG_IF |= IRQ_HBLANK;
 }
