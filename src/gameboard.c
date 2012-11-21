@@ -558,6 +558,7 @@ void gameBoardInit(u32 framecount) {
 	DMA3COPY(game_backdropPal, &BG_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | (game_backdropPalLen >> 1));
 	DMA3COPY(hud_spritesPal, &BG_COLORS[16 * 5], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
 	DMA3COPY(hud_spritesPal, &OBJ_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 1));
+	DMA3COPY(hud_spritesPal, &OBJ_COLORS[16 * 5], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 1));
 	DMA3COPY(hud_spritesPal, timerPalette, DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 1));
 }
 

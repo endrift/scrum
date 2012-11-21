@@ -58,7 +58,7 @@ static struct {
 			.size = 2,
 			.palette = 1,
 			.priority = 3,
-			.transformed = 1
+			.transformed = 0
 		},
 		.id = -1,
 		.affine = {
