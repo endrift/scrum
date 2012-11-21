@@ -9,6 +9,7 @@
 #include "gameboard.h"
 #include "gameParams.h"
 #include "text.h"
+#include "util.h"
 
 #include "endrift.h"
 #include "hud-sprites.h"
@@ -43,7 +44,8 @@ static void endIntro(u32 framecount) {
 	switchState(TITLE_FADE_IN, framecount);
 	REG_DISPCNT = 0;
 	REG_BLDALPHA = 0x0F00;
-	RegisterRamReset(0xC);
+	hzero((u16*) VRAM, 48 * 1024);
+	hzero(BG_PALETTE, 256);
 	REG_BG1CNT = CHAR_BASE(2) | SCREEN_BASE(1) | 1;
 	DMA3COPY(hud_spritesPal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
 	BG_COLORS[0] = 0;
@@ -133,7 +135,8 @@ void introFrame(u32 framecount) {
 		if (framecount - introStart >= 32) {
 			currentParams = defaultParams;
 			REG_DISPCNT = 0;
-			RegisterRamReset(0xC);
+			hzero((u16*) VRAM, 48 * 1024);
+			hzero(BG_PALETTE, 256);
 			setRunloop(&gameBoard);
 		} else {
 			int value = (framecount - introStart) >> 1;

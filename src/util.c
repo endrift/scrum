@@ -1,5 +1,7 @@
 #include "util.h"
 
+#include <gba_systemcalls.h>
+
 void formatNumber(char* buffer, unsigned int len, unsigned int value) {
 	int i;
 	for (i = 0; i < len; ++i) {
@@ -25,4 +27,9 @@ void clearBlock(u16* base, int startX, int startY, int width, int height) {
 			base[swizzled >> 1] &= ~(0xF << (4 * (x & 3)));
 		}
 	}
+}
+
+void hzero(u16* base, int hsize) {
+	int source = 0;
+	CpuSet(&source, base, hsize | 0x1000000);
 }
