@@ -7,6 +7,7 @@
 #include <gba_video.h>
 
 #include "gameboard.h"
+#include "gameParams.h"
 #include "text.h"
 
 #include "endrift.h"
@@ -130,6 +131,7 @@ void introFrame(u32 framecount) {
 		break;
 	case TITLE_FADE_OUT:
 		if (framecount - introStart >= 32) {
+			currentParams = defaultParams;
 			REG_DISPCNT = 0;
 			RegisterRamReset(0xC);
 			setRunloop(&gameBoard);

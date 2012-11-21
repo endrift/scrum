@@ -24,6 +24,7 @@ Runloop gameBoard = {
 };
 
 GameBoard board;
+GameParameters currentParams;
 
 const static Sprite bugSprite = {
 	.x = 183,
@@ -403,7 +404,7 @@ static void removeRow(void) {
 static void layBlock(void) {
 	int nextWidth = board.rows[board.activeY].width + board.active.width;
 	int i;
-	if (board.rows[board.activeY].color[board.rows[board.activeY].width - 1] != board.active.color) {
+	if (currentParams.hasColorMismatchBugs && board.rows[board.activeY].color[board.rows[board.activeY].width - 1] != board.active.color) {
 		++board.bugs;
 		updateScore();
 	}
@@ -432,9 +433,9 @@ static void updateTimer() {
 	++board.timer;
 	int i;
 	for (i = 0; i < 16; ++i) {
-		OBJ_COLORS[16 * 5 + i] = timerPalette[i] + ((board.timer >> 4) & 0xF);
+		OBJ_COLORS[16 * 5 + i] = timerPalette[i] + (board.timer << 4) / currentParams.dropTimerLength;
 	}
-	if (!((board.timer + 1) & 0xFF)) {
+	if (board.timer == currentParams.dropTimerLength) {
 		dropBlock();
 	}
 }
@@ -602,7 +603,7 @@ void gameBoardFrame(u32 framecount) {
 
 		doRepeat(&keyContext, framecount);
 
-		if (keys & KEY_A && board.timer > 4) {
+		if (keys & KEY_A && board.timer > 9) {
 			dropBlock();
 		}
 

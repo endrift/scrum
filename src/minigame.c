@@ -111,9 +111,7 @@ typedef struct Bullet {
 	Coordinates coords;
 } Bullet;
 
-#define FRIENDLY_BULLETS_MAX 2
-#define FRIENDLY_COOLDOWN_TIME 20
-static Bullet friendlyBullets[FRIENDLY_BULLETS_MAX];
+static Bullet friendlyBullets[32];
 static u32 friendlyCooldown = 0;
 static int activeBullets;
 
@@ -375,7 +373,7 @@ static void updateBug(void) {
 static void fireFriendly(u32 framecount) {
 	int i;
 	// We must prepend the sprite to get layer ordering right
-	if (activeBullets == FRIENDLY_BULLETS_MAX || friendlyCooldown + FRIENDLY_COOLDOWN_TIME > framecount) {
+	if (activeBullets == currentParams.bulletsMax || friendlyCooldown + currentParams.bulletCooldown > framecount) {
 		return;
 	}
 	friendlyCooldown = framecount;
@@ -456,7 +454,7 @@ void minigameInit(u32 framecount) {
 	spaceship.sprite.id = appendSprite(&spaceship.sprite.sprite);
 
 	activeBullets = 0;
-	for (i = 0; i < FRIENDLY_BULLETS_MAX; ++i) {
+	for (i = 0; i < currentParams.bulletsMax; ++i) {
 		Bullet* bullet = &friendlyBullets[i];
 		bullet->sprite.sprite.base = 224;
 		bullet->sprite.sprite.palette = 3;
@@ -465,7 +463,11 @@ void minigameInit(u32 framecount) {
 		bullet->sprite.sprite.transformGroup = 2 + i;
 		bullet->sprite.sprite.disable = 1;
 		bullet->sprite.sprite.priority = 3;
-		bullet->sprite.id = appendSprite(&bullet->sprite.sprite);
+		if (bullet->sprite.id > 0) {
+			updateSprite(&bullet->sprite.sprite, bullet->sprite.id);
+		} else {
+			bullet->sprite.id = appendSprite(&bullet->sprite.sprite);
+		}
 	}
 
 	bug.sprite.sprite.transformGroup = 1;
@@ -539,7 +541,7 @@ void minigameFrame(u32 framecount) {
 		gameBoardSetup();
 	}
 
-	offsets.z -= 192;
+	offsets.z -= currentParams.bugSpeed;
 
 	if (!((offsets.z >> 9) & 0xF)) {
 		int range = ((offsets.z >> 13) + 8) & 0xF;

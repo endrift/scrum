@@ -3,6 +3,7 @@
 
 #include <gba_types.h>
 
+#include "gameParams.h"
 #include "runloop.h"
 #include "sprite.h"
 
@@ -47,5 +48,6 @@ typedef struct GameBoard {
 } GameBoard;
 
 extern GameBoard board;
+extern GameParameters currentParams;
 
 #endif
