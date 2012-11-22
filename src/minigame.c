@@ -216,6 +216,7 @@ static s16 bgFade[160] = {
 static s16 fadeOffset = 0;
 
 static int killstreak = 0;
+static int birthstreak = 0;
 
 static void switchState(int nextState, u32 framecount) {
 	state = nextState;
@@ -358,6 +359,9 @@ static void updateBug(void) {
 		bug.active = 0;
 		if (!bug.dead) {
 			killstreak = 0;
+			++birthstreak;
+			board.bugs += birthstreak;
+			updateScore();
 		}
 	} else if (bug.sprite.affine.sX < 256) {
 		bug.active = 2;
@@ -420,6 +424,7 @@ static void updateBullets(void) {
 				++killstreak;
 				board.score += killstreak;
 				--board.bugs;
+				birthstreak = 0;
 				updateScore();
 				int inner;
 				for (inner = i + 1; inner > activeBullets; ++inner) {
@@ -531,6 +536,7 @@ void showMinigame(u32 framecount) {
 
 	switchState(FLYING_INTRO, framecount);
 	killstreak = 0;
+	birthstreak = 0;
 	offsets.x = 0;
 	offsets.y = -32 << 8;
 	offsets.z = 0;
