@@ -687,7 +687,7 @@ void gameBoardFrame(u32 framecount) {
 		updateTimer(framecount);
 		updateBlocks();
 
-		if (keys & KEY_B) {
+		if (keys & KEY_B && board.bugs >= currentParams.bugEntryThreshold) {
 			BG_COLORS[0] = 0;
 			switchState(GAMEPLAY_FADE_FOR_MINIGAME, framecount);
 		}

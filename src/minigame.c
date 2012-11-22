@@ -369,7 +369,7 @@ static void updateBug(void) {
 		blend += 0xF - (bug.sprite.affine.sX >> 7);
 	}
 	if (blend < 0 || blend > 0xF) {
-		blend = 0;			
+		blend = 0;
 	}
 	REG_BLDALPHA = blend;
 	updateSprite(&bug.sprite.sprite, bug.sprite.id);
@@ -594,18 +594,18 @@ void minigameFrame(u32 framecount) {
 			fireFriendly(framecount);
 		}
 		updateBug();
-		if (board.bugs == 0) {
+		if ((!bug.active || bug.dead >= 16) && board.bugs <= currentParams.bugKickThreshold) {
 			switchState(FLYING_END, framecount);
 		}
 		break;
 	case FLYING_END:
-		offsets.x -= (offsets.x >> 4);
-		offsets.y += 512 - (offsets.y >> 5);
+		offsets.x = (offsets.x * 65) >> 6;
+		offsets.y += 768 - (offsets.y >> 5);
 		offsets.z -= (((framecount - startFrame) >> 4) + 1) * currentParams.bugSpeed;
 		spaceship.offsetY -= spaceship.offsetY >> 4;
 		spaceship.sprite.sprite.mode = 1;
 		fadeOffset = (framecount - startFrame) >> 2;
-		if (board.bugs > 0 || bug.active) {
+		if (board.bugs > 0 && bug.active) {
 			bug.coords.y = (((bug.coords.y + 256) * 33) >> 5) - 256;
 			bug.coords.x = (bug.coords.x * 33) >> 5;
 			updateBug();
@@ -624,7 +624,7 @@ void minigameFrame(u32 framecount) {
 
 	spaceship.sprite.affine.theta = -offsets.x >> 2;
 	spaceship.sprite.affine.sX = spaceship.sprite.affine.sY = (shipOffsetY >> 8) + 256;
-	spaceship.sprite.sprite.x = 56 - (offsets.x >> 11);
+	spaceship.sprite.sprite.x = 56 - (offsets.x >> 11) + (state == FLYING_END ? (offsets.x * (framecount - startFrame) >> 14) : 0);
 	spaceship.sprite.sprite.y = 72 - (shipOffsetY >> 9);
 	updateSprite(&spaceship.sprite.sprite, spaceship.sprite.id);
 	ObjAffineSet(&spaceship.sprite.affine, affineTable(0), 1, 8);
