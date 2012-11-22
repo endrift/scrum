@@ -545,7 +545,7 @@ void minigameFrame(u32 framecount) {
 	scanKeys();
 	u16 keys = keysDown();
 
-	if (keys & KEY_B) {
+	if (keys & KEY_B && board.bugs < currentParams.bugShuntThreshold) {
 		irqDisable(IRQ_HBLANK);
 		hideMinigame();
 		gameBoard.frame = gameBoardFrame;

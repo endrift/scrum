@@ -381,13 +381,17 @@ static void resetBoard(void) {
 	}
 }
 
-static void removeRow(void) {
+static void removeRow(u32 framecount) {
 	int x;
 	Row* row = &board.rows[board.activeY];
 	int color = row->color[row->width - 1];
 	int score = -board.active.width;
 	if (row->width > GAMEBOARD_COLS) {
 		board.bugs += row->width - GAMEBOARD_COLS;
+		if (board.bugs >= currentParams.bugShuntThreshold) {
+			BG_COLORS[0] = 0;
+			switchState(GAMEPLAY_FADE_FOR_MINIGAME, framecount);
+		}
 	}
 	for (x = row->width - 1; x >= 0; --x) {
 		if (row->color[x] != color) {
@@ -423,14 +427,18 @@ static void layBlock(void) {
 	board.rows[board.activeY].width = i;
 }
 
-static void dropBlock(void) {
+static void dropBlock(u32 framecount) {
 	REG_SOUND1CNT_L = 0x001F;
 	REG_SOUND1CNT_H = 0xE2B4;
 	REG_SOUND1CNT_X = 0x8500;
 	layBlock();
 	if (board.rows[board.activeY].width >= GAMEBOARD_COLS) {
-		removeRow();
+		removeRow(framecount);
 		updateScore();
+		if (board.bugs >= currentParams.bugShuntThreshold) {
+			BG_COLORS[0] = 0;
+			switchState(GAMEPLAY_FADE_FOR_MINIGAME, framecount);
+		}
 	}
 	genBlock();
 	drawBoard();
@@ -448,14 +456,14 @@ static void updateBlocks(void) {
 	updateBlockSprite(&board.next);
 }
 
-static void updateTimer(void) {
+static void updateTimer(u32 framecount) {
 	++board.timer;
 	int i;
 	for (i = 0; i < 16; ++i) {
 		OBJ_COLORS[16 * 5 + i] = timerPalette[i] + (board.timer << 4) / currentParams.dropTimerLength;
 	}
 	if (board.timer == currentParams.dropTimerLength) {
-		dropBlock();
+		dropBlock(framecount);
 	}
 }
 
@@ -673,10 +681,10 @@ void gameBoardFrame(u32 framecount) {
 		doRepeat(&keyContext, framecount);
 
 		if (keys & KEY_A && board.timer > 9) {
-			dropBlock();
+			dropBlock(framecount);
 		}
 
-		updateTimer();
+		updateTimer(framecount);
 		updateBlocks();
 
 		if (keys & KEY_B) {
