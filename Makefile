@@ -19,8 +19,9 @@ include $(DEVKITARM)/gba_rules
 TARGET		:=	$(shell basename $(CURDIR))
 BUILD		:=	build
 SOURCES		:=	src
-DATA		:=  data
+DATA		:=  
 GRAPHICS	:=	graphics
+FONTS		:=	graphics/fonts
 INCLUDES	:=	include
 TITLE		:=	GHUB GAMEOFF
 MAKER		:=	8N
@@ -67,7 +68,8 @@ ifneq ($(BUILD),$(notdir $(CURDIR)))
 export OUTPUT	:=	$(CURDIR)/$(TARGET)
 export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
 			$(foreach dir,$(DATA),$(CURDIR)/$(dir)) \
-			$(foreach dir,$(GRAPHICS),$(CURDIR)/$(dir))
+			$(foreach dir,$(GRAPHICS),$(CURDIR)/$(dir)) \
+			$(foreach dir,$(FONTS),$(CURDIR)/$(dir))
 
 export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
@@ -80,6 +82,7 @@ SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
 BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
 BMPFILES	:=	$(foreach dir,$(GRAPHICS),$(notdir $(wildcard $(dir)/*.bmp)))
 GRITFILES	:=	$(foreach dir,$(GRAPHICS),$(notdir $(wildcard $(dir)/*.grit)))
+FONTFILES	:=	$(foreach dir,$(FONTS),$(notdir $(wildcard $(dir)/*.bmp)))
 
 #---------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
@@ -96,7 +99,7 @@ endif
 #---------------------------------------------------------------------------------
 
 export OFILES	:=	$(addsuffix .o,$(BINFILES)) \
-					$(BMPFILES:.bmp=.o) $(GRITFILES:.grit=.o) \
+					$(BMPFILES:.bmp=.o) $(GRITFILES:.grit=.o) $(FONTFILES:.bmp=.font.o)\
 					$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
 
 #---------------------------------------------------------------------------------
@@ -159,6 +162,19 @@ $(OUTPUT).elf	:	$(OFILES)
 #---------------------------------------------------------------------------------
 	@echo $(notdir $<)
 	@$(bin2o)
+
+#---------------------------------------------------------------------------------
+%.font.o	:	%.font
+#---------------------------------------------------------------------------------
+	@echo $(notdir $<)
+	@$(bin2o)
+
+#---------------------------------------------------------------------------------
+%.font	:	%.bmp
+#---------------------------------------------------------------------------------
+	@echo $(notdir $<)
+	@dd if=$< of=$@ bs=1 skip=74
+
 
 #---------------------------------------------------------------------------------
 # This rule creates assembly source files using grit

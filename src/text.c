@@ -2,8 +2,8 @@
 
 #include <string.h>
 
-#include "fontLarge_bin.h"
-#include "fontThin_bin.h"
+#include "large_font.h"
+#include "thin_font.h"
 
 struct Font {
 	unsigned int gridW;
@@ -302,7 +302,7 @@ const Font largeFont = {
 	.gridW = 16,
 	.gridH = 16,
 	.baseline = 0,
-	.grid = (u16*) fontLarge_bin,
+	.grid = (u16*) large_font,
 	.metrics = &largeFontMetrics
 };
 
@@ -310,7 +310,7 @@ const Font thinFont = {
 	.gridW = 8,
 	.gridH = 16,
 	.baseline = 0,
-	.grid = (u16*) fontThin_bin,
+	.grid = (u16*) thin_font,
 	.metrics = &thinFontMetrics
 };
 
