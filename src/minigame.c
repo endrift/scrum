@@ -26,7 +26,8 @@ static void m7();
 static enum {
 	FLYING_INTRO,
 	FLYING_GAMEPLAY,
-	FLYING_END
+	FLYING_END,
+	FLYING_GAME_OVER
 } state = FLYING_INTRO;
 
 static u32 startFrame;
@@ -511,7 +512,7 @@ void showMinigame(u32 framecount) {
 
 	REG_DISPCNT = MODE_1 | BG0_ON | BG1_ON | BG2_ON | OBJ_ON | WIN0_ON | WIN1_ON;
 	REG_BG2CNT = CHAR_BASE(1) | SCREEN_BASE(4) | 0xA003;
-	REG_BLDCNT = 0x24EF;
+	REG_BLDCNT = 0x24ED;
 	REG_WIN0V = 0x4098;
 	REG_WIN1H = 0x08A8;
 	REG_WIN1V = 0x1840;
@@ -603,6 +604,9 @@ void minigameFrame(u32 framecount) {
 		if ((!bug.active || bug.dead >= 16) && board.bugs <= currentParams.bugKickThreshold) {
 			switchState(FLYING_END, framecount);
 		}
+		if (board.bugs >= currentParams.maxBugs) {
+			switchState(FLYING_GAME_OVER, framecount);
+		}
 		break;
 	case FLYING_END:
 		offsets.x = (offsets.x * 65) >> 6;
@@ -619,6 +623,33 @@ void minigameFrame(u32 framecount) {
 		REG_BLDALPHA = fadeOffset > 0xF ? 0 : 0xF - fadeOffset;
 		if ((framecount - startFrame) >= 64) {
 			hideMinigame(framecount);
+		}
+		break;
+	case FLYING_GAME_OVER:
+		if (framecount - 1 == startFrame) {
+			renderText("GAME OVER", &(Textarea) {
+				.destination = TILE_BASE_ADR(2),
+				.clipX = 47,
+				.clipY = 76,
+				.clipW = 160,
+				.clipH = 16,
+				.baseline = 0
+			}, &largeFont);
+			mapText(SCREEN_BASE_BLOCK(3), 1, 22, 9, 12, 5);
+		}
+		if (framecount - startFrame >= 128) {
+			spaceship.sprite.sprite.transformed = 0;
+		} else {
+			spaceship.sprite.sprite.mode = 1;
+			spaceship.sprite.sprite.transformed ^= 1;
+			offsets.x -= (offsets.x >> 6);
+			offsets.y -= (11 * (framecount - startFrame) * (framecount - startFrame)) >> 9;
+			if (offsets.y < 1024 - (64 << 8)) {
+				offsets.y = 1024 - (64 << 8);
+				spaceship.sprite.sprite.transformed = 0;
+			}
+			fadeOffset = (framecount - startFrame) >> 4;
+			REG_BLDALPHA = 0xF - ((framecount - startFrame) >> 3);
 		}
 		break;
 	};

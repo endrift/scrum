@@ -644,6 +644,7 @@ void gameBoardFrame(u32 framecount) {
 			mapText(SCREEN_BASE_BLOCK(3), 1, 22, 9, 12, 5);
 		} else if (framecount - startFrame == 120 || keys) {
 			unmapText(SCREEN_BASE_BLOCK(3), 1, 22, 9, 12);
+			clearBlock(TILE_BASE_ADR(2), 11, 76, 160, 16);
 			switchState(GAMEPLAY, framecount);
 		}
 		break;
