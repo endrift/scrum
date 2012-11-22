@@ -435,10 +435,10 @@ static void dropBlock(u32 framecount) {
 	if (board.rows[board.activeY].width >= GAMEBOARD_COLS) {
 		removeRow(framecount);
 		updateScore();
-		if (board.bugs >= currentParams.bugShuntThreshold) {
-			BG_COLORS[0] = 0;
-			switchState(GAMEPLAY_FADE_FOR_MINIGAME, framecount);
-		}
+	}
+	if (board.bugs >= currentParams.bugShuntThreshold) {
+		BG_COLORS[0] = 0;
+		switchState(GAMEPLAY_FADE_FOR_MINIGAME, framecount);
 	}
 	genBlock();
 	drawBoard();
