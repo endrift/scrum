@@ -463,22 +463,20 @@ static void blockUp(void) {
 	--board.activeY;
 	if (board.activeY < 0) {
 		board.activeY = GAMEBOARD_ROWS - 1;
-	} else {
-		REG_SOUND1CNT_L = 0x0027;
-		REG_SOUND1CNT_H = 0xA1B4;
-		REG_SOUND1CNT_X = 0x8500;
 	}
+	REG_SOUND1CNT_L = 0x0027;
+	REG_SOUND1CNT_H = 0xA1B4;
+	REG_SOUND1CNT_X = 0x8500;
 }
 
 static void blockDown(void) {
 	++board.activeY;
 	if (board.activeY >= GAMEBOARD_ROWS) {
 		board.activeY = 0;
-	} else {
-		REG_SOUND1CNT_L = 0x0027;
-		REG_SOUND1CNT_H = 0xA1B4;
-		REG_SOUND1CNT_X = 0x8440;
 	}
+	REG_SOUND1CNT_L = 0x0027;
+	REG_SOUND1CNT_H = 0xA1B4;
+	REG_SOUND1CNT_X = 0x8440;
 }
 
 static void hideBoard(void) {
