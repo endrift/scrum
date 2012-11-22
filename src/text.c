@@ -16,7 +16,14 @@ struct Font {
 const Glyph largeFontGlyphs[128] = {
 	{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
 	{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
-	{ .width = 8 }, {}, {}, {}, {},
+	{ // space 
+		.width = 8 
+	},
+	{ // !
+		.clipLeft = 3,
+		.clipWidth = 10,
+		.width = 9
+	}, {}, {}, {},
 	{ // %
 		.clipLeft = 1,
 		.clipWidth = 14,
@@ -356,6 +363,15 @@ void mapText(u16* mapData, int startX, int endX, int startY, int endY, int palet
 	for (y = startY; y < endY; ++y) {
 		for (x = startX; x < endX; ++x) {
 			mapData[x + y * 32] = (x + y * 32) | (palette << 12);
+		}
+	}
+}
+
+void unmapText(u16* mapData, int startX, int endX, int startY, int endY) {
+	int x, y;
+	for (y = startY; y < endY; ++y) {
+		for (x = startX; x < endX; ++x) {
+			mapData[x + y * 32] = 0;
 		}
 	}
 }

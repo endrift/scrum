@@ -39,6 +39,9 @@ static u16 timerPalette[16];
 
 static u16 stupidShinyTransitionStates[160] = {};
 
+static int introRow;
+static int introBlock;
+
 static void repeatHandler(KeyContext* context, int key);
 static KeyContext keyContext = {
 	.next = {},
@@ -49,16 +52,19 @@ static KeyContext keyContext = {
 };
 
 static enum {
+	LOADING_INTRO,
+	PRE_GAMEPLAY,
 	GAMEPLAY,
 	GAMEPLAY_PAUSED,
 	GAMEPLAY_FADE_FOR_MINIGAME
-} state = GAMEPLAY;
+} state;
 static u32 startFrame;
 
 static void switchState(int nextState, u32 framecount) {
 	state = nextState;
 	startFrame = framecount;
 	stopRepeat(&keyContext, 0x3FF);
+	gameBoard.frame(framecount);
 }
 
 static void drawBoard(void) {
@@ -221,17 +227,17 @@ static void resetBackdrop(void) {
 			.y = 16 * y + 48,
 			.base = 280,
 			.palette = 4,
-			.shape = 0,
-			.size = 2
+			.shape = 2,
+			.size = 1
 		});
 
 		appendSprite(&(Sprite) {
-			.x = 144,
+			.x = 168,
 			.y = 16 * y + 48,
 			.base = 280,
 			.palette = 5,
-			.shape = 0,
-			.size = 2,
+			.shape = 2,
+			.size = 1,
 			.hflip = 1
 		});
 
@@ -240,17 +246,17 @@ static void resetBackdrop(void) {
 			.y = 16 * y + 48,
 			.base = 280,
 			.palette = 4,
-			.shape = 0,
-			.size = 2
+			.shape = 2,
+			.size = 1
 		});
 
 		appendSprite(&(Sprite) {
-			.x = 208,
+			.x = 232,
 			.y = 16 * y + 48,
 			.base = 280,
 			.palette = 4,
-			.shape = 0,
-			.size = 2,
+			.shape = 2,
+			.size = 1,
 			.hflip = 1
 		});
 	}
@@ -320,12 +326,12 @@ static void updateBlockSprite(Block* block) {
 		break;
 	case 3:
 		block->spriteL.shape = 1;
-		block->spriteR.disable = 0;
+		block->spriteR.disable = block->spriteL.disable;
 		block->spriteR.shape = 0;
 		break;
 	case 4:
 		block->spriteL.shape = 1;
-		block->spriteR.disable = 0;
+		block->spriteR.disable = block->spriteL.disable;
 		block->spriteR.shape = 1;
 		break;
 	}
@@ -344,20 +350,24 @@ static void genBlock(void) {
 	updateBlockSprite(&board.next);
 }
 
+static void layRandom(row) {
+	u32 seed = rand() >> 16;
+	int width = (seed % 3) + 1;
+	int color = (seed >> 2) & 3;
+	int x;
+	for (x = 0; x < width; ++x) {
+		board.rows[row].color[x + board.rows[row].width] = color;
+	}
+	board.rows[row].width += width;
+}
+
 static void genRow(int row) {
 	int i;
 	int y = board.activeY;
 	board.activeY = row;
 	board.rows[row].width = 0;
 	for (i = 0; i < 4; ++i) {
-		u32 seed = rand() >> 16;
-		int width = (seed % 3) + 1;
-		int color = (seed >> 2) & 3;
-		int x;
-		for (x = 0; x < width; ++x) {
-			board.rows[row].color[x + board.rows[row].width] = color;
-		}
-		board.rows[row].width += width;
+		layRandom(row);
 	}
 	board.activeY = y;
 }
@@ -368,7 +378,6 @@ static void resetBoard(void) {
 	int y;
 	for (y = 0; y < GAMEBOARD_ROWS; ++y) {
 		board.rows[y].width = 0;
-		genRow(y);
 	}
 }
 
@@ -429,7 +438,17 @@ static void dropBlock(void) {
 	board.timer = 0;
 }
 
-static void updateTimer() {
+static void updateBlocks(void) {
+	board.active.spriteL.y = board.active.spriteR.y = 160 - 8 - 8 * GAMEBOARD_ROWS + (board.activeY << 3);
+	board.next.spriteL.x = 0xC4 + (3 - board.next.width) * 4;
+	board.next.spriteR.x = 0xD4 + (3 - board.next.width) * 4;
+	board.active.spriteL.disable = 0;
+	board.next.spriteL.disable = 0;
+	updateBlockSprite(&board.active);
+	updateBlockSprite(&board.next);
+}
+
+static void updateTimer(void) {
 	++board.timer;
 	int i;
 	for (i = 0; i < 16; ++i) {
@@ -495,8 +514,12 @@ void gameBoardInit(u32 framecount) {
 	DMA3COPY(hud_spritesTiles, TILE_BASE_ADR(4) + 0x1400, DMA16 | DMA_IMMEDIATE | (hud_spritesTilesLen >> 1));
 
 	clearSpriteTable();
-	board.next.spriteL.raw.a = 0x408C;
-	board.next.spriteR.raw.a = 0x408C;
+	board.next.spriteL.raw.a = 0x428C;
+	board.next.spriteL.priority = 2;
+	board.next.spriteR.raw.a = 0x428C;
+	board.next.spriteR.priority = 2;
+	board.active.spriteL.disable = 1;
+	board.active.spriteR.disable = 1;
 	insertSprite(&board.next.spriteL, 0);
 	insertSprite(&board.next.spriteR, 1);
 	insertSprite(&board.next.spriteL, 2);
@@ -506,7 +529,7 @@ void gameBoardInit(u32 framecount) {
 
 	resetBackdrop();
 
-	mapText(SCREEN_BASE_BLOCK(3), 20, 32, 0, 17, 5);
+	mapText(SCREEN_BASE_BLOCK(3), 0, 32, 0, 20, 5);
 
 	// TODO: Move to constants
 	renderText("SCORE", &(Textarea) {
@@ -536,24 +559,26 @@ void gameBoardInit(u32 framecount) {
 		.baseline = 0
 	}, &largeFont);
 
-	renderText("DEBUG", &(Textarea) {
+	renderText("CLONING REPOSITORY", &(Textarea) {
 		.destination = TILE_BASE_ADR(2),
-		.clipX = 186,
-		.clipY = 136,
-		.clipW = 64,
+		.clipX = 12,
+		.clipY = 76,
+		.clipW = 160,
 		.clipH = 16,
 		.baseline = 0
 	}, &largeFont);
 
 	srand(framecount);
 	updateScore();
+	switchState(LOADING_INTRO, framecount);
 	minigameInit(framecount);
-	gameBoardFrame(framecount);
-	gameBoardSetup();
+	gameBoardSetup(framecount);
 	resetBoard();
 
-	gameBoardFrame(framecount); // We need to realign things twice; this is the easiest way
 	drawBoard();
+
+	introRow = 0;
+	introBlock = 0;
 
 	DMA3COPY(game_backdropPal, &BG_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | (game_backdropPalLen >> 1));
 	DMA3COPY(hud_spritesPal, &BG_COLORS[16 * 5], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
@@ -569,8 +594,53 @@ void gameBoardFrame(u32 framecount) {
 	scanKeys();
 	u16 keys = keysDown();
 	u16 unkeys = keysUp();
+	static char buffer[5] = "000%\0";
 
 	switch (state) {
+	case LOADING_INTRO:
+		formatNumber(buffer, 3, 100 * (framecount - startFrame) / (GAMEBOARD_ROWS * 8 + 1));
+		renderText(buffer, &(Textarea) {
+			.destination = TILE_BASE_ADR(2),
+			.clipX = 188,
+			.clipY = 136,
+			.clipW = 64,
+			.clipH = 16,
+			.baseline = 0
+		}, &largeFont);
+		if (!((framecount - startFrame + 1) & 1)) {
+			if (introRow == GAMEBOARD_ROWS) {
+				clearBlock(TILE_BASE_ADR(2), 188, 136, 64, 16);
+				clearBlock(TILE_BASE_ADR(2), 12, 72, 160, 16);
+				switchState(PRE_GAMEPLAY, framecount);
+			} else {
+				layRandom(introRow);
+				++introBlock;
+				if (introBlock == 4) {
+					introBlock = 0;
+					++introRow;
+				}
+				drawBoard();
+			}
+		}
+		break;
+	case PRE_GAMEPLAY:
+		if (framecount == startFrame + 1) {
+			updateBlocks();
+			unmapText(SCREEN_BASE_BLOCK(3), 1, 22, 9, 12);
+			renderText("BEGIN PROGRAMMING!", &(Textarea) {
+				.destination = TILE_BASE_ADR(2),
+				.clipX = 11,
+				.clipY = 76,
+				.clipW = 160,
+				.clipH = 16,
+				.baseline = 0
+			}, &largeFont);
+			mapText(SCREEN_BASE_BLOCK(3), 1, 22, 9, 12, 5);
+		} else if (framecount - startFrame == 120 || keys) {
+			unmapText(SCREEN_BASE_BLOCK(3), 1, 22, 9, 12);
+			switchState(GAMEPLAY, framecount);
+		}
+		break;
 	case GAMEPLAY_PAUSED:
 		if (keys & KEY_START) {
 			board.active.spriteL.mode = 1;
@@ -609,10 +679,7 @@ void gameBoardFrame(u32 framecount) {
 		}
 
 		updateTimer();
-
-		board.active.spriteL.y = board.active.spriteR.y = 160 - 8 - 8 * GAMEBOARD_ROWS + (board.activeY << 3);
-		board.next.spriteL.x = 0xC4 + (3 - board.next.width) * 4;
-		board.next.spriteR.x = 0xD4 + (3 - board.next.width) * 4;
+		updateBlocks();
 
 		if (keys & KEY_B) {
 			BG_COLORS[0] = 0;
@@ -656,6 +723,7 @@ void gameBoardFrame(u32 framecount) {
 			gameBoard.frame = minigameFrame;
 			hideBoard();
 			showMinigame(framecount);
+			switchState(PRE_GAMEPLAY, framecount);
 		}
 		break;
 	}
@@ -668,11 +736,13 @@ void gameBoardFrame(u32 framecount) {
 	writeSpriteTable();
 }
 
-void gameBoardSetup(void) {
+void gameBoardSetup(u32 framecount) {
 	DMA3COPY(tile_bluePal + 1, &BG_COLORS[1], DMA16 | DMA_IMMEDIATE | (16 * 4 - 1));
 	DMA3COPY(tile_bluePal, &OBJ_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 4));
 	resetPlayfield();
 	drawBoard();
+
+	startFrame = framecount;
 
 	REG_BG0CNT = CHAR_BASE(0) | SCREEN_BASE(2) | 2;
 	REG_BG1CNT = CHAR_BASE(2) | SCREEN_BASE(3) | 1;
@@ -686,14 +756,6 @@ void gameBoardSetup(void) {
 	REG_WIN0V = 0x1898;
 	REG_WININ = 0x3B3F;
 	REG_WINOUT = 0x001B;
-
-	switchState(GAMEPLAY, 0);
-
-	board.active.spriteL.disable = 0;
-	board.next.spriteL.disable = 0;
-	updateBlockSprite(&board.active);
-	updateBlockSprite(&board.next);
-	writeSpriteTable();
 
 	REG_SOUNDCNT_X = 0x80;
 	REG_SOUNDCNT_L = SND1_R_ENABLE | SND1_L_ENABLE | SND4_R_ENABLE | SND4_L_ENABLE | 0x33;

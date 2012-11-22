@@ -15,7 +15,7 @@ void gameBoardInit(u32 framecount);
 void gameBoardDeinit(void);
 void gameBoardFrame(u32 framecount);
 
-void gameBoardSetup(void);
+void gameBoardSetup(u32 framecount);
 void updateScore(void);
 
 extern Runloop gameBoard;

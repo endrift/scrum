@@ -32,5 +32,6 @@ extern unsigned int textPalLightLen;
 
 void renderText(const char* text, const Textarea* destination, const Font* font);
 void mapText(u16* mapData, int startX, int endX, int startY, int endY, int palette);
+void unmapText(u16* mapData, int startX, int endX, int startY, int endY);
 
 #endif

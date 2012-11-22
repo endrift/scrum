@@ -10,6 +10,7 @@
 #include "rng.h"
 #include "sprite.h"
 #include "text.h"
+#include "util.h"
 
 #include "bug.h"
 #include "bullet.h"
@@ -221,12 +222,7 @@ static void switchState(int nextState, u32 framecount) {
 }
 
 static void hideMinigame(void) {
-	int x, y;
-	for (y = 17; y < 20; ++y) {
-		for (x = 20; x < 32; ++x) {
-			((u16*) SCREEN_BASE_BLOCK(3))[x + y * 32] = 0;
-		}
-	}
+	clearBlock((u16*) TILE_BASE_ADR(2), 186, 136, 64, 16);
 	spaceship.sprite.sprite.transformed = 0; // Doublesize == disabled, so this disables it
 }
 
@@ -511,7 +507,14 @@ void showMinigame(u32 framecount) {
 	REG_WIN1H = 0x08A8;
 	REG_WIN1V = 0x1840;
 
-	mapText(SCREEN_BASE_BLOCK(3), 20, 32, 17, 20, 5);
+	renderText("DEBUG", &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 186,
+		.clipY = 136,
+		.clipW = 64,
+		.clipH = 16,
+		.baseline = 0
+	}, &largeFont);
 
 	calcMap(0, 0, 16, 16, 0, 0);
 
@@ -546,7 +549,7 @@ void minigameFrame(u32 framecount) {
 		irqDisable(IRQ_HBLANK);
 		hideMinigame();
 		gameBoard.frame = gameBoardFrame;
-		gameBoardSetup();
+		gameBoardSetup(framecount);
 	}
 
 	offsets.z -= currentParams.bugSpeed;
