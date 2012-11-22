@@ -173,8 +173,7 @@ $(OUTPUT).elf	:	$(OFILES)
 %.font	:	%.bmp
 #---------------------------------------------------------------------------------
 	@echo $(notdir $<)
-	@dd if=$< of=$@ bs=1 skip=74
-
+	@dd if=$< of=$@ bs=1 skip=$(shell od -t d4 -j10 -N1 $^ | head -1 | awk '{print $$2}' )
 
 #---------------------------------------------------------------------------------
 # This rule creates assembly source files using grit
