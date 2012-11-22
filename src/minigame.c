@@ -25,7 +25,8 @@ static void m7();
 
 static enum {
 	FLYING_INTRO,
-	FLYING_GAMEPLAY
+	FLYING_GAMEPLAY,
+	FLYING_END
 } state = FLYING_INTRO;
 
 static u32 startFrame;
@@ -221,9 +222,12 @@ static void switchState(int nextState, u32 framecount) {
 	startFrame = framecount;
 }
 
-static void hideMinigame(void) {
+static void hideMinigame(u32 framecount) {
+	irqDisable(IRQ_HBLANK);
 	clearBlock((u16*) TILE_BASE_ADR(2), 186, 136, 64, 16);
 	spaceship.sprite.sprite.transformed = 0; // Doublesize == disabled, so this disables it
+	gameBoard.frame = gameBoardFrame;
+	gameBoardSetup(framecount);
 }
 
 static void calcMap(int startX, int startY, int endX, int endY, int xOffset, int yOffset) {
@@ -546,10 +550,7 @@ void minigameFrame(u32 framecount) {
 	u16 keys = keysDown();
 
 	if (keys & KEY_B && board.bugs < currentParams.bugShuntThreshold) {
-		irqDisable(IRQ_HBLANK);
-		hideMinigame();
-		gameBoard.frame = gameBoardFrame;
-		gameBoardSetup(framecount);
+		switchState(FLYING_END, framecount);
 	}
 
 	offsets.z -= currentParams.bugSpeed;
@@ -569,9 +570,7 @@ void minigameFrame(u32 framecount) {
 			REG_BLDALPHA = (framecount - startFrame) >> 2;
 			spaceship.offsetY -= spaceship.offsetY >> 5;
 			offsets.y -= offsets.y >> 4;
-			if (((framecount - startFrame) & 0x3) == 0x3) {
-				--fadeOffset;
-			}
+			fadeOffset = 0xF - ((framecount - startFrame) >> 2);
 		}
 		break;
 	case FLYING_GAMEPLAY:
@@ -595,6 +594,27 @@ void minigameFrame(u32 framecount) {
 			fireFriendly(framecount);
 		}
 		updateBug();
+		if (board.bugs == 0) {
+			switchState(FLYING_END, framecount);
+		}
+		break;
+	case FLYING_END:
+		offsets.x -= (offsets.x >> 4);
+		offsets.y += 512 - (offsets.y >> 5);
+		offsets.z -= (((framecount - startFrame) >> 4) + 1) * currentParams.bugSpeed;
+		spaceship.offsetY -= spaceship.offsetY >> 4;
+		spaceship.sprite.sprite.mode = 1;
+		fadeOffset = (framecount - startFrame) >> 2;
+		if (board.bugs > 0 || bug.active) {
+			bug.coords.y = (((bug.coords.y + 256) * 33) >> 5) - 256;
+			bug.coords.x = (bug.coords.x * 33) >> 5;
+			updateBug();
+		}
+		REG_BLDALPHA = fadeOffset > 0xF ? 0 : 0xF - fadeOffset;
+		if ((framecount - startFrame) >= 64) {
+			hideMinigame(framecount);
+		}
+		break;
 	};
 
 	camPos.x = (256 << 8) + offsets.x;
