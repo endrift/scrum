@@ -16,6 +16,7 @@
 #include "hud-sprites.h"
 #include "tile-palette.h"
 #include "tile-data.h"
+#include "title.h"
 
 static void introInit(u32 framecount);
 static void introDeinit(void);
@@ -63,6 +64,7 @@ static void endIntro(u32 framecount) {
 	REG_BG1CNT = CHAR_BASE(2) | SCREEN_BASE(1) | 1;
 	REG_BG3CNT = CHAR_BASE(0) | SCREEN_BASE(2) | 3;
 	DMA3COPY(hud_spritesPal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
+	DMA3COPY(titlePal, &BG_COLORS[16 * 5], DMA16 | DMA_IMMEDIATE | (titlePalLen >> 1));
 	BG_COLORS[0] = 0;
 	int i;
 	for (i = 0; i < 16 * 4; ++i) {
@@ -85,22 +87,8 @@ static void endIntro(u32 framecount) {
 			}
 		}
 	}
-
-	mapText(SCREEN_BASE_BLOCK(1), 0, 32, 0, 24, 0);
-	renderText("BAD PROGRAMMING METAPHORS", &(Textarea) {
-		.destination = TILE_BASE_ADR(2),
-		.clipX = 9,
-		.clipY = 24,
-		.clipW = 192,
-		.clipH = 16
-	}, &largeFont);
-	renderText("THE GAME", &(Textarea) {
-		.destination = TILE_BASE_ADR(2),
-		.clipX = 85,
-		.clipY = 40,
-		.clipW = 192,
-		.clipH = 16
-	}, &largeFont);
+	DMA3COPY(titleTiles, TILE_BASE_ADR(2), DMA16 | DMA_IMMEDIATE | (titleTilesLen >> 1));
+	mapText(SCREEN_BASE_BLOCK(1), 0, 32, 0, 11, 5);
 	REG_DISPCNT = MODE_0 | BG1_ON;
 }
 
@@ -219,29 +207,29 @@ void introFrame(u32 framecount) {
 		break;
 	case MODE_SELECT:
 		if (framecount == introStart) {
-			unmapText(SCREEN_BASE_BLOCK(1), 0, 32, 10, 16);
+			unmapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 18);
 			renderText("EASY", &(Textarea) {
-				.destination = TILE_BASE_ADR(2),
-				.clipX = 96,
-				.clipY = 80,
-				.clipW = 128,
-				.clipH = 16
-			}, &largeFont);
-			renderText("NORMAL", &(Textarea) {
 				.destination = TILE_BASE_ADR(2),
 				.clipX = 96,
 				.clipY = 96,
 				.clipW = 128,
 				.clipH = 16
 			}, &largeFont);
-			renderText("HARD", &(Textarea) {
+			renderText("NORMAL", &(Textarea) {
 				.destination = TILE_BASE_ADR(2),
 				.clipX = 96,
 				.clipY = 112,
 				.clipW = 128,
 				.clipH = 16
 			}, &largeFont);
-			mapText(SCREEN_BASE_BLOCK(1), 0, 32, 10, 16, 0);
+			renderText("HARD", &(Textarea) {
+				.destination = TILE_BASE_ADR(2),
+				.clipX = 96,
+				.clipY = 128,
+				.clipW = 128,
+				.clipH = 16
+			}, &largeFont);
+			mapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 18, 0);
 		}
 		if (keys & (KEY_START | KEY_A)) {
 			currentParams = *modes[modeIndex];
