@@ -24,6 +24,7 @@ static enum {
 	LOGO_FADE_OUT,
 	TITLE_FADE_IN,
 	PRESS_START,
+	MODE_SELECT,
 	TITLE_FADE_OUT
 } state = LOGO_FADE_IN;
 
@@ -33,11 +34,20 @@ Runloop intro = {
 	.frame = introFrame
 };
 
+static const GameParameters* modes[] = {
+	&easyParams,
+	&defaultParams,
+	&hardParams,
+	0
+};
+
 static u32 introStart = 0;
+static int modeIndex = 1;
 
 static void switchState(int nextState, u32 framecount) {
 	state = nextState;
 	introStart = framecount;
+	intro.frame(framecount);
 }
 
 static void endIntro(u32 framecount) {
@@ -114,26 +124,69 @@ void introFrame(u32 framecount) {
 			int value = (framecount - introStart) >> 2;
 			REG_BLDALPHA = value | (16 - value) << 8;
 		} else {
-			renderText("PRESS START", &(Textarea) {
-				.destination = TILE_BASE_ADR(2),
-				.clipX = 74,
-				.clipY = 100,
-				.clipW = 80,
-				.clipH = 16
-			}, &largeFont);
 			REG_BLDCNT = 0;
 			switchState(PRESS_START, framecount);
 		}
 		break;
 	case PRESS_START:
-		if (keys & KEY_START) {
-			switchState(TITLE_FADE_OUT, framecount);
+		if (framecount == introStart) {
+			renderText("PRESS START", &(Textarea) {
+				.destination = TILE_BASE_ADR(2),
+				.clipX = 74,
+				.clipY = 96,
+				.clipW = 128,
+				.clipH = 16
+			}, &largeFont);
+		}
+		if (keys & (KEY_START | KEY_A)) {
+			clearBlock(TILE_BASE_ADR(2), 74, 96, 128, 16);
+			switchState(MODE_SELECT, framecount);
 			REG_BLDCNT = 0x3F7F;
+		}
+		break;
+	case MODE_SELECT:
+		if (framecount == introStart) {
+			renderText("EASY", &(Textarea) {
+				.destination = TILE_BASE_ADR(2),
+				.clipX = 96,
+				.clipY = 80,
+				.clipW = 128,
+				.clipH = 16
+			}, &largeFont);
+			renderText("NORMAL", &(Textarea) {
+				.destination = TILE_BASE_ADR(2),
+				.clipX = 96,
+				.clipY = 96,
+				.clipW = 128,
+				.clipH = 16
+			}, &largeFont);
+			renderText("HARD", &(Textarea) {
+				.destination = TILE_BASE_ADR(2),
+				.clipX = 96,
+				.clipY = 112,
+				.clipW = 128,
+				.clipH = 16
+			}, &largeFont);
+		}
+		if (keys & (KEY_START | KEY_A)) {
+			currentParams = *modes[modeIndex];
+			switchState(TITLE_FADE_OUT, framecount);
+		}
+		if (keys & KEY_DOWN) {
+			++modeIndex;
+			if (!modes[modeIndex]) {
+				modeIndex = 0;
+			}
+		}
+		if (keys & KEY_UP) {
+			--modeIndex;
+			if (modeIndex < 0) {
+				for (modeIndex = -1; modes[modeIndex + 1]; ++modeIndex);
+			}
 		}
 		break;
 	case TITLE_FADE_OUT:
 		if (framecount - introStart >= 32) {
-			currentParams = defaultParams;
 			REG_DISPCNT = 0;
 			hzero((u16*) VRAM, 48 * 1024);
 			hzero(BG_PALETTE, 256);
