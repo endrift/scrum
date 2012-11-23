@@ -17,5 +17,7 @@ typedef struct GameParameters {
 } GameParameters;
 
 extern const GameParameters defaultParams;
+extern const GameParameters easyParams;
+extern const GameParameters hardParams;
 
 #endif
