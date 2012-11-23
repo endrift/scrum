@@ -8,11 +8,14 @@
 
 #include "gameboard.h"
 #include "gameParams.h"
+#include "rng.h"
 #include "text.h"
 #include "util.h"
 
 #include "endrift.h"
 #include "hud-sprites.h"
+#include "tile-palette.h"
+#include "tile-data.h"
 
 static void introInit(u32 framecount);
 static void introDeinit(void);
@@ -23,6 +26,7 @@ static enum {
 	LOGO_IDLE,
 	LOGO_FADE_OUT,
 	TITLE_FADE_IN,
+	TITLE_FADE_IN_2,
 	PRESS_START,
 	MODE_SELECT,
 	TITLE_FADE_OUT
@@ -57,8 +61,31 @@ static void endIntro(u32 framecount) {
 	hzero((u16*) VRAM, 48 * 1024);
 	hzero(BG_PALETTE, 256);
 	REG_BG1CNT = CHAR_BASE(2) | SCREEN_BASE(1) | 1;
+	REG_BG3CNT = CHAR_BASE(0) | SCREEN_BASE(2) | 3;
 	DMA3COPY(hud_spritesPal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
 	BG_COLORS[0] = 0;
+	int i;
+	for (i = 0; i < 16 * 4; ++i) {
+		int color = tile_bluePal[i];
+		int r = (color >> 1) & 0xF;
+		int g = (color >> 6) & 0xF;
+		int b = (color >> 11) & 0xF;
+		BG_COLORS[i + 16] = r | g << 5 | b << 10;
+	}
+	DMA3COPY(tileTiles, TILE_BASE_ADR(0) + 32, DMA16 | DMA_IMMEDIATE | (tileTilesLen >> 1));
+	srand(0);
+	for (i = 0; i < 32; ++i) {
+		int x;
+		int width;
+		for (x = 0; x < 30;) {
+			int seed = rand() >> 16;
+			int color = ((seed >> 2) & 3) + 1;
+			for (width = (seed & 3) + 1; width; --width, ++x) {
+				((u16*) SCREEN_BASE_BLOCK(2))[i * 32 + x] = 1 | CHAR_PALETTE(color);
+			}
+		}
+	}
+
 	mapText(SCREEN_BASE_BLOCK(1), 0, 32, 0, 24, 0);
 	renderText("BAD PROGRAMMING METAPHORS", &(Textarea) {
 		.destination = TILE_BASE_ADR(2),
@@ -82,7 +109,7 @@ void introInit(u32 framecount) {
 	introStart = framecount;
 
 	REG_BLDALPHA = 0x0F00; // Whoops, GBA.js doesn't support BLDY in modes 3 - 5
-	REG_BLDCNT = 0x3F7F;
+	REG_BLDCNT = 0x3877;
 	REG_BG2PA = 0x100;
 	REG_BG2PB = 0;
 	REG_BG2PC = 0;
@@ -102,11 +129,31 @@ void introFrame(u32 framecount) {
 	scanKeys();
 	u32 keys = keysDown();
 
-	if (keys & KEY_START && state < TITLE_FADE_IN) {
-		endIntro(framecount);
-		return;
+	if (keys & KEY_START) {
+		if (state < TITLE_FADE_IN) {
+			endIntro(framecount);
+			return;
+		} else if (state < PRESS_START) {
+			switchState(PRESS_START, framecount);
+			return;
+		}
 	}
 
+	if (state >= TITLE_FADE_IN_2) {
+		u16 y = (framecount >> 2);
+		REG_BG3VOFS = y;
+		if (!(y & 7)) {
+			int x;
+			int width;
+			for (x = 0; x < 30;) {
+				int seed = rand() >> 16;
+				int color = ((seed >> 2) & 3) + 1;
+				for (width = (seed & 3) + 1; width; --width, ++x) {
+					((u16*) SCREEN_BASE_BLOCK(2))[(((y >> 3) + 21) & 31) * 32 + x] = 1 | CHAR_PALETTE(color);
+				}
+			}
+		}
+	}
 	switch (state) {
 	case LOGO_FADE_IN:
 		if (framecount - introStart < 64) {
@@ -138,12 +185,24 @@ void introFrame(u32 framecount) {
 			int value = (framecount - introStart) >> 2;
 			REG_BLDALPHA = value | (16 - value) << 8;
 		} else {
-			REG_BLDCNT = 0;
+			switchState(TITLE_FADE_IN_2, framecount);
+		}
+		break;
+	case TITLE_FADE_IN_2:
+		if (framecount - introStart <= 64) {
+			REG_DISPCNT = MODE_0 | BG1_ON | BG3_ON;
+			REG_BLDCNT = 0x3F78;
+			int value = (framecount - introStart) >> 2;
+			REG_BLDALPHA = value | (16 - value) << 8;
+		} else {
 			switchState(PRESS_START, framecount);
 		}
 		break;
 	case PRESS_START:
 		if (framecount == introStart) {
+			REG_BLDCNT = 0;
+			REG_DISPCNT = MODE_0 | BG1_ON | BG3_ON;
+			unmapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 14);
 			renderText("PRESS START", &(Textarea) {
 				.destination = TILE_BASE_ADR(2),
 				.clipX = 71,
@@ -151,15 +210,16 @@ void introFrame(u32 framecount) {
 				.clipW = 128,
 				.clipH = 16
 			}, &largeFont);
+			mapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 14, 0);
 		}
 		if (keys & (KEY_START | KEY_A)) {
 			clearBlock(TILE_BASE_ADR(2), 71, 96, 128, 16);
 			switchState(MODE_SELECT, framecount);
-			REG_BLDCNT = 0x3F7F;
 		}
 		break;
 	case MODE_SELECT:
 		if (framecount == introStart) {
+			unmapText(SCREEN_BASE_BLOCK(1), 0, 32, 10, 16);
 			renderText("EASY", &(Textarea) {
 				.destination = TILE_BASE_ADR(2),
 				.clipX = 96,
@@ -181,6 +241,7 @@ void introFrame(u32 framecount) {
 				.clipW = 128,
 				.clipH = 16
 			}, &largeFont);
+			mapText(SCREEN_BASE_BLOCK(1), 0, 32, 10, 16, 0);
 		}
 		if (keys & (KEY_START | KEY_A)) {
 			currentParams = *modes[modeIndex];
@@ -207,7 +268,8 @@ void introFrame(u32 framecount) {
 			setRunloop(&gameBoard);
 		} else {
 			int value = (framecount - introStart) >> 1;
-			REG_BLDALPHA = (16 - value) | value << 8;
+			REG_BLDCNT = 0x3FFF;
+			REG_BLDY = value;
 		}
 		break;
 	}
