@@ -60,9 +60,16 @@ static void endIntro(u32 framecount) {
 	DMA3COPY(hud_spritesPal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
 	BG_COLORS[0] = 0;
 	mapText(SCREEN_BASE_BLOCK(1), 0, 32, 0, 24, 0);
-	renderText("THIS GAME NEEDS A NAME", &(Textarea) {
+	renderText("BAD PROGRAMMING METAPHORS", &(Textarea) {
 		.destination = TILE_BASE_ADR(2),
-		.clipX = 26,
+		.clipX = 9,
+		.clipY = 24,
+		.clipW = 192,
+		.clipH = 16
+	}, &largeFont);
+	renderText("THE GAME", &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 85,
 		.clipY = 40,
 		.clipW = 192,
 		.clipH = 16
@@ -139,14 +146,14 @@ void introFrame(u32 framecount) {
 		if (framecount == introStart) {
 			renderText("PRESS START", &(Textarea) {
 				.destination = TILE_BASE_ADR(2),
-				.clipX = 74,
+				.clipX = 71,
 				.clipY = 96,
 				.clipW = 128,
 				.clipH = 16
 			}, &largeFont);
 		}
 		if (keys & (KEY_START | KEY_A)) {
-			clearBlock(TILE_BASE_ADR(2), 74, 96, 128, 16);
+			clearBlock(TILE_BASE_ADR(2), 71, 96, 128, 16);
 			switchState(MODE_SELECT, framecount);
 			REG_BLDCNT = 0x3F7F;
 		}
