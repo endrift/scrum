@@ -251,20 +251,20 @@ static void calcMap(int startX, int startY, int endX, int endY, int xOffset, int
 }
 
 static inline int bulletHit(Bullet* bullet, Bug* bug) {
-	int bugDiffX = bug->currentCoords.x + (bullet->coords.x >> 6);
-	int bugDiffY = 3 * bug->currentCoords.y - (bullet->coords.y >> 4);
+	int bugDiffX = bug->currentCoords.x - (bullet->coords.x >> 6);
+	int bugDiffY = bug->currentCoords.y - (bullet->coords.y >> 6);
 	int bugDiffZ = (192 << 8) + (bullet->coords.z << 2) + bug->currentCoords.z;
 	int scatter = bullet->coords.z >> 10;
 	int scatterZ = 128 * scatter;
 	int scatterX = 4 * scatter;
-	int scatterY = 16 * scatter;
+	int scatterY = 4 * scatter;
 	if (bugDiffZ < -(0x1000 - scatterZ) || bugDiffZ > 0x1000 - scatterZ) {
 		return 0;
 	}
 	if (bugDiffX < -(64 - scatterX) || bugDiffX > 64 - scatterX) {
 		return 0;
 	}
-	if (bugDiffY < -(192 - scatterY) || bugDiffY > 192 - scatterY) {
+	if (bugDiffY < -(64 - scatterY) || bugDiffY > 64 - scatterY) {
 		return 0;
 	}
 
@@ -345,7 +345,7 @@ static void updateBug(void) {
 	bug.currentCoords.y = y;
 	bug.currentCoords.z = advance;
 	bug.sprite.sprite.y = 24 + ((((((y >> 6) - y) >> 3) + 32) * (-advance >> 9)) >> 6);
-	bug.sprite.sprite.x = 56 + (((((-offsets.x >> 6) - x) >> 3) * (-advance >> 9)) >> 6);
+	bug.sprite.sprite.x = 56 + (((((-offsets.x >> 6) + x) >> 3) * (-advance >> 9)) >> 6);
 	unsigned int blend = 0;
 	if (bug.dead) {
 		blend = -bug.dead >> 2;
@@ -402,7 +402,7 @@ static void fireFriendly(u32 framecount) {
 
 	Bullet* bullet = &friendlyBullets[0];
 	bullet->coords.x = offsets.x;
-	bullet->coords.y = offsets.y;
+	bullet->coords.y = (offsets.y << 2) / 3;
 	bullet->coords.z = 0;
 	bullet->sprite.sprite.transformed = 1;
 	bullet->sprite.sprite.disable = 0;
@@ -445,7 +445,7 @@ static void updateBullets(void) {
 			} else {
 				bullet->sprite.affine.sX = bullet->sprite.affine.sY = 256 - (bullet->coords.z >> 3);
 				bullet->sprite.sprite.base ^= 2;
-				bullet->sprite.sprite.y = (((82 - (bullet->coords.y >> 8) + (offsets.y >> 9)) * ((1024 << 5) + bullet->coords.z) + (-((128 + (bullet->coords.y << 1) - offsets.y) << 15) * bullet->coords.z))) >> 15;
+				bullet->sprite.sprite.y = (((82 - (bullet->coords.y >> 9) + (offsets.y >> 10)) * ((1024 << 5) + bullet->coords.z) + (-((128 + (bullet->coords.y << 1) - offsets.y) << 15) * bullet->coords.z))) >> 15;
 				bullet->sprite.sprite.x = 80 - (((bullet->coords.x >> 11) - (offsets.x >> 12)) * ((256 << 5) + bullet->coords.z) >> 13);
 				ObjAffineSet(&bullet->sprite.affine, affineTable(bullet->sprite.sprite.transformGroup), 1, 8);
 			}
