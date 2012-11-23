@@ -345,7 +345,7 @@ static void updateBug(void) {
 	bug.currentCoords.x = x;
 	bug.currentCoords.y = y;
 	bug.currentCoords.z = advance;
-	bug.sprite.sprite.y = 24 + ((((((y >> 6) - y) >> 3) + 32) * (-advance >> 9)) >> 6);
+	bug.sprite.sprite.y = 24 + ((((((offsets.y >> 6) - y) >> 3) + 16) * (-advance >> 9)) >> 6);
 	bug.sprite.sprite.x = 56 + (((((-offsets.x >> 6) + x) >> 3) * (-advance >> 9)) >> 6);
 	unsigned int blend = 0;
 	if (bug.dead) {
