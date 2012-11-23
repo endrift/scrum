@@ -475,10 +475,11 @@ static void updateBlocks(void) {
 static void updateTimer(u32 framecount) {
 	++board.timer;
 	int i;
+	int timerMax = ramp(currentParams.dropTimerLength, currentParams.dropTimerMin);
 	for (i = 0; i < 16; ++i) {
-		OBJ_COLORS[16 * 5 + i] = timerPalette[i] + (board.timer << 4) / currentParams.dropTimerLength;
+		OBJ_COLORS[16 * 5 + i] = timerPalette[i] + (board.timer << 4) / timerMax;
 	}
-	if (board.timer == currentParams.dropTimerLength) {
+	if (board.timer >= timerMax) {
 		dropBlock(framecount);
 	}
 }
@@ -701,6 +702,22 @@ void gameBoardFrame(u32 framecount) {
 			dropBlock(framecount);
 		}
 
+		if (keys & KEY_L) {
+			dropBlock(framecount);
+			board.difficultyRamp -= 16;
+			if (board.difficultyRamp < 0) {
+				board.difficultyRamp = 0;
+			}
+		}
+
+		if (keys & KEY_R) {
+			dropBlock(framecount);
+			board.difficultyRamp += 16;
+			if (board.difficultyRamp > 256) {
+				board.difficultyRamp = 256;
+			}
+		}
+
 		updateTimer(framecount);
 		updateBlocks();
 
@@ -782,4 +799,8 @@ void gameBoardSetup(u32 framecount) {
 
 	REG_SOUNDCNT_X = 0x80;
 	REG_SOUNDCNT_L = SND1_R_ENABLE | SND1_L_ENABLE | SND4_R_ENABLE | SND4_L_ENABLE | 0x33;
+}
+
+inline int ramp(int a, int b) {
+	return (a * (256 - board.difficultyRamp) + b * board.difficultyRamp) >> 8;
 }

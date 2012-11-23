@@ -556,7 +556,7 @@ void minigameFrame(u32 framecount) {
 	scanKeys();
 	u16 keys = keysDown();
 
-	offsets.z -= currentParams.bugSpeed;
+	offsets.z -= ramp(currentParams.bugSpeed, currentParams.bugSpeedMax);
 
 	if (!((offsets.z >> 9) & 0xF)) {
 		int range = ((offsets.z >> 13) + 8) & 0xF;
@@ -611,7 +611,7 @@ void minigameFrame(u32 framecount) {
 	case FLYING_END:
 		offsets.x = (offsets.x * 65) >> 6;
 		offsets.y += 768 - (offsets.y >> 5);
-		offsets.z -= (((framecount - startFrame) >> 4) + 1) * currentParams.bugSpeed;
+		offsets.z -= (((framecount - startFrame) >> 4) + 1) * ramp(currentParams.bugSpeed, currentParams.bugSpeedMax);
 		spaceship.offsetY -= spaceship.offsetY >> 4;
 		spaceship.sprite.sprite.mode = 1;
 		fadeOffset = (framecount - startFrame) >> 2;

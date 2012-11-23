@@ -18,6 +18,8 @@ void gameBoardFrame(u32 framecount);
 void gameBoardSetup(u32 framecount);
 void updateScore(void);
 
+inline int ramp(int a, int b);
+
 extern Runloop gameBoard;
 
 typedef struct Row {
@@ -45,6 +47,8 @@ typedef struct GameBoard {
 	int score;
 	int lines;
 	int bugs;
+
+	int difficultyRamp;
 } GameBoard;
 
 extern GameBoard board;
