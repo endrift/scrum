@@ -118,7 +118,8 @@ static void resetBackdrop(void) {
 		.y = 16,
 		.base = 248,
 		.palette = 4,
-		.size = 2
+		.size = 2,
+		.priority = 1
 	});
 
 	appendSprite(&(Sprite) {
@@ -127,7 +128,8 @@ static void resetBackdrop(void) {
 		.base = 248,
 		.palette = 5,
 		.size = 2,
-		.hflip = 1
+		.hflip = 1,
+		.priority = 1
 	});
 
 	appendSprite(&(Sprite) {
@@ -136,7 +138,8 @@ static void resetBackdrop(void) {
 		.base = 280,
 		.palette = 4,
 		.shape = 2,
-		.size = 3
+		.size = 3,
+		.priority = 1
 	});
 
 	appendSprite(&(Sprite) {
@@ -146,7 +149,8 @@ static void resetBackdrop(void) {
 		.palette = 5,
 		.shape = 2,
 		.size = 3,
-		.hflip = 1
+		.hflip = 1,
+		.priority = 1
 	});
 
 
@@ -157,7 +161,8 @@ static void resetBackdrop(void) {
 			.base = 249,
 			.palette = 4,
 			.shape = 1,
-			.size = 0
+			.size = 0,
+			.priority = 1
 		});
 
 		appendSprite(&(Sprite) {
@@ -166,7 +171,8 @@ static void resetBackdrop(void) {
 			.base = 473,
 			.palette = 4,
 			.shape = 1,
-			.size = 0
+			.size = 0,
+			.priority = 1
 		});
 	}
 
@@ -176,6 +182,7 @@ static void resetBackdrop(void) {
 		.y = 16,
 		.base = 249,
 		.palette = 5,
+		.priority = 1
 	});
 
 	appendSprite(&(Sprite) {
@@ -183,6 +190,7 @@ static void resetBackdrop(void) {
 		.y = 152,
 		.base = 473,
 		.palette = 5,
+		.priority = 1
 	});
 
 	appendSprite(&(Sprite) {
@@ -190,7 +198,8 @@ static void resetBackdrop(void) {
 		.y = 16,
 		.base = 248,
 		.palette = 4,
-		.size = 2
+		.size = 2,
+		.priority = 1
 	});
 
 	appendSprite(&(Sprite) {
@@ -199,7 +208,8 @@ static void resetBackdrop(void) {
 		.base = 248,
 		.palette = 4,
 		.size = 2,
-		.hflip = 1
+		.hflip = 1,
+		.priority = 1
 	});
 
 	appendSprite(&(Sprite) {
@@ -208,7 +218,8 @@ static void resetBackdrop(void) {
 		.base = 280,
 		.palette = 4,
 		.shape = 2,
-		.size = 3
+		.size = 3,
+		.priority = 1
 	});
 
 	appendSprite(&(Sprite) {
@@ -218,7 +229,8 @@ static void resetBackdrop(void) {
 		.palette = 4,
 		.shape = 2,
 		.size = 3,
-		.hflip = 1
+		.hflip = 1,
+		.priority = 1
 	});
 
 	for (y = 0; y < 3; ++y) {
@@ -228,7 +240,8 @@ static void resetBackdrop(void) {
 			.base = 280,
 			.palette = 4,
 			.shape = 2,
-			.size = 1
+			.size = 1,
+			.priority = 1
 		});
 
 		appendSprite(&(Sprite) {
@@ -238,7 +251,8 @@ static void resetBackdrop(void) {
 			.palette = 5,
 			.shape = 2,
 			.size = 1,
-			.hflip = 1
+			.hflip = 1,
+			.priority = 1
 		});
 
 		appendSprite(&(Sprite) {
@@ -247,7 +261,8 @@ static void resetBackdrop(void) {
 			.base = 280,
 			.palette = 4,
 			.shape = 2,
-			.size = 1
+			.size = 1,
+			.priority = 1
 		});
 
 		appendSprite(&(Sprite) {
@@ -257,7 +272,8 @@ static void resetBackdrop(void) {
 			.palette = 4,
 			.shape = 2,
 			.size = 1,
-			.hflip = 1
+			.hflip = 1,
+			.priority = 1
 		});
 	}
 }
@@ -521,9 +537,9 @@ void gameBoardInit(u32 framecount) {
 
 	clearSpriteTable();
 	board.next.spriteL.raw.a = 0x428C;
-	board.next.spriteL.priority = 2;
+	board.next.spriteL.priority = 1;
 	board.next.spriteR.raw.a = 0x428C;
-	board.next.spriteR.priority = 2;
+	board.next.spriteR.priority = 1;
 	board.active.spriteL.disable = 1;
 	board.active.spriteR.disable = 1;
 	insertSprite(&board.next.spriteL, 0);
@@ -752,7 +768,7 @@ void gameBoardSetup(u32 framecount) {
 	startFrame = framecount;
 
 	REG_BG0CNT = CHAR_BASE(0) | SCREEN_BASE(2) | 2;
-	REG_BG1CNT = CHAR_BASE(2) | SCREEN_BASE(3) | 1;
+	REG_BG1CNT = CHAR_BASE(2) | SCREEN_BASE(3);
 	REG_BG2CNT = CHAR_BASE(0) | SCREEN_BASE(1) | 1;
 	REG_BG2HOFS = -8;
 	REG_BG2VOFS = -24;
