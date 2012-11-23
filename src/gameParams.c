@@ -22,11 +22,11 @@ const GameParameters easyParams = {
 	.bugShuntThreshold = 25,
 	.bugEntryThreshold = 1,
 	.bugKickThreshold = 0,
-	.maxBugs = 50,
+	.maxBugs = 40,
 	.hasColorMismatchBugs = 1,
-	.bugSpeed = 100,
+	.bugSpeed = 150,
 	.bugSpeedMax = 200,
-	.bulletsMax = 3,
+	.bulletsMax = 2,
 	.bulletCooldown = 15
 };
 
@@ -39,8 +39,8 @@ const GameParameters hardParams = {
 	.bugKickThreshold = 4,
 	.maxBugs = 20,
 	.hasColorMismatchBugs = 1,
-	.bugSpeed = 200,
-	.bugSpeedMax = 300,
+	.bugSpeed = 220,
+	.bugSpeedMax = 320,
 	.bulletsMax = 1,
 	.bulletCooldown = 30
 };
