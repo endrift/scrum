@@ -582,17 +582,17 @@ void minigameFrame(u32 framecount) {
 		}
 
 		if (~REG_KEYINPUT & KEY_LEFT) {
-			offsets.x = offsets.x - 512 - (offsets.x >> 5);
+			offsets.x = offsets.x - 2048 - (offsets.x >> 3);
 		} else if (~REG_KEYINPUT & KEY_RIGHT) {
-			offsets.x = offsets.x + 512 - (offsets.x >> 5);
+			offsets.x = offsets.x + 2048 - (offsets.x >> 3);
 		} else {
 			offsets.x -= (offsets.x >> 4);
 		}
 
 		if (~REG_KEYINPUT & KEY_DOWN) {
-			offsets.y = offsets.y - 384 - (offsets.y >> 5);
+			offsets.y = offsets.y - 1536 - (offsets.y >> 3);
 		} else if (~REG_KEYINPUT & KEY_UP) {
-			offsets.y = offsets.y + 384 - (offsets.y >> 5);
+			offsets.y = offsets.y + 1536 - (offsets.y >> 3);
 		} else {
 			offsets.y -= offsets.y >> 4;
 		}
