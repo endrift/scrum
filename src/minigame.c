@@ -675,8 +675,7 @@ void minigameFrame(u32 framecount) {
 }
 
 // From Tonc
-__attribute__((section(".iwram"), long_call))
-static void m7() {
+IWRAM_CODE static void m7() {
 	int vcount = REG_VCOUNT;
 	if (vcount >= 152 || vcount < 16) {
 		return;

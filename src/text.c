@@ -1,5 +1,7 @@
 #include "text.h"
 
+#include <gba_base.h>
+
 #include <string.h>
 
 #include "large_font.h"
@@ -13,7 +15,7 @@ struct Font {
 	const Metrics* metrics;
 };
 
-const Glyph largeFontGlyphs[128] = {
+EWRAM_DATA const Glyph largeFontGlyphs[128] = {
 	{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
 	{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
 	{ // space 
@@ -246,11 +248,11 @@ const Glyph largeFontGlyphs[128] = {
 	},
 };
 
-const Metrics largeFontMetrics = {
+EWRAM_DATA const Metrics largeFontMetrics = {
 	.glyphs = largeFontGlyphs
 };
 
-const Glyph thinFontGlyphs[128] = {
+EWRAM_DATA const Glyph thinFontGlyphs[128] = {
 	{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
 	{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
 	{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
@@ -306,11 +308,11 @@ const Glyph thinFontGlyphs[128] = {
 	},
 };
 
-const Metrics thinFontMetrics = {
+EWRAM_DATA const Metrics thinFontMetrics = {
 	.glyphs = thinFontGlyphs
 };
 
-const Font largeFont = {
+EWRAM_DATA const Font largeFont = {
 	.gridW = 16,
 	.gridH = 16,
 	.baseline = 0,
@@ -318,7 +320,7 @@ const Font largeFont = {
 	.metrics = &largeFontMetrics
 };
 
-const Font thinFont = {
+EWRAM_DATA const Font thinFont = {
 	.gridW = 8,
 	.gridH = 16,
 	.baseline = 0,
@@ -326,8 +328,7 @@ const Font thinFont = {
 	.metrics = &thinFontMetrics
 };
 
-__attribute__((section(".iwram"), long_call))
-void renderText(const char* text, const Textarea* destination, const Font* font) {
+IWRAM_CODE void renderText(const char* text, const Textarea* destination, const Font* font) {
 	int x = destination->clipX, y, i;
 	int lastX = 0;
 	u16* pixels = destination->destination;

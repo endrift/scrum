@@ -15,8 +15,7 @@ void formatNumber(char* buffer, unsigned int len, unsigned int value) {
 	}
 }
 
-__attribute__((section(".iwram"), long_call))
-void clearBlock(u16* base, int startX, int startY, int width, int height) {
+IWRAM_CODE void clearBlock(u16* base, int startX, int startY, int width, int height) {
 	// TODO: put swizzling in a #define
 	int x, y;
 	for (y = startY; y < startY + height; ++y) {
