@@ -556,10 +556,6 @@ void minigameFrame(u32 framecount) {
 	scanKeys();
 	u16 keys = keysDown();
 
-	if (keys & KEY_B && board.bugs < currentParams.bugShuntThreshold) {
-		switchState(FLYING_END, framecount);
-	}
-
 	offsets.z -= currentParams.bugSpeed;
 
 	if (!((offsets.z >> 9) & 0xF)) {
@@ -581,6 +577,10 @@ void minigameFrame(u32 framecount) {
 		}
 		break;
 	case FLYING_GAMEPLAY:
+		if (keys & KEY_B && board.bugs < currentParams.bugShuntThreshold) {
+			switchState(FLYING_END, framecount);
+		}
+
 		if (~REG_KEYINPUT & KEY_LEFT) {
 			offsets.x = offsets.x - 512 - (offsets.x >> 5);
 		} else if (~REG_KEYINPUT & KEY_RIGHT) {
