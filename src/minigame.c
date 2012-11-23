@@ -7,6 +7,7 @@
 #include <gba_video.h>
 
 #include "gameboard.h"
+#include "intro.h"
 #include "rng.h"
 #include "sprite.h"
 #include "text.h"
@@ -650,6 +651,10 @@ void minigameFrame(u32 framecount) {
 			}
 			fadeOffset = (framecount - startFrame) >> 4;
 			REG_BLDALPHA = 0xF - ((framecount - startFrame) >> 3);
+		}
+		if (keys & KEY_START) {
+			hideMinigame(framecount);
+			setRunloop(&intro);
 		}
 		break;
 	};

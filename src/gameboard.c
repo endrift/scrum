@@ -389,6 +389,13 @@ static void genRow(int row) {
 }
 
 static void resetBoard(void) {
+	board.difficultyRamp = 0;
+	board.timer = 0;
+	board.activeY = 0;
+	board.score = 0;
+	board.lines = 0;
+	board.bugs = 0;
+
 	genBlock();
 	genBlock(); // Ensure that a block is actually queued
 	int y;
@@ -591,17 +598,17 @@ void gameBoardInit(u32 framecount) {
 		.baseline = 0
 	}, &largeFont);
 
+	introRow = 0;
+	introBlock = 0;
+
 	srand(framecount);
+	resetBoard();
 	updateScore();
 	switchState(LOADING_INTRO, framecount);
 	minigameInit(framecount);
 	gameBoardSetup(framecount);
-	resetBoard();
 
 	drawBoard();
-
-	introRow = 0;
-	introBlock = 0;
 
 	DMA3COPY(game_backdropPal, &BG_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | (game_backdropPalLen >> 1));
 	DMA3COPY(hud_spritesPal, &BG_COLORS[16 * 5], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
@@ -611,6 +618,7 @@ void gameBoardInit(u32 framecount) {
 }
 
 void gameBoardDeinit() {
+	clearSpriteTable();
 }
 
 void gameBoardFrame(u32 framecount) {

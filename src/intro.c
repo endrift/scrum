@@ -26,7 +26,7 @@ static enum {
 	PRESS_START,
 	MODE_SELECT,
 	TITLE_FADE_OUT
-} state = LOGO_FADE_IN;
+} state;
 
 Runloop intro = {
 	.init = introInit,
@@ -71,10 +71,17 @@ static void endIntro(u32 framecount) {
 }
 
 void introInit(u32 framecount) {
+	state = LOGO_FADE_IN;
 	introStart = framecount;
 
 	REG_BLDALPHA = 0x0F00; // Whoops, GBA.js doesn't support BLDY in modes 3 - 5
 	REG_BLDCNT = 0x3F7F;
+	REG_BG2PA = 0x100;
+	REG_BG2PB = 0;
+	REG_BG2PC = 0;
+	REG_BG2PD = 0x100;
+	REG_BG2X = 0;
+	REG_BG2Y = 0;
 
 	LZ77UnCompVram((void*) endriftBitmap, (void*) VRAM);
 	REG_DISPCNT = MODE_3 | BG2_ON;
