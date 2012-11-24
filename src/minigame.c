@@ -478,11 +478,7 @@ void minigameInit(u32 framecount) {
 		bullet->sprite.sprite.transformGroup = 2 + i;
 		bullet->sprite.sprite.disable = 1;
 		bullet->sprite.sprite.priority = 3;
-		if (bullet->sprite.id > 0) {
-			updateSprite(&bullet->sprite.sprite, bullet->sprite.id);
-		} else {
-			bullet->sprite.id = appendSprite(&bullet->sprite.sprite);
-		}
+		bullet->sprite.id = appendSprite(&bullet->sprite.sprite);
 	}
 
 	bug.sprite.sprite.transformGroup = 1;
