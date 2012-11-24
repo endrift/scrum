@@ -73,18 +73,12 @@ static void endIntro(u32 framecount) {
 	DMA3COPY(hud_spritesPal, &BG_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
 	DMA3COPY(hud_spritesPal, &OBJ_COLORS[0], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
 	DMA3COPY(titlePal, &BG_COLORS[16 * 5], DMA16 | DMA_IMMEDIATE | (titlePalLen >> 1));
-	int i;
-	for (i = 0; i < 16 * 4; ++i) {
-		int color = tile_bluePal[i];
-		int r = (color >> 1) & 0xF;
-		int g = (color >> 6) & 0xF;
-		int b = (color >> 11) & 0xF;
-		BG_COLORS[i] = r | g << 5 | b << 10;
-	}
+	DMA3COPY(tile_bluePal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (tile_bluePalLen << 1));
 	BG_COLORS[0] = 0;
 	DMA3COPY(tile_largeTiles, TILE_BASE_ADR(0) + 64, DMA16 | DMA_IMMEDIATE | (tile_largeTilesLen >> 1));
 	DMA3COPY(cursorTiles, OBJ_BASE_ADR, DMA16 | DMA_IMMEDIATE | (cursorTilesLen >> 1));
 	srand(0);
+	int i;
 	for (i = 0; i < 64; ++i) {
 		int x;
 		int width;
@@ -108,7 +102,11 @@ static void endIntro(u32 framecount) {
 	m7Context.d = 250;
 	m7Context.w = 120;
 	for (i = 0; i < 160; ++i) {
-		m7Context.bgFade[i] = 15 - (i >> 6);
+		if (i >= 64) {
+			m7Context.bgFade[i] = 0;
+		} else {
+			m7Context.bgFade[i] = (64 - i) >> 2;
+		}
 		m7Context.div16[i] = ((1 << 24) / (i + 100)) >> 8;
 	}
 	enableMode7(1);
@@ -208,18 +206,17 @@ void introFrame(u32 framecount) {
 		}
 		break;
 	case TITLE_FADE_IN_2:
-		if (framecount - introStart <= 64) {
+		if (framecount - introStart < 32) {
 			REG_DISPCNT = MODE_1 | BG1_ON | BG2_ON;
-			REG_BLDCNT = 0x3F74;
-			int value = (framecount - introStart) >> 2;
-			REG_BLDALPHA = value | (16 - value) << 8;
+			REG_BLDCNT = 0x00C4;
+			int value = (framecount - introStart) >> 1;
+			m7Context.fadeOffset = 17 - value;
 		} else {
 			switchState(PRESS_START, framecount);
 		}
 		break;
 	case PRESS_START:
 		if (framecount == introStart) {
-			REG_BLDCNT = 0;
 			REG_DISPCNT = MODE_1 | BG1_ON | BG2_ON | OBJ_ON | OBJ_1D_MAP;
 			unmapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 14);
 			renderText("PRESS START", &(Textarea) {
