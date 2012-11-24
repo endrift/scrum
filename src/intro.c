@@ -15,7 +15,7 @@
 #include "endrift.h"
 #include "hud-sprites.h"
 #include "tile-palette.h"
-#include "tile-data.h"
+#include "tile-large.h"
 #include "title.h"
 
 static void introInit(u32 framecount);
@@ -74,16 +74,22 @@ static void endIntro(u32 framecount) {
 		int b = (color >> 11) & 0xF;
 		BG_COLORS[i + 16] = r | g << 5 | b << 10;
 	}
-	DMA3COPY(tileTiles, TILE_BASE_ADR(0) + 32, DMA16 | DMA_IMMEDIATE | (tileTilesLen >> 1));
+	DMA3COPY(tile_largeTiles, TILE_BASE_ADR(0) + 32, DMA16 | DMA_IMMEDIATE | (tile_largeTilesLen >> 1));
 	srand(0);
-	for (i = 0; i < 32; ++i) {
+	for (i = 0; i < 32; i += 2) {
 		int x;
 		int width;
 		for (x = 0; x < 30;) {
 			int seed = rand() >> 16;
 			int color = ((seed >> 2) & 3) + 1;
-			for (width = (seed & 3) + 1; width; --width, ++x) {
+			for (width = (seed & 3) + 1; width; --width, x += 2) {
+				if (x > 30) {
+					break;
+				}
 				((u16*) SCREEN_BASE_BLOCK(2))[i * 32 + x] = 1 | CHAR_PALETTE(color);
+				((u16*) SCREEN_BASE_BLOCK(2))[i * 32 + x + 1] = 2 | CHAR_PALETTE(color);
+				((u16*) SCREEN_BASE_BLOCK(2))[(i + 1) * 32 + x] = 3 | CHAR_PALETTE(color);
+				((u16*) SCREEN_BASE_BLOCK(2))[(i + 1) * 32 + x + 1] = 4 | CHAR_PALETTE(color);
 			}
 		}
 	}
@@ -129,15 +135,21 @@ void introFrame(u32 framecount) {
 
 	if (state >= TITLE_FADE_IN_2) {
 		u16 y = (framecount >> 2);
-		REG_BG3VOFS = y;
-		if (!(y & 7)) {
+		REG_BG3VOFS = y & 0xFF;
+		if (!(y & 0xF)) {
 			int x;
 			int width;
 			for (x = 0; x < 30;) {
 				int seed = rand() >> 16;
 				int color = ((seed >> 2) & 3) + 1;
-				for (width = (seed & 3) + 1; width; --width, ++x) {
-					((u16*) SCREEN_BASE_BLOCK(2))[(((y >> 3) + 21) & 31) * 32 + x] = 1 | CHAR_PALETTE(color);
+				for (width = (seed & 3) + 1; width; --width, x += 2) {
+					if (x > 30) {
+						break;
+					}
+					((u16*) SCREEN_BASE_BLOCK(2))[(((y >> 3) + 22) & 31) * 32 + x] = 1 | CHAR_PALETTE(color);
+					((u16*) SCREEN_BASE_BLOCK(2))[(((y >> 3) + 22) & 31) * 32 + x + 1] = 2 | CHAR_PALETTE(color);
+					((u16*) SCREEN_BASE_BLOCK(2))[(((y >> 3) + 23) & 31) * 32 + x] = 3 | CHAR_PALETTE(color);
+					((u16*) SCREEN_BASE_BLOCK(2))[(((y >> 3) + 23) & 31) * 32 + x + 1] = 4 | CHAR_PALETTE(color);
 				}
 			}
 		}
