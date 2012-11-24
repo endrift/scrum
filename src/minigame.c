@@ -89,7 +89,7 @@ static Bug bug = {
 			.x = 56,
 			.y = 40,
 			.mode = 1,
-			.base = 164,
+			.base = 168,
 			.shape = 0,
 			.size = 2,
 			.palette = 2,
@@ -353,7 +353,7 @@ static void updateBug(void) {
 		bug.sprite.sprite.transformed ^= 1;
 		++bug.dead;
 	} else {
-		bug.sprite.sprite.base ^= 0xC;
+		bug.sprite.sprite.base ^= 4;
 	}
 	if (bug.sprite.affine.sX < 128) {
 		bug.sprite.sprite.transformed = 0;
@@ -501,11 +501,11 @@ void showMinigame(u32 framecount) {
 	DMA3COPY(bulletPal, &OBJ_COLORS[16 * 3], DMA16 | DMA_IMMEDIATE | 16);
 	// Sigh. Maybe I should go back to 1-D mapping
 	DMA3COPY(spaceshipTiles, TILE_BASE_ADR(4) + 0x1400, DMA16 | DMA_IMMEDIATE | (spaceshipTilesLen >> 2));
-	DMA3COPY(spaceshipTiles + 0x20, TILE_BASE_ADR(4) + 0x1800, DMA16 | DMA_IMMEDIATE | (spaceshipTilesLen >> 2));
-	DMA3COPY(bugTiles, TILE_BASE_ADR(4) + 0x1480, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
-	DMA3COPY(bugTiles + (bugTilesLen >> 4), TILE_BASE_ADR(4) + 0x1880, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
-	DMA3COPY(bugTiles + (bugTilesLen >> 3), TILE_BASE_ADR(4) + 0x1C80, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
-	DMA3COPY(bugTiles + 3 * (bugTilesLen >> 4), TILE_BASE_ADR(4) + 0x2080, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
+	DMA3COPY(spaceshipTiles + (spaceshipTilesLen >> 3), TILE_BASE_ADR(4) + 0x1800, DMA16 | DMA_IMMEDIATE | (spaceshipTilesLen >> 2));
+	DMA3COPY(bugTiles, TILE_BASE_ADR(4) + 0x1500, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
+	DMA3COPY(bugTiles + (bugTilesLen >> 4), TILE_BASE_ADR(4) + 0x1900, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
+	DMA3COPY(bugTiles + (bugTilesLen >> 3), TILE_BASE_ADR(4) + 0x1D00, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
+	DMA3COPY(bugTiles + 3 * (bugTilesLen >> 4), TILE_BASE_ADR(4) + 0x2100, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
 	DMA3COPY(bulletTiles, TILE_BASE_ADR(4) + 0x1C00, DMA16 | DMA_IMMEDIATE | (bulletTilesLen >> 2));
 	DMA3COPY(bulletTiles + (bulletTilesLen >> 3), TILE_BASE_ADR(4) + 0x2000, DMA16 | DMA_IMMEDIATE | (bulletTilesLen >> 2));
 
@@ -668,6 +668,7 @@ void minigameFrame(u32 framecount) {
 	spaceship.sprite.affine.sX = spaceship.sprite.affine.sY = (shipOffsetY >> 8) + 256;
 	spaceship.sprite.sprite.x = 56 - (offsets.x >> 11) + (state == FLYING_END ? (offsets.x * (framecount - startFrame) >> 14) : 0);
 	spaceship.sprite.sprite.y = 72 - (shipOffsetY >> 9);
+	spaceship.sprite.sprite.base ^= 4;
 	updateSprite(&spaceship.sprite.sprite, spaceship.sprite.id);
 	ObjAffineSet(&spaceship.sprite.affine, affineTable(0), 1, 8);
 	updateBullets();
