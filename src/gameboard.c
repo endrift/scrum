@@ -737,8 +737,6 @@ void gameBoardFrame(u32 framecount) {
 	case GAMEPLAY_FADE_FOR_MINIGAME:
 		REG_DMA0CNT = 0;
 		if (framecount - startFrame < 48) {
-			REG_WININ = 0x3B00;
-			REG_WINOUT = 0x003F;
 			int i;
 			for (i = 16; i < 152; ++i) {
 				if (i & 1) {
@@ -763,6 +761,8 @@ void gameBoardFrame(u32 framecount) {
 					stupidShinyTransitionStates[i] = 0x00A8 + (state << 8);
 				}
 			}
+			REG_WININ = 0x3B00;
+			REG_WINOUT = 0x003F;
 			DMA0COPY(stupidShinyTransitionStates, &REG_WIN0H, DMA16 | DMA_REPEAT | DMA_HBLANK | DMA_SRC_INC | DMA_DST_FIXED | 1);
 		} else {
 			REG_WININ = 0x3B3F;
