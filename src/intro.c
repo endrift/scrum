@@ -217,6 +217,8 @@ void introFrame(u32 framecount) {
 		break;
 	case PRESS_START:
 		if (framecount == introStart) {
+			m7Context.fadeOffset = 1;
+			REG_BLDCNT = 0x00C4;
 			REG_DISPCNT = MODE_1 | BG1_ON | BG2_ON | OBJ_ON | OBJ_1D_MAP;
 			unmapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 14);
 			renderText("PRESS START", &(Textarea) {
@@ -294,7 +296,7 @@ void introFrame(u32 framecount) {
 		} else {
 			int value = (framecount - introStart) >> 1;
 			REG_BLDCNT = 0x3FFF;
-			REG_BLDY = value;
+			m7Context.fadeOffset = value + 1;
 		}
 		break;
 	}
