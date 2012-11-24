@@ -5,7 +5,7 @@
 
 typedef struct Mode7Context {
 	s32 x, y, z;
-	s32 div16[228];
+	s32 div16[160];
 	s32 d;
 	s32 w;
 	s16 bgFade[160];

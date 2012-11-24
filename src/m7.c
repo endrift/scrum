@@ -8,6 +8,12 @@ Mode7Context m7Context;
 // From Tonc
 IWRAM_CODE static void m7() {
 	int vcount = REG_VCOUNT;
+	if (vcount >= 227) {
+		vcount = 0;
+	} else if (vcount >= 160) {
+		return;
+	}
+
 	s32 lcf, lxr, lyr;
 
 	s16 fade = m7Context.bgFade[vcount] + m7Context.fadeOffset;
