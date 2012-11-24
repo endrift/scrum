@@ -5,6 +5,7 @@ typedef struct GameParameters {
 	int dropTimerLength;
 	int dropTimerMin;
 	int hasFuncs;
+	int rampSpeed;
 	int bugShuntThreshold;
 	int bugEntryThreshold;
 	int bugKickThreshold;

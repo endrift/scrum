@@ -409,6 +409,9 @@ static void removeRow(u32 framecount) {
 	Row* row = &board.rows[board.activeY];
 	int color = row->color[row->width - 1];
 	int score = -board.active.width;
+	if (board.difficultyRamp < 256) {
+		board.difficultyRamp += currentParams.rampSpeed;
+	}
 	if (row->width > GAMEBOARD_COLS) {
 		board.bugs += row->width - GAMEBOARD_COLS;
 		if (board.bugs >= currentParams.bugShuntThreshold) {
