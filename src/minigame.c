@@ -456,6 +456,8 @@ void minigameInit(u32 framecount) {
 		}
 		m7Context.div16[i] = ((1 << 24) / (i - 66)) >> 8;
 	}
+	m7Context.d = 80;
+	m7Context.w = ((240 - 72 + 8) >> 1);
 
 	spaceship.sprite.sprite.doublesize = 1;
 	spaceship.sprite.sprite.transformGroup = 0;

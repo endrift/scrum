@@ -9,6 +9,7 @@
 
 #include "gameboard.h"
 #include "gameParams.h"
+#include "m7.h"
 #include "rng.h"
 #include "text.h"
 #include "util.h"
@@ -87,11 +88,11 @@ static void endIntro(u32 framecount) {
 	for (i = 0; i < 64; ++i) {
 		int x;
 		int width;
-		for (x = 0; x < 30;) {
+		for (x = 0; x < 32;) {
 			int seed = rand() >> 16;
 			int color = (seed >> 2) & 3;
 			for (width = (seed & 3) + 1; width; --width, ++x) {
-				if (x > 30) {
+				if (x > 32) {
 					break;
 				}
 				((u16*) SCREEN_BASE_BLOCK(2))[i * 64 + x] = 0x201 + color * 0x404;
@@ -101,6 +102,16 @@ static void endIntro(u32 framecount) {
 	}
 	DMA3COPY(titleTiles, TILE_BASE_ADR(2), DMA16 | DMA_IMMEDIATE | (titleTilesLen >> 1));
 	mapText(SCREEN_BASE_BLOCK(1), 0, 32, 0, 11, 5);
+
+	m7Context.y = 128 << 8;
+	m7Context.x = 256 << 8;
+	m7Context.d = 250;
+	m7Context.w = 120;
+	for (i = 0; i < 160; ++i) {
+		m7Context.bgFade[i] = 15 - (i >> 6);
+		m7Context.div16[i] = ((1 << 24) / (i + 100)) >> 8;
+	}
+	enableMode7(1);
 
 	REG_DISPCNT = MODE_1 | BG1_ON;
 }
@@ -145,15 +156,15 @@ void introFrame(u32 framecount) {
 
 	if (state >= TITLE_FADE_IN_2) {
 		u16 y = (framecount >> 2);
-		REG_BG2Y = (y & 0x3FF) << 8;
+		m7Context.z = (y & 0x3FF) << 8;
 		if (!(framecount & 0x3F)) {
 			int x;
 			int width;
-			for (x = 0; x < 30;) {
+			for (x = 0; x < 32;) {
 				int seed = rand() >> 16;
 				int color = (seed >> 2) & 3;
 				for (width = (seed & 3) + 1; width; --width, ++x) {
-					if (x > 30) {
+					if (x > 32) {
 						break;
 					}
 					((u16*) SCREEN_BASE_BLOCK(2))[(((y >> 3) + 22) & 63) * 32 + x] = 0x201 + color * 0x404;

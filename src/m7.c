@@ -3,17 +3,11 @@
 #include <gba_interrupt.h>
 #include <gba_video.h>
 
-Mode7Context m7Context = {
-	.d = 80,
-	.w = ((240 - 72 + 8) >> 1)
-};
+Mode7Context m7Context;
 
 // From Tonc
 IWRAM_CODE static void m7() {
 	int vcount = REG_VCOUNT;
-	if (vcount >= 152 || vcount < 16) {
-		return;
-	}
 	s32 lcf, lxr, lyr;
 
 	s16 fade = m7Context.bgFade[vcount] + m7Context.fadeOffset;
