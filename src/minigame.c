@@ -451,10 +451,11 @@ void minigameInit(u32 framecount) {
 	int i;
 	for (i = 0; i < 160; ++i) {
 		m7Context.bgFade[i] = bgFade[i];
-		if (i == 66) {
-			continue;
+		if (i > 60) {
+			m7Context.div16[i] = ((1 << 24) / (i - 60)) >> 8;
+		} else {
+			m7Context.div16[i] = 0x100;
 		}
-		m7Context.div16[i] = ((1 << 24) / (i - 66)) >> 8;
 	}
 	m7Context.d = 80;
 	m7Context.w = ((240 - 72 + 8) >> 1);
