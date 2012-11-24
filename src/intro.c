@@ -121,7 +121,7 @@ void introInit(u32 framecount) {
 	introStart = framecount;
 
 	REG_BLDALPHA = 0x0F00; // Whoops, GBA.js doesn't support BLDY in modes 3 - 5
-	REG_BLDCNT = 0x387B;
+	REG_BLDCNT = 0x3877;
 	REG_BG2PA = 0x100;
 	REG_BG2PB = 0;
 	REG_BG2PC = 0;
