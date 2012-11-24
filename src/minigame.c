@@ -527,14 +527,13 @@ void showMinigame(u32 framecount) {
 	}
 
 	switchState(FLYING_INTRO, framecount);
+	REG_BLDALPHA = 0;
 	killstreak = 0;
 	birthstreak = 0;
 	offsets.x = 0;
 	offsets.y = -32 << 8;
 	offsets.z = 0;
 	spaceship.offsetY = -(64 << 9);
-	spaceship.sprite.sprite.mode = 1;
-	spaceship.sprite.sprite.transformed = 1;
 
 	bug.sprite.sprite.transformed = 0;
 	updateSprite(&bug.sprite.sprite, bug.sprite.id);
@@ -556,6 +555,10 @@ void minigameFrame(u32 framecount) {
 
 	switch (state) {
 	case FLYING_INTRO:
+		if (framecount == startFrame + 1) {
+			spaceship.sprite.sprite.mode = 1;
+			spaceship.sprite.sprite.transformed = 1;
+		}
 		if ((framecount - startFrame) >= 64) {
 			switchState(FLYING_GAMEPLAY, framecount);
 			spaceship.sprite.sprite.mode = 0;
