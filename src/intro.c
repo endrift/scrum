@@ -136,6 +136,7 @@ void introInit(u32 framecount) {
 }
 
 void introDeinit(void) {
+	enableMode7(0);
 }
 
 void introFrame(u32 framecount) {
