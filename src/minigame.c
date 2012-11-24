@@ -3,11 +3,11 @@
 #include <gba_affine.h>
 #include <gba_dma.h>
 #include <gba_input.h>
-#include <gba_interrupt.h>
 #include <gba_video.h>
 
 #include "gameboard.h"
 #include "intro.h"
+#include "m7.h"
 #include "rng.h"
 #include "sprite.h"
 #include "text.h"
@@ -22,8 +22,6 @@
 // ABANDON HOPE, ALL YE WHO ENTER HERE
 // This logic is horribly hard-coded and I am very sorry.
 
-static void m7();
-
 static enum {
 	FLYING_INTRO,
 	FLYING_GAMEPLAY,
@@ -36,11 +34,7 @@ static u32 startFrame;
 typedef struct Coordinates {
 	s32 x, y, z;
 } Coordinates;
-static Coordinates camPos, offsets;
-
-static s32 DIV16[278];
-static s32 M7_D = 80;
-static s32 M7_W = ((240 - 72 + 8) >> 1);
+static Coordinates offsets;
 
 typedef struct AffineSprite {
 	Sprite sprite;
@@ -215,8 +209,6 @@ static s16 bgFade[160] = {
 	0x0001
 };
 
-static s16 fadeOffset = 0;
-
 static int killstreak = 0;
 static int birthstreak = 0;
 
@@ -226,7 +218,7 @@ static void switchState(int nextState, u32 framecount) {
 }
 
 static void hideMinigame(u32 framecount) {
-	irqDisable(IRQ_HBLANK);
+	enableMode7(0);
 	clearBlock((u16*) TILE_BASE_ADR(2), 186, 136, 64, 16);
 	spaceship.sprite.sprite.transformed = 0; // Doublesize == disabled, so this disables it
 	gameBoard.frame = gameBoardFrame;
@@ -457,11 +449,12 @@ static void updateBullets(void) {
 
 void minigameInit(u32 framecount) {
 	int i;
-	for(i = 0; i < 160; ++i) {
+	for (i = 0; i < 160; ++i) {
+		m7Context.bgFade[i] = bgFade[i];
 		if (i == 66) {
 			continue;
 		}
-		DIV16[i] = ((1 << 24) / (i - 66)) >> 8;
+		m7Context.div16[i] = ((1 << 24) / (i - 66)) >> 8;
 	}
 
 	spaceship.sprite.sprite.doublesize = 1;
@@ -486,9 +479,8 @@ void minigameInit(u32 framecount) {
 }
 
 void showMinigame(u32 framecount) {
-	fadeOffset = 16;
-	irqSet(IRQ_HBLANK, m7);
-	irqEnable(IRQ_HBLANK);
+	m7Context.fadeOffset = 16;
+	enableMode7(1);
 
 	DMA3COPY(pcbPal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 2));
 	DMA3COPY(pcbTiles, TILE_BASE_ADR(1), DMA16 | DMA_IMMEDIATE | (pcbTilesLen >> 1));
@@ -570,7 +562,7 @@ void minigameFrame(u32 framecount) {
 			REG_BLDALPHA = (framecount - startFrame) >> 2;
 			spaceship.offsetY -= spaceship.offsetY >> 5;
 			offsets.y -= offsets.y >> 4;
-			fadeOffset = 0xF - ((framecount - startFrame) >> 2);
+			m7Context.fadeOffset = 0xF - ((framecount - startFrame) >> 2);
 		}
 		break;
 	case FLYING_GAMEPLAY:
@@ -611,13 +603,13 @@ void minigameFrame(u32 framecount) {
 		offsets.z -= (((framecount - startFrame) >> 4) + 1) * ramp(currentParams.bugSpeed, currentParams.bugSpeedMax);
 		spaceship.offsetY -= spaceship.offsetY >> 4;
 		spaceship.sprite.sprite.mode = 1;
-		fadeOffset = (framecount - startFrame) >> 2;
+		m7Context.fadeOffset = (framecount - startFrame) >> 2;
 		if (board.bugs > 0 && bug.active) {
 			bug.coords.y = (((bug.coords.y + 256) * 33) >> 5) - 256;
 			bug.coords.x = (bug.coords.x * 33) >> 5;
 			updateBug();
 		}
-		REG_BLDALPHA = fadeOffset > 0xF ? 0 : 0xF - fadeOffset;
+		REG_BLDALPHA = m7Context.fadeOffset > 0xF ? 0 : 0xF - m7Context.fadeOffset;
 		if ((framecount - startFrame) >= 64) {
 			hideMinigame(framecount);
 		}
@@ -645,7 +637,7 @@ void minigameFrame(u32 framecount) {
 				offsets.y = 1024 - (64 << 8);
 				spaceship.sprite.sprite.transformed = 0;
 			}
-			fadeOffset = (framecount - startFrame) >> 4;
+			m7Context.fadeOffset = (framecount - startFrame) >> 4;
 			REG_BLDALPHA = 0xF - ((framecount - startFrame) >> 3);
 		}
 		if (keys & KEY_START) {
@@ -654,10 +646,10 @@ void minigameFrame(u32 framecount) {
 		}
 		break;
 	};
-
-	camPos.x = (256 << 8) + offsets.x;
-	camPos.y = (64 << 8) + offsets.y;
-	camPos.z = (256 << 8) + offsets.z;
+ 
+	m7Context.x = (256 << 8) + offsets.x;
+	m7Context.y = (64 << 8) + offsets.y;
+	m7Context.z = (256 << 8) + offsets.z;
 	int shipOffsetY = spaceship.offsetY + offsets.y;
 
 	spaceship.sprite.affine.theta = -offsets.x >> 2;
@@ -669,34 +661,4 @@ void minigameFrame(u32 framecount) {
 	ObjAffineSet(&spaceship.sprite.affine, affineTable(0), 1, 8);
 	updateBullets();
 	writeSpriteTable();
-}
-
-// From Tonc
-IWRAM_CODE static void m7() {
-	int vcount = REG_VCOUNT;
-	if (vcount >= 152 || vcount < 16) {
-		return;
-	}
-	s32 lcf, lxr, lyr;
-
-	s16 fade = bgFade[vcount] + fadeOffset;
-	if (fade > 0xF) {
-		REG_BLDY = 0xF;
-	} else {
-		REG_BLDY = fade;
-	}
-
-	lcf = camPos.y * DIV16[vcount] >> 12;
-	
-	REG_BG2PA = lcf >> 4;
-
-	// Horizontal offset
-	lxr = M7_W * (lcf >> 4);
-	REG_BG2X = camPos.x - lxr;
-
-	// Vertical offset
-	lyr = (M7_D * lcf) >> 4; 
-	REG_BG2Y = camPos.z - lyr;
-
-	REG_IF |= IRQ_HBLANK;
 }
