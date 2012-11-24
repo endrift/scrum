@@ -68,42 +68,41 @@ static void endIntro(u32 framecount) {
 	hzero((u16*) VRAM, 48 * 1024);
 	hzero(BG_PALETTE, 256);
 	REG_BG1CNT = CHAR_BASE(2) | SCREEN_BASE(1) | 1;
-	REG_BG3CNT = CHAR_BASE(0) | SCREEN_BASE(2) | 3;
-	DMA3COPY(hud_spritesPal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
+	REG_BG2CNT = CHAR_BASE(0) | SCREEN_BASE(2) | BG_SIZE_2 | BG_WRAP | 3;
+	DMA3COPY(hud_spritesPal, &BG_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
 	DMA3COPY(hud_spritesPal, &OBJ_COLORS[0], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
 	DMA3COPY(titlePal, &BG_COLORS[16 * 5], DMA16 | DMA_IMMEDIATE | (titlePalLen >> 1));
-	BG_COLORS[0] = 0;
 	int i;
 	for (i = 0; i < 16 * 4; ++i) {
 		int color = tile_bluePal[i];
 		int r = (color >> 1) & 0xF;
 		int g = (color >> 6) & 0xF;
 		int b = (color >> 11) & 0xF;
-		BG_COLORS[i + 16] = r | g << 5 | b << 10;
+		BG_COLORS[i] = r | g << 5 | b << 10;
 	}
-	DMA3COPY(tile_largeTiles, TILE_BASE_ADR(0) + 32, DMA16 | DMA_IMMEDIATE | (tile_largeTilesLen >> 1));
+	BG_COLORS[0] = 0;
+	DMA3COPY(tile_largeTiles, TILE_BASE_ADR(0) + 64, DMA16 | DMA_IMMEDIATE | (tile_largeTilesLen >> 1));
 	DMA3COPY(cursorTiles, OBJ_BASE_ADR, DMA16 | DMA_IMMEDIATE | (cursorTilesLen >> 1));
 	srand(0);
-	for (i = 0; i < 32; i += 2) {
+	for (i = 0; i < 64; ++i) {
 		int x;
 		int width;
 		for (x = 0; x < 30;) {
 			int seed = rand() >> 16;
-			int color = ((seed >> 2) & 3) + 1;
-			for (width = (seed & 3) + 1; width; --width, x += 2) {
+			int color = (seed >> 2) & 3;
+			for (width = (seed & 3) + 1; width; --width, ++x) {
 				if (x > 30) {
 					break;
 				}
-				((u16*) SCREEN_BASE_BLOCK(2))[i * 32 + x] = 1 | CHAR_PALETTE(color);
-				((u16*) SCREEN_BASE_BLOCK(2))[i * 32 + x + 1] = 2 | CHAR_PALETTE(color);
-				((u16*) SCREEN_BASE_BLOCK(2))[(i + 1) * 32 + x] = 3 | CHAR_PALETTE(color);
-				((u16*) SCREEN_BASE_BLOCK(2))[(i + 1) * 32 + x + 1] = 4 | CHAR_PALETTE(color);
+				((u16*) SCREEN_BASE_BLOCK(2))[i * 64 + x] = 0x201 + color * 0x404;
+				((u16*) SCREEN_BASE_BLOCK(2))[(2 * i + 1) * 32 + x] = 0x403 + color * 0x404;
 			}
 		}
 	}
 	DMA3COPY(titleTiles, TILE_BASE_ADR(2), DMA16 | DMA_IMMEDIATE | (titleTilesLen >> 1));
 	mapText(SCREEN_BASE_BLOCK(1), 0, 32, 0, 11, 5);
-	REG_DISPCNT = MODE_0 | BG1_ON;
+
+	REG_DISPCNT = MODE_1 | BG1_ON;
 }
 
 void introInit(u32 framecount) {
@@ -111,7 +110,7 @@ void introInit(u32 framecount) {
 	introStart = framecount;
 
 	REG_BLDALPHA = 0x0F00; // Whoops, GBA.js doesn't support BLDY in modes 3 - 5
-	REG_BLDCNT = 0x3877;
+	REG_BLDCNT = 0x387B;
 	REG_BG2PA = 0x100;
 	REG_BG2PB = 0;
 	REG_BG2PC = 0;
@@ -146,21 +145,19 @@ void introFrame(u32 framecount) {
 
 	if (state >= TITLE_FADE_IN_2) {
 		u16 y = (framecount >> 2);
-		REG_BG3VOFS = y & 0xFF;
-		if (!(y & 0xF)) {
+		REG_BG2Y = (y & 0x3FF) << 8;
+		if (!(framecount & 0x3F)) {
 			int x;
 			int width;
 			for (x = 0; x < 30;) {
 				int seed = rand() >> 16;
-				int color = ((seed >> 2) & 3) + 1;
-				for (width = (seed & 3) + 1; width; --width, x += 2) {
+				int color = (seed >> 2) & 3;
+				for (width = (seed & 3) + 1; width; --width, ++x) {
 					if (x > 30) {
 						break;
 					}
-					((u16*) SCREEN_BASE_BLOCK(2))[(((y >> 3) + 22) & 31) * 32 + x] = 1 | CHAR_PALETTE(color);
-					((u16*) SCREEN_BASE_BLOCK(2))[(((y >> 3) + 22) & 31) * 32 + x + 1] = 2 | CHAR_PALETTE(color);
-					((u16*) SCREEN_BASE_BLOCK(2))[(((y >> 3) + 23) & 31) * 32 + x] = 3 | CHAR_PALETTE(color);
-					((u16*) SCREEN_BASE_BLOCK(2))[(((y >> 3) + 23) & 31) * 32 + x + 1] = 4 | CHAR_PALETTE(color);
+					((u16*) SCREEN_BASE_BLOCK(2))[(((y >> 3) + 22) & 63) * 32 + x] = 0x201 + color * 0x404;
+					((u16*) SCREEN_BASE_BLOCK(2))[(((y >> 3) + 23) & 63) * 32 + x] = 0x403 + color * 0x404;
 				}
 			}
 		}
@@ -201,8 +198,8 @@ void introFrame(u32 framecount) {
 		break;
 	case TITLE_FADE_IN_2:
 		if (framecount - introStart <= 64) {
-			REG_DISPCNT = MODE_0 | BG1_ON | BG3_ON;
-			REG_BLDCNT = 0x3F78;
+			REG_DISPCNT = MODE_1 | BG1_ON | BG2_ON;
+			REG_BLDCNT = 0x3F74;
 			int value = (framecount - introStart) >> 2;
 			REG_BLDALPHA = value | (16 - value) << 8;
 		} else {
@@ -212,7 +209,7 @@ void introFrame(u32 framecount) {
 	case PRESS_START:
 		if (framecount == introStart) {
 			REG_BLDCNT = 0;
-			REG_DISPCNT = MODE_0 | BG1_ON | BG3_ON | OBJ_ON | OBJ_1D_MAP;
+			REG_DISPCNT = MODE_1 | BG1_ON | BG2_ON | OBJ_ON | OBJ_1D_MAP;
 			unmapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 14);
 			renderText("PRESS START", &(Textarea) {
 				.destination = TILE_BASE_ADR(2),
@@ -221,7 +218,7 @@ void introFrame(u32 framecount) {
 				.clipW = 128,
 				.clipH = 16
 			}, &largeFont);
-			mapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 14, 0);
+			mapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 14, 4);
 		}
 		if (keys & (KEY_START | KEY_A)) {
 			clearBlock(TILE_BASE_ADR(2), 71, 96, 128, 16);
@@ -252,7 +249,7 @@ void introFrame(u32 framecount) {
 				.clipW = 128,
 				.clipH = 16
 			}, &largeFont);
-			mapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 18, 0);
+			mapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 18, 4);
 
 			cursor.y = 112;
 			appendSprite(&cursor);
