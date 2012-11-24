@@ -3,6 +3,7 @@
 #include <gba_compression.h>
 #include <gba_dma.h>
 #include <gba_input.h>
+#include <gba_sprites.h>
 #include <gba_systemcalls.h>
 #include <gba_video.h>
 
@@ -12,6 +13,7 @@
 #include "text.h"
 #include "util.h"
 
+#include "cursor.h"
 #include "endrift.h"
 #include "hud-sprites.h"
 #include "tile-palette.h"
@@ -48,6 +50,10 @@ static const GameParameters* modes[] = {
 
 static u32 introStart = 0;
 static int modeIndex = 1;
+static Sprite cursor = {
+	.x = 80,
+	.size = 1
+};
 
 static void switchState(int nextState, u32 framecount) {
 	state = nextState;
@@ -64,6 +70,7 @@ static void endIntro(u32 framecount) {
 	REG_BG1CNT = CHAR_BASE(2) | SCREEN_BASE(1) | 1;
 	REG_BG3CNT = CHAR_BASE(0) | SCREEN_BASE(2) | 3;
 	DMA3COPY(hud_spritesPal, &BG_COLORS[0], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
+	DMA3COPY(hud_spritesPal, &OBJ_COLORS[0], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
 	DMA3COPY(titlePal, &BG_COLORS[16 * 5], DMA16 | DMA_IMMEDIATE | (titlePalLen >> 1));
 	BG_COLORS[0] = 0;
 	int i;
@@ -75,6 +82,7 @@ static void endIntro(u32 framecount) {
 		BG_COLORS[i + 16] = r | g << 5 | b << 10;
 	}
 	DMA3COPY(tile_largeTiles, TILE_BASE_ADR(0) + 32, DMA16 | DMA_IMMEDIATE | (tile_largeTilesLen >> 1));
+	DMA3COPY(cursorTiles, OBJ_BASE_ADR, DMA16 | DMA_IMMEDIATE | (cursorTilesLen >> 1));
 	srand(0);
 	for (i = 0; i < 32; i += 2) {
 		int x;
@@ -114,6 +122,9 @@ void introInit(u32 framecount) {
 	LZ77UnCompVram((void*) endriftBitmap, (void*) VRAM);
 	REG_DISPCNT = MODE_3 | BG2_ON;
 	BG_COLORS[0] = 0x7FFF;
+
+	clearSpriteTable();
+	writeSpriteTable();
 }
 
 void introDeinit(void) {
@@ -201,7 +212,7 @@ void introFrame(u32 framecount) {
 	case PRESS_START:
 		if (framecount == introStart) {
 			REG_BLDCNT = 0;
-			REG_DISPCNT = MODE_0 | BG1_ON | BG3_ON;
+			REG_DISPCNT = MODE_0 | BG1_ON | BG3_ON | OBJ_ON | OBJ_1D_MAP;
 			unmapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 14);
 			renderText("PRESS START", &(Textarea) {
 				.destination = TILE_BASE_ADR(2),
@@ -242,6 +253,10 @@ void introFrame(u32 framecount) {
 				.clipH = 16
 			}, &largeFont);
 			mapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 18, 0);
+
+			cursor.y = 112;
+			appendSprite(&cursor);
+			writeSpriteTable();
 		}
 		if (keys & (KEY_START | KEY_A)) {
 			currentParams = *modes[modeIndex];
@@ -252,13 +267,18 @@ void introFrame(u32 framecount) {
 			if (!modes[modeIndex]) {
 				modeIndex = 0;
 			}
+			cursor.y = 96 + 16 * modeIndex;
+			updateSprite(&cursor, 0);
 		}
 		if (keys & KEY_UP) {
 			--modeIndex;
 			if (modeIndex < 0) {
 				for (modeIndex = -1; modes[modeIndex + 1]; ++modeIndex);
 			}
+			cursor.y = 96 + 16 * modeIndex;
+			updateSprite(&cursor, 0);
 		}
+		writeSpriteTable();
 		break;
 	case TITLE_FADE_OUT:
 		if (framecount - introStart >= 32) {
