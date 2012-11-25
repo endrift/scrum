@@ -154,9 +154,8 @@ void introFrame(u32 framecount) {
 	}
 
 	if (state >= TITLE_FADE_IN_2) {
-		u16 y = (framecount >> 2);
-		m7Context.z = (y & 0x3FF) << 8;
-		if (!(framecount & 0x3F)) {
+		m7Context.z = framecount << 7;
+		if (!(framecount & 0xFF)) {
 			int x;
 			int width;
 			for (x = 0; x < 32;) {
@@ -166,8 +165,8 @@ void introFrame(u32 framecount) {
 					if (x > 32) {
 						break;
 					}
-					((u16*) SCREEN_BASE_BLOCK(2))[(((y >> 3) + 22) & 63) * 32 + x] = 0x201 + color * 0x404;
-					((u16*) SCREEN_BASE_BLOCK(2))[(((y >> 3) + 23) & 63) * 32 + x] = 0x403 + color * 0x404;
+					((u16*) SCREEN_BASE_BLOCK(2))[(((framecount >> 4) + 22) & 63) * 32 + x] = 0x201 + color * 0x404;
+					((u16*) SCREEN_BASE_BLOCK(2))[(((framecount >> 4) + 23) & 63) * 32 + x] = 0x403 + color * 0x404;
 				}
 			}
 		}
