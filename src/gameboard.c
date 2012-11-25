@@ -409,8 +409,8 @@ void updateBugFlashing(int type) {
 		}
 	}
 
-	int timer = state < 128 ? state : 256 - state;
-	int weight = (((max - min) * timer) >> 7) + min;
+	int timer = state < 512 ? state : 1024 - state;
+	int weight = (((max - min) * timer) >> 9) + min;
 	for (i = 0; i < 5; ++i) {
 		int r = ((timerPalette[i] & 0x1F) * (16 - weight) + 0x1F * weight) >> 4;
 		int g = ((timerPalette[i] >> 5) & 0x1F) * (16 - weight) >> 4;
@@ -418,7 +418,7 @@ void updateBugFlashing(int type) {
 		OBJ_COLORS[16 * 5 + i] = r | (g << 5) | (b << 10);
 	}
 	state += speed;
-	state &= 0xFF;
+	state &= 0x3FF;
 }
 
 static void updateBlockSprite(Block* block) {
