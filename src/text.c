@@ -538,6 +538,17 @@ void mapText(u16* mapData, int startX, int endX, int startY, int endY, int palet
 	}
 }
 
+void remapText(u16* mapData, int oldX, int oldY, int startX, int endX, int startY, int endY, int palette) {
+	int x, y;
+	int diffX = startX - oldX;
+	int diffY = startY - oldY;
+	for (y = startY; y < endY; ++y) {
+		for (x = startX; x < endX; ++x) {
+			mapData[x + y * 32] = (x - diffX + (y - diffY) * 32) | (palette << 12);
+		}
+	}
+}
+
 void unmapText(u16* mapData, int startX, int endX, int startY, int endY) {
 	int x, y;
 	for (y = startY; y < endY; ++y) {

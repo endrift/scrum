@@ -622,15 +622,7 @@ void minigameFrame(u32 framecount) {
 		break;
 	case FLYING_GAME_OVER:
 		if (framecount - 1 == startFrame) {
-			renderText("GAME OVER", &(Textarea) {
-				.destination = TILE_BASE_ADR(2),
-				.clipX = 47,
-				.clipY = 76,
-				.clipW = 160,
-				.clipH = 16,
-				.baseline = 0
-			}, &largeFont);
-			mapText(SCREEN_BASE_BLOCK(3), 1, 22, 9, 12, 5);
+			remapText(SCREEN_BASE_BLOCK(3), 1, 15, 1, 22, 9, 12, 5);
 		}
 		if (framecount - startFrame >= 128) {
 			spaceship.sprite.sprite.transformed = 0;

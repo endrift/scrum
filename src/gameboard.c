@@ -106,27 +106,17 @@ static void drawBoard(void) {
 		}
 	}
 
-	if (board->branch == 1) {
-		clearBlock(TILE_BASE_ADR(2), 163, 4, 5, 16);
-		renderText("MERGE", &(Textarea) {
-			.destination = TILE_BASE_ADR(2),
-			.clipX = 168,
-			.clipY = 4,
-			.clipW = 64,
-			.clipH = 16,
-			.baseline = 0
-		}, &largeFont);
-	} else if (localBoard.branch == -1) {
-		clearBlock(TILE_BASE_ADR(2), 163, 4, 64, 16);
+
+	if (board->branch) {
+		remapText(SCREEN_BASE_BLOCK(3), 0, 20, 23, 30, 13, 15, 5);
+		remapText(SCREEN_BASE_BLOCK(3), 8, 20, 20, 28, 0, 3, 5);
 	} else {
-		renderText("DELETE", &(Textarea) {
-			.destination = TILE_BASE_ADR(2),
-			.clipX = 163,
-			.clipY = 4,
-			.clipW = 64,
-			.clipH = 16,
-			.baseline = 0
-		}, &largeFont);
+		remapText(SCREEN_BASE_BLOCK(3), 0, 22, 23, 30, 13, 15, 5);
+		if (localBoard.branch > -1) {
+			remapText(SCREEN_BASE_BLOCK(3), 8, 23, 20, 28, 0, 3, 5);
+		} else {
+			unmapText(SCREEN_BASE_BLOCK(3), 20, 28, 0, 3);
+		}
 	}
 }
 
@@ -374,22 +364,6 @@ void updateScore(void) {
 		.clipH = 16,
 		.baseline = 0
 	}, &largeFont);
-
-	const char* branch;
-	if (board->branch) {
-		branch = "* LOCAL";
-	} else {
-		branch = "* MASTER";
-	}
-	clearBlock(TILE_BASE_ADR(2), 190, 104, 48, 16);
-	renderText(branch, &(Textarea) {
-		.destination = TILE_BASE_ADR(2),
-		.clipX = 187,
-		.clipY = 104,
-		.clipW = 64,
-		.clipH = 16,
-		.baseline = 0
-	}, &thinFont);
 }
 
 static void updateBlockSprite(Block* block) {
@@ -661,6 +635,28 @@ void gameBoardInit(u32 framecount) {
 		.baseline = 0
 	}, &thinFont);
 
+	renderText("CHECKOUT", &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 27,
+		.clipY = 4,
+		.clipW = 64,
+		.clipH = 16,
+		.baseline = 0
+	}, &largeFont);
+
+	// Draw offscreen
+
+	unmapText(SCREEN_BASE_BLOCK(3), 1, 21, 2, 20);
+
+	renderText("PAUSED", &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 62,
+		.clipY = 52,
+		.clipW = 160,
+		.clipH = 16,
+		.baseline = 0
+	}, &largeFont);
+
 	renderText("CLONING REPOSITORY", &(Textarea) {
 		.destination = TILE_BASE_ADR(2),
 		.clipX = 12,
@@ -670,10 +666,55 @@ void gameBoardInit(u32 framecount) {
 		.baseline = 0
 	}, &largeFont);
 
-	renderText("CHECKOUT", &(Textarea) {
+	renderText("BEGIN PROGRAMMING!", &(Textarea) {
 		.destination = TILE_BASE_ADR(2),
-		.clipX = 27,
-		.clipY = 4,
+		.clipX = 11,
+		.clipY = 100,
+		.clipW = 160,
+		.clipH = 16,
+		.baseline = 0
+	}, &largeFont);
+
+	renderText("GAME OVER", &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 47,
+		.clipY = 124,
+		.clipW = 160,
+		.clipH = 16,
+		.baseline = 0
+	}, &largeFont);
+
+	renderText("* LOCAL", &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 3,
+		.clipY = 160,
+		.clipW = 64,
+		.clipH = 16,
+		.baseline = 0
+	}, &thinFont);
+
+	renderText("* MASTER", &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 3,
+		.clipY = 176,
+		.clipW = 64,
+		.clipH = 16,
+		.baseline = 0
+	}, &thinFont);
+
+	renderText("MERGE", &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 72,
+		.clipY = 164,
+		.clipW = 64,
+		.clipH = 16,
+		.baseline = 0
+	}, &largeFont);
+
+	renderText("DELETE", &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 67,
+		.clipY = 188,
 		.clipW = 64,
 		.clipH = 16,
 		.baseline = 0
@@ -690,6 +731,7 @@ void gameBoardInit(u32 framecount) {
 	gameBoardSetup(framecount);
 
 	drawBoard();
+	remapText(SCREEN_BASE_BLOCK(3), 1, 9, 1, 22, 9, 12, 5);
 
 	DMA3COPY(game_backdropPal, &BG_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | (game_backdropPalLen >> 1));
 	DMA3COPY(hud_spritesPal, &BG_COLORS[16 * 5], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
@@ -722,7 +764,6 @@ void gameBoardFrame(u32 framecount) {
 		if (!((framecount - startFrame + 1) & 1)) {
 			if (introRow == GAMEBOARD_ROWS) {
 				clearBlock(TILE_BASE_ADR(2), 188, 136, 64, 16);
-				clearBlock(TILE_BASE_ADR(2), 12, 72, 160, 16);
 				switchState(PRE_GAMEPLAY, framecount);
 			} else {
 				layRandom(introRow);
@@ -738,19 +779,9 @@ void gameBoardFrame(u32 framecount) {
 	case PRE_GAMEPLAY:
 		if (framecount == startFrame + 1) {
 			updateBlocks();
-			unmapText(SCREEN_BASE_BLOCK(3), 1, 22, 9, 12);
-			renderText("BEGIN PROGRAMMING!", &(Textarea) {
-				.destination = TILE_BASE_ADR(2),
-				.clipX = 11,
-				.clipY = 76,
-				.clipW = 160,
-				.clipH = 16,
-				.baseline = 0
-			}, &largeFont);
-			mapText(SCREEN_BASE_BLOCK(3), 1, 22, 9, 12, 5);
+			remapText(SCREEN_BASE_BLOCK(3), 1, 12, 1, 22, 9, 12, 5);
 		} else if (framecount - startFrame == 120 || keys) {
 			unmapText(SCREEN_BASE_BLOCK(3), 1, 22, 9, 12);
-			clearBlock(TILE_BASE_ADR(2), 11, 76, 160, 16);
 			switchState(GAMEPLAY, framecount);
 		}
 		break;
@@ -760,6 +791,7 @@ void gameBoardFrame(u32 framecount) {
 			board->active.spriteR.mode = 1;
 			REG_BLDCNT = 0x0100;
 			switchState(GAMEPLAY, framecount);
+			unmapText(SCREEN_BASE_BLOCK(3), 1, 22, 9, 12);
 		}
 		break;
 	case GAMEPLAY:
@@ -770,8 +802,9 @@ void gameBoardFrame(u32 framecount) {
 		if (keys & KEY_START) {
 			board->active.spriteL.mode = 0;
 			board->active.spriteR.mode = 0;
-			REG_BLDCNT = 0x01FF;
+			REG_BLDCNT = 0x01FD;
 			REG_BLDY = 0x000A;
+			remapText(SCREEN_BASE_BLOCK(3), 1, 6, 1, 22, 9, 12, 5);
 			switchState(GAMEPLAY_PAUSED, framecount);
 		}
 
