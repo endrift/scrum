@@ -106,14 +106,19 @@ static void drawBoard(void) {
 		}
 	}
 
+	if (localBoard.branch < 0) {
+		remapText(SCREEN_BASE_BLOCK(3), 8, 20, 3, 13, 0, 3, 5);
+	} else {
+		remapText(SCREEN_BASE_BLOCK(3), 8, 23, 3, 13, 0, 3, 5);
+	}
 
 	if (board->branch) {
 		remapText(SCREEN_BASE_BLOCK(3), 0, 20, 23, 30, 13, 15, 5);
-		remapText(SCREEN_BASE_BLOCK(3), 8, 20, 20, 28, 0, 3, 5);
+		remapText(SCREEN_BASE_BLOCK(3), 18, 20, 20, 28, 0, 3, 5);
 	} else {
 		remapText(SCREEN_BASE_BLOCK(3), 0, 22, 23, 30, 13, 15, 5);
 		if (localBoard.branch > -1) {
-			remapText(SCREEN_BASE_BLOCK(3), 8, 23, 20, 28, 0, 3, 5);
+			remapText(SCREEN_BASE_BLOCK(3), 18, 23, 20, 28, 0, 3, 5);
 		} else {
 			unmapText(SCREEN_BASE_BLOCK(3), 20, 28, 0, 3);
 		}
@@ -635,15 +640,6 @@ void gameBoardInit(u32 framecount) {
 		.baseline = 0
 	}, &thinFont);
 
-	renderText("CHECKOUT", &(Textarea) {
-		.destination = TILE_BASE_ADR(2),
-		.clipX = 27,
-		.clipY = 4,
-		.clipW = 64,
-		.clipH = 16,
-		.baseline = 0
-	}, &largeFont);
-
 	// Draw offscreen
 
 	unmapText(SCREEN_BASE_BLOCK(3), 1, 21, 2, 20);
@@ -702,9 +698,27 @@ void gameBoardInit(u32 framecount) {
 		.baseline = 0
 	}, &thinFont);
 
+	renderText("BRANCH", &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 67,
+		.clipY = 164,
+		.clipW = 64,
+		.clipH = 16,
+		.baseline = 0
+	}, &largeFont);
+
+	renderText("CHECKOUT", &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 67,
+		.clipY = 188,
+		.clipW = 64,
+		.clipH = 16,
+		.baseline = 0
+	}, &largeFont);
+
 	renderText("MERGE", &(Textarea) {
 		.destination = TILE_BASE_ADR(2),
-		.clipX = 72,
+		.clipX = 152,
 		.clipY = 164,
 		.clipW = 64,
 		.clipH = 16,
@@ -713,7 +727,7 @@ void gameBoardInit(u32 framecount) {
 
 	renderText("DELETE", &(Textarea) {
 		.destination = TILE_BASE_ADR(2),
-		.clipX = 67,
+		.clipX = 147,
 		.clipY = 188,
 		.clipW = 64,
 		.clipH = 16,
