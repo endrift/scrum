@@ -26,7 +26,8 @@ static enum {
 	FLYING_INTRO,
 	FLYING_GAMEPLAY,
 	FLYING_END,
-	FLYING_GAME_OVER
+	FLYING_GAME_OVER,
+	FLYING_PAUSED
 } state = FLYING_INTRO;
 
 static u32 startFrame;
@@ -546,8 +547,11 @@ void showMinigame(u32 framecount) {
 void minigameFrame(u32 framecount) {
 	scanKeys();
 	u16 keys = keysDown();
+	u16 unbufferedKeys = ~REG_KEYINPUT;
 
-	offsets.z -= ramp(currentParams.bugSpeed, currentParams.bugSpeedMax);
+	if (state != FLYING_PAUSED) {
+		offsets.z -= ramp(currentParams.bugSpeed, currentParams.bugSpeedMax);
+	}
 
 	if (!((offsets.z >> 9) & 0xF)) {
 		int range = ((offsets.z >> 13) + 8) & 0xF;
@@ -576,7 +580,7 @@ void minigameFrame(u32 framecount) {
 			switchState(FLYING_END, framecount);
 		}
 
-		if (~REG_KEYINPUT & KEY_LEFT) {
+		if (unbufferedKeys & KEY_LEFT) {
 			offsets.x = offsets.x - 2048 - (offsets.x >> 3);
 		} else if (~REG_KEYINPUT & KEY_RIGHT) {
 			offsets.x = offsets.x + 2048 - (offsets.x >> 3);
@@ -584,7 +588,7 @@ void minigameFrame(u32 framecount) {
 			offsets.x -= (offsets.x >> 4);
 		}
 
-		if (~REG_KEYINPUT & KEY_DOWN) {
+		if (unbufferedKeys & KEY_DOWN) {
 			offsets.y = offsets.y - 1536 - (offsets.y >> 3);
 		} else if (~REG_KEYINPUT & KEY_UP) {
 			offsets.y = offsets.y + 1536 - (offsets.y >> 3);
@@ -594,6 +598,12 @@ void minigameFrame(u32 framecount) {
 
 		if (keys & KEY_A) {
 			fireFriendly(framecount);
+		}
+
+		if (keys & KEY_START) {
+			remapText(SCREEN_BASE_BLOCK(3), 1, 6, 1, 22, 9, 12, 5);
+			m7Context.fadeOffset = 4;
+			switchState(FLYING_PAUSED, framecount);
 		}
 		updateBug();
 		if ((!bug.active || bug.dead >= 16) && board->bugs <= currentParams.bugKickThreshold) {
@@ -643,6 +653,12 @@ void minigameFrame(u32 framecount) {
 			setRunloop(&intro);
 		}
 		break;
+	case FLYING_PAUSED:
+		if (keys & KEY_START) {
+			m7Context.fadeOffset = 0;
+			switchState(FLYING_GAMEPLAY, framecount);
+			unmapText(SCREEN_BASE_BLOCK(3), 1, 22, 9, 12);
+		}
 	};
  
 	m7Context.x = (256 << 8) + offsets.x;
