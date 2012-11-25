@@ -354,7 +354,7 @@ static void updateBug(void) {
 		if (!bug.dead) {
 			killstreak = 0;
 			++birthstreak;
-			board.bugs += birthstreak;
+			board->bugs += birthstreak;
 			updateScore();
 		}
 	} else if (bug.sprite.affine.sX < 256) {
@@ -416,8 +416,8 @@ static void updateBullets(void) {
 			} else if (!bug.dead && bug.active == 1 && bulletHit(bullet, &bug)) {
 				bug.dead = 1;
 				++killstreak;
-				board.score += killstreak;
-				--board.bugs;
+				board->score += killstreak;
+				--board->bugs;
 				birthstreak = 0;
 				updateScore();
 				int inner;
@@ -572,7 +572,7 @@ void minigameFrame(u32 framecount) {
 		}
 		break;
 	case FLYING_GAMEPLAY:
-		if (keys & KEY_B && board.bugs < currentParams.bugShuntThreshold) {
+		if (keys & KEY_B && board->bugs < currentParams.bugShuntThreshold) {
 			switchState(FLYING_END, framecount);
 		}
 
@@ -596,10 +596,10 @@ void minigameFrame(u32 framecount) {
 			fireFriendly(framecount);
 		}
 		updateBug();
-		if ((!bug.active || bug.dead >= 16) && board.bugs <= currentParams.bugKickThreshold) {
+		if ((!bug.active || bug.dead >= 16) && board->bugs <= currentParams.bugKickThreshold) {
 			switchState(FLYING_END, framecount);
 		}
-		if (board.bugs >= currentParams.maxBugs) {
+		if (board->bugs >= currentParams.maxBugs) {
 			switchState(FLYING_GAME_OVER, framecount);
 		}
 		break;
@@ -610,7 +610,7 @@ void minigameFrame(u32 framecount) {
 		spaceship.offsetY -= spaceship.offsetY >> 4;
 		spaceship.sprite.sprite.mode = 1;
 		m7Context.fadeOffset = (framecount - startFrame) >> 2;
-		if (board.bugs > 0 && bug.active) {
+		if (board->bugs > 0 && bug.active) {
 			bug.coords.y = (((bug.coords.y + 256) * 33) >> 5) - 256;
 			bug.coords.x = (bug.coords.x * 33) >> 5;
 			updateBug();

@@ -49,10 +49,12 @@ typedef struct GameBoard {
 	int branch;
 	int bugs;
 
+	int rowsRemaining;
+
 	int difficultyRamp;
 } GameBoard;
 
-extern GameBoard board;
+extern GameBoard* board;
 extern GameParameters currentParams;
 
 #endif
