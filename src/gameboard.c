@@ -646,7 +646,7 @@ void gameBoardInit(u32 framecount) {
 
 	renderText("PAUSED", &(Textarea) {
 		.destination = TILE_BASE_ADR(2),
-		.clipX = 62,
+		.clipX = 61,
 		.clipY = 52,
 		.clipW = 160,
 		.clipH = 16,
@@ -673,7 +673,7 @@ void gameBoardInit(u32 framecount) {
 
 	renderText("GAME OVER", &(Textarea) {
 		.destination = TILE_BASE_ADR(2),
-		.clipX = 47,
+		.clipX = 48,
 		.clipY = 124,
 		.clipW = 160,
 		.clipH = 16,
