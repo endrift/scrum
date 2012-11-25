@@ -325,6 +325,22 @@ void updateScore(void) {
 		.clipH = 16,
 		.baseline = 0
 	}, &largeFont);
+
+	const char* branch;
+	if (board.branch) {
+		branch = "* LOCAL";
+	} else {
+		branch = "* MASTER";
+	}
+	clearBlock(TILE_BASE_ADR(2), 190, 104, 48, 16);
+	renderText(branch, &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 187,
+		.clipY = 104,
+		.clipW = 64,
+		.clipH = 16,
+		.baseline = 0
+	}, &thinFont);
 }
 
 static void updateBlockSprite(Block* block) {
@@ -583,14 +599,14 @@ void gameBoardInit(u32 framecount) {
 		.baseline = 0
 	}, &largeFont);
 
-	renderText("FUNC", &(Textarea) {
+	renderText("ON BRANCH", &(Textarea) {
 		.destination = TILE_BASE_ADR(2),
-		.clipX = 195,
+		.clipX = 186,
 		.clipY = 88,
 		.clipW = 64,
 		.clipH = 16,
 		.baseline = 0
-	}, &largeFont);
+	}, &thinFont);
 
 	renderText("CLONING REPOSITORY", &(Textarea) {
 		.destination = TILE_BASE_ADR(2),
@@ -727,6 +743,11 @@ void gameBoardFrame(u32 framecount) {
 			if (board.difficultyRamp > 256) {
 				board.difficultyRamp = 256;
 			}
+		}
+
+		if (keys & KEY_SELECT) {
+			board.branch = !board.branch;
+			updateScore();
 		}
 
 		updateTimer(framecount);

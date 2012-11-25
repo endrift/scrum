@@ -255,7 +255,12 @@ EWRAM_DATA const Metrics largeFontMetrics = {
 EWRAM_DATA const Glyph thinFontGlyphs[128] = {
 	{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
 	{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
-	{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
+	{ .width = 3 }, {}, {}, {}, {}, {}, {}, {}, {}, {},
+	{ // *
+		.clipLeft = 0,
+		.clipWidth = 7,
+		.width = 6
+	}, {}, {}, {}, {}, {},
 	{ // 0
 		.clipLeft = 1,
 		.clipWidth = 6,
@@ -305,6 +310,171 @@ EWRAM_DATA const Glyph thinFontGlyphs[128] = {
 		.clipLeft = 1,
 		.clipWidth = 6,
 		.width = 5,
+	},
+	{ // :
+		.clipLeft = 1,
+		.clipWidth = 10,
+		.width = 9,
+	},
+	{ // ;
+		.clipLeft = 1,
+		.clipWidth = 10,
+		.width = 9,
+	},
+	{ // <
+		.clipLeft = 1,
+		.clipWidth = 10,
+		.width = 9,
+	},
+	{ // =
+		.clipLeft = 1,
+		.clipWidth = 10,
+		.width = 9,
+	},
+	{ // >
+		.clipLeft = 1,
+		.clipWidth = 10,
+		.width = 9,
+	},
+	{ // ?
+		.clipLeft = 1,
+		.clipWidth = 10,
+		.width = 9,
+	},
+	{ // @
+		.clipLeft = 1,
+		.clipWidth = 10,
+		.width = 9,
+	},
+	{ // A
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // B
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // C
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // D
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // E
+		.clipLeft = 1,
+		.clipWidth = 5,
+		.width = 4,
+	},
+	{ // F
+		.clipLeft = 1,
+		.clipWidth = 5,
+		.width = 8,
+	},
+	{ // G
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // H
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // I
+		.clipLeft = 5,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // J
+		.clipLeft = 4,
+		.clipWidth = 5,
+		.width = 8,
+	},
+	{ // K
+		.clipLeft = 4,
+		.clipWidth = 5,
+		.width = 8,
+	},
+	{ // L
+		.clipLeft = 1,
+		.clipWidth = 5,
+		.width = 4,
+	},
+	{ // M
+		.clipLeft = 0,
+		.clipWidth = 7,
+		.width = 6,
+	},
+	{ // N
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // O
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // P
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // Q
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // R
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // S
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // T
+		.clipLeft = 0,
+		.clipWidth = 7,
+		.width = 6,
+	},
+	{ // U
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // V
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // W
+		.clipLeft = 0,
+		.clipWidth = 11,
+		.width = 6,
+	},
+	{ // X
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // Y
+		.clipLeft = 1,
+		.clipWidth = 6,
+		.width = 5,
+	},
+	{ // Z
+		.clipLeft = 4,
+		.clipWidth = 8,
+		.width = 7,
 	},
 };
 
