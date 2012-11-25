@@ -671,6 +671,7 @@ void minigameFrame(u32 framecount) {
 	spaceship.sprite.sprite.x = 56 - (offsets.x >> 11) + (state == FLYING_END ? (offsets.x * (framecount - startFrame) >> 14) : 0);
 	spaceship.sprite.sprite.y = 72 - (shipOffsetY >> 9);
 	spaceship.sprite.sprite.base ^= 4;
+	updateBugFlashing(2);
 	updateSprite(&spaceship.sprite.sprite, spaceship.sprite.id);
 	ObjAffineSet(&spaceship.sprite.affine, affineTable(0), 1, 8);
 	updateBullets();

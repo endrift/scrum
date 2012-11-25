@@ -37,7 +37,7 @@ const static Sprite bugSprite = {
 	.base = 186,
 	.shape = 1,
 	.size = 2,
-	.palette = 4
+	.palette = 5
 };
 
 const static Sprite shoulderL = {
@@ -371,6 +371,56 @@ void updateScore(void) {
 	}, &largeFont);
 }
 
+void updateBugFlashing(int type) {
+	static int state = 0;
+	int speed = 0;
+	int max = 16;
+	int min = 0;
+	int i;
+	switch (type) {
+	case 0:
+		for (i = 0; i < 5; ++i) {
+			int r = (timerPalette[i] & 0x1F) >> 1;
+			int g = ((timerPalette[i] >> 5) & 0x1F) >> 1;
+			int b = ((timerPalette[i] >> 10) & 0x1F) >> 1;
+			OBJ_COLORS[16 * 5 + i] = r | (g << 5) | (b << 10);
+		}
+		return;
+	case 1:
+		max = (board->bugs << 4) / currentParams.bugShuntThreshold;
+		max = (max * max) >> 4;
+		min = 0;
+		speed = max;
+		break;
+	case 2:
+		if (board->bugs < currentParams.bugShuntThreshold) {
+			max = (board->bugs << 4) / currentParams.bugShuntThreshold;
+			max = (max * max) >> 4;
+			min = 0;
+			speed = max >> 1;
+		} else if (board->bugs < currentParams.maxBugs) {
+			max = 15;
+			min = ((board->bugs - currentParams.bugShuntThreshold) << 4) / (currentParams.maxBugs - currentParams.bugShuntThreshold);
+			speed = (16 + min) >> 1;
+		} else {
+			max = 16;
+			min = 16;
+			speed = 0;
+		}
+	}
+
+	int timer = state < 128 ? state : 256 - state;
+	int weight = (((max - min) * timer) >> 7) + min;
+	for (i = 0; i < 5; ++i) {
+		int r = ((timerPalette[i] & 0x1F) * (16 - weight) + 0x1F * weight) >> 4;
+		int g = ((timerPalette[i] >> 5) & 0x1F) * (16 - weight) >> 4;
+		int b = ((timerPalette[i] >> 10) & 0x1F) * (16 - weight) >> 4;
+		OBJ_COLORS[16 * 5 + i] = r | (g << 5) | (b << 10);
+	}
+	state += speed;
+	state &= 0xFF;
+}
+
 static void updateBlockSprite(Block* block) {
 	block->spriteL.palette = block->color;
 	block->spriteR.palette = block->color;
@@ -530,7 +580,7 @@ static void updateTimer(u32 framecount) {
 	++board->timer;
 	int i;
 	int timerMax = ramp(currentParams.dropTimerLength, currentParams.dropTimerMin);
-	for (i = 0; i < 16; ++i) {
+	for (i = 5; i < 16; ++i) {
 		OBJ_COLORS[16 * 5 + i] = timerPalette[i] + (board->timer << 4) / timerMax;
 	}
 	if (board->timer >= timerMax) {
@@ -914,6 +964,7 @@ void gameBoardFrame(u32 framecount) {
 	}
 
 	REG_BLDALPHA = 0x0F0B;
+	updateBugFlashing(board->bugs >= currentParams.bugEntryThreshold ? 1 : 0);
 	updateSprite(&board->active.spriteL, 0);
 	updateSprite(&board->active.spriteR, 1);
 	updateSprite(&board->next.spriteL, 2);

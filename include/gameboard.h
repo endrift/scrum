@@ -17,6 +17,7 @@ void gameBoardFrame(u32 framecount);
 
 void gameBoardSetup(u32 framecount);
 void updateScore(void);
+void updateBugFlashing(int type);
 
 inline int ramp(int a, int b);
 
