@@ -15,6 +15,7 @@
 
 #include "bug.h"
 #include "bullet.h"
+#include "explosion.h"
 #include "game-backdrop.h"
 #include "pcb.h"
 #include "spaceship.h"
@@ -113,6 +114,30 @@ typedef struct Bullet {
 static Bullet friendlyBullets[32];
 static u32 friendlyCooldown = 0;
 static int activeBullets;
+
+typedef struct Explosion {
+	Sprite sprite;
+	int id;
+} Explosion;
+
+static Explosion spaceshipDoom = {
+	.sprite = {
+		.disable = 1,
+		.base = 608,
+		.size = 2,
+		.priority = 3,
+		.palette = 6
+	},
+};
+static Explosion bugDoom = {
+	.sprite = {
+		.disable = 1,
+		.base = 608,
+		.size = 2,
+		.priority = 3,
+		.palette = 6
+	},
+};
 
 static s16 bgFade[160] = {
 	0x0000,
@@ -303,6 +328,11 @@ static void genOctant(int seed, Coordinates* coords) {
 
 }
 
+static void updateExplosion(Sprite* explosion, int stage) {
+	int tile = ((stage & 0x7) << 2) + ((stage & 0x8) << 4);
+	explosion->base = 608 + tile;
+}
+
 static void generateBug(void) {
 	bug.coords.z = offsets.z;
 	bug.active = 1;
@@ -319,6 +349,8 @@ static void updateBug(void) {
 		bug.sprite.sprite.transformed = 0;
 		REG_BLDALPHA = 0;
 		bug.active = 0;
+		bugDoom.sprite.transformed = 0;
+		updateSprite(&bugDoom.sprite, bugDoom.id);
 		updateSprite(&bug.sprite.sprite, bug.sprite.id);
 	}
 	if (!bug.active) {
@@ -340,15 +372,19 @@ static void updateBug(void) {
 	bug.currentCoords.z = advance;
 	bug.sprite.sprite.y = 24 + ((((((offsets.y >> 6) - y) >> 3) + 16) * (-advance >> 9)) >> 6);
 	bug.sprite.sprite.x = 56 + (((((-offsets.x >> 6) + x) >> 3) * (-advance >> 9)) >> 6);
+	bugDoom.sprite.x = bug.sprite.sprite.x;
+	bugDoom.sprite.y = bug.sprite.sprite.y;
 	unsigned int blend = 0;
 	if (bug.dead) {
 		blend = -bug.dead >> 2;
 		bug.sprite.sprite.transformed ^= 1;
 		++bug.dead;
+		updateExplosion(&bugDoom.sprite, bug.dead >> 1);
 	} else {
 		bug.sprite.sprite.base ^= 4;
 	}
 	if (bug.sprite.affine.sX < 128) {
+		bugDoom.sprite.transformed = 0;
 		bug.sprite.sprite.transformed = 0;
 		blend = 0;
 		bug.active = 0;
@@ -372,6 +408,7 @@ static void updateBug(void) {
 	}
 	REG_BLDALPHA = blend;
 	updateSprite(&bug.sprite.sprite, bug.sprite.id);
+	updateSprite(&bugDoom.sprite, bugDoom.id);
 	ObjAffineSet(&bug.sprite.affine, affineTable(1), 1, 8);
 }
 
@@ -420,6 +457,8 @@ static void updateBullets(void) {
 				board->score += killstreak;
 				--board->bugs;
 				birthstreak = 0;
+				bugDoom.sprite.transformed = 1;
+				bugDoom.sprite.doublesize = 1;
 				updateScore();
 				int inner;
 				for (inner = i + 1; inner > activeBullets; ++inner) {
@@ -463,6 +502,9 @@ void minigameInit(u32 framecount) {
 
 	spaceship.sprite.sprite.doublesize = 1;
 	spaceship.sprite.sprite.transformGroup = 0;
+	spaceshipDoom.sprite.doublesize = 1;
+	spaceshipDoom.sprite.transformGroup = 0;
+	spaceshipDoom.id = appendSprite(&spaceshipDoom.sprite);
 	spaceship.sprite.id = appendSprite(&spaceship.sprite.sprite);
 
 	activeBullets = 0;
@@ -479,6 +521,8 @@ void minigameInit(u32 framecount) {
 	}
 
 	bug.sprite.sprite.transformGroup = 1;
+	bugDoom.sprite.transformGroup = 1;
+	bugDoom.id = appendSprite(&bugDoom.sprite);
 	bug.sprite.id = appendSprite(&bug.sprite.sprite);
 }
 
@@ -491,6 +535,7 @@ void showMinigame(u32 framecount) {
 	DMA3COPY(spaceshipPal, &OBJ_COLORS[16], DMA16 | DMA_IMMEDIATE | 16);
 	DMA3COPY(bugPal, &OBJ_COLORS[16 * 2], DMA16 | DMA_IMMEDIATE | 16);
 	DMA3COPY(bulletPal, &OBJ_COLORS[16 * 3], DMA16 | DMA_IMMEDIATE | 16);
+	DMA3COPY(explosionPal, &OBJ_COLORS[16 * 6], DMA16 | DMA_IMMEDIATE | (explosionPalLen >> 1));
 	// Sigh. Maybe I should go back to 1-D mapping
 	DMA3COPY(spaceshipTiles, TILE_BASE_ADR(4) + 0x1400, DMA16 | DMA_IMMEDIATE | (spaceshipTilesLen >> 2));
 	DMA3COPY(spaceshipTiles + (spaceshipTilesLen >> 3), TILE_BASE_ADR(4) + 0x1800, DMA16 | DMA_IMMEDIATE | (spaceshipTilesLen >> 2));
@@ -500,6 +545,7 @@ void showMinigame(u32 framecount) {
 	DMA3COPY(bugTiles + 3 * (bugTilesLen >> 4), TILE_BASE_ADR(4) + 0x2100, DMA16 | DMA_IMMEDIATE | (bugTilesLen >> 3));
 	DMA3COPY(bulletTiles, TILE_BASE_ADR(4) + 0x1C00, DMA16 | DMA_IMMEDIATE | (bulletTilesLen >> 2));
 	DMA3COPY(bulletTiles + (bulletTilesLen >> 3), TILE_BASE_ADR(4) + 0x2000, DMA16 | DMA_IMMEDIATE | (bulletTilesLen >> 2));
+	DMA3COPY(explosionTiles, TILE_BASE_ADR(4) + 0x4C00, DMA16 | DMA_IMMEDIATE | (explosionTilesLen >> 1));
 
 	BG_COLORS[0] = game_backdropPal[15];
 
@@ -634,9 +680,14 @@ void minigameFrame(u32 framecount) {
 		if (framecount - 1 == startFrame) {
 			remapText(SCREEN_BASE_BLOCK(3), 1, 15, 1, 22, 9, 12, 5);
 		}
+		if (framecount - startFrame < 160) {
+			updateExplosion(&spaceshipDoom.sprite, (framecount - startFrame) >> 1);
+		}
 		if (framecount - startFrame >= 128) {
 			spaceship.sprite.sprite.transformed = 0;
 		} else {
+			spaceshipDoom.sprite.transformed = 1;
+			spaceshipDoom.sprite.doublesize = 1;
 			spaceship.sprite.sprite.mode = 1;
 			spaceship.sprite.sprite.transformed ^= 1;
 			offsets.x -= (offsets.x >> 6);
@@ -671,9 +722,12 @@ void minigameFrame(u32 framecount) {
 	spaceship.sprite.sprite.x = 56 - (offsets.x >> 11) + (state == FLYING_END ? (offsets.x * (framecount - startFrame) >> 14) : 0);
 	spaceship.sprite.sprite.y = 72 - (shipOffsetY >> 9);
 	spaceship.sprite.sprite.base ^= 4;
+	spaceshipDoom.sprite.x = spaceship.sprite.sprite.x;
+	spaceshipDoom.sprite.y = spaceship.sprite.sprite.y - 16;
 	updateBugFlashing(2);
 	updateSprite(&spaceship.sprite.sprite, spaceship.sprite.id);
 	ObjAffineSet(&spaceship.sprite.affine, affineTable(0), 1, 8);
+	updateSprite(&spaceshipDoom.sprite, spaceshipDoom.id);
 	updateBullets();
 	writeSpriteTable();
 }
