@@ -353,7 +353,7 @@ static void updateBug(void) {
 		updateSprite(&bugDoom.sprite, bugDoom.id);
 		updateSprite(&bug.sprite.sprite, bug.sprite.id);
 	}
-	if (!bug.active) {
+	if (!bug.active && board->bugs) {
 		if ((rand() & 0xF0000) == 0xF0000) {
 			generateBug();
 		} else {
@@ -652,7 +652,7 @@ void minigameFrame(u32 framecount) {
 			switchState(FLYING_PAUSED, framecount);
 		}
 		updateBug();
-		if ((!bug.active || bug.dead >= 16) && board->bugs <= currentParams.bugKickThreshold) {
+		if (!bug.active && board->bugs <= currentParams.bugKickThreshold) {
 			switchState(FLYING_END, framecount);
 		}
 		if (board->bugs >= currentParams.maxBugs) {
