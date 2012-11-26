@@ -964,7 +964,11 @@ void gameBoardFrame(u32 framecount) {
 	}
 
 	REG_BLDALPHA = 0x0F0B;
-	updateBugFlashing(board->bugs >= currentParams.bugEntryThreshold ? 1 : 0);
+	if (state != GAMEPLAY_FADE_FOR_MINIGAME) {
+		updateBugFlashing(board->bugs >= currentParams.bugEntryThreshold ? 1 : 0);
+	} else {
+		updateBugFlashing(2);
+	}
 	updateSprite(&board->active.spriteL, 0);
 	updateSprite(&board->active.spriteR, 1);
 	updateSprite(&board->next.spriteL, 2);
