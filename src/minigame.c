@@ -1,6 +1,5 @@
 #include "minigame.h"
 
-#include <gba_affine.h>
 #include <gba_dma.h>
 #include <gba_input.h>
 #include <gba_video.h>
@@ -37,12 +36,6 @@ typedef struct Coordinates {
 	s32 x, y, z;
 } Coordinates;
 static Coordinates offsets;
-
-typedef struct AffineSprite {
-	Sprite sprite;
-	int id;
-	ObjAffineSource affine;
-} AffineSprite;
 
 static struct {
 	AffineSprite sprite;

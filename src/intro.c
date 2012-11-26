@@ -15,6 +15,7 @@
 #include "util.h"
 
 #include "cursor.h"
+#include "cycle.h"
 #include "endrift.h"
 #include "hud-sprites.h"
 #include "tile-palette.h"
@@ -52,8 +53,33 @@ static const GameParameters* modes[] = {
 static u32 introStart = 0;
 static int modeIndex = 1;
 static Sprite cursor = {
-	.x = 80,
+	.x = 56,
 	.size = 1
+};
+
+static AffineSprite cycle = {
+	.sprite = {
+		.x = 88,
+		.y = 4,
+		.size = 3,
+		.transformed = 1,
+		.base = 68,
+		.priority = 2,
+		.mode = 1
+	},
+	.affine = {
+		.sX = 0x100,
+		.sY = -0x100
+	}
+};
+
+static Sprite circle = {
+	.x = 88,
+	.y = 4,
+	.size = 3,
+	.base = 4,
+	.priority = 2,
+	.mode = 1
 };
 
 static void switchState(int nextState, u32 framecount) {
@@ -77,6 +103,7 @@ static void endIntro(u32 framecount) {
 	BG_COLORS[0] = 0;
 	DMA3COPY(tile_largeTiles, TILE_BASE_ADR(0) + 64, DMA16 | DMA_IMMEDIATE | (tile_largeTilesLen >> 1));
 	DMA3COPY(cursorTiles, OBJ_BASE_ADR, DMA16 | DMA_IMMEDIATE | (cursorTilesLen >> 1));
+	DMA3COPY(cycleTiles, OBJ_BASE_ADR + 0x80, DMA16 | DMA_IMMEDIATE | (cycleTilesLen >> 1));
 	srand(0);
 	int i;
 	for (i = 0; i < 64; ++i) {
@@ -110,6 +137,11 @@ static void endIntro(u32 framecount) {
 		m7Context.div16[i] = ((1 << 24) / (i + 100)) >> 8;
 	}
 	enableMode7(1);
+	cycle.sprite.transformGroup = 0;
+	cycle.id = appendSprite(&cycle.sprite);
+	appendSprite(&circle);
+	ObjAffineSet(&cycle.affine, affineTable(0), 1, 8);
+	writeSpriteTable();
 
 	REG_DISPCNT = MODE_1 | BG1_ON;
 }
@@ -155,7 +187,7 @@ void introFrame(u32 framecount) {
 
 	if (state >= TITLE_FADE_IN_2) {
 		m7Context.z = framecount << 7;
-		if (!(framecount & 0xFF)) {
+		if (!(framecount & 0x1F)) {
 			int x;
 			int width;
 			for (x = 0; x < 32;) {
@@ -206,10 +238,11 @@ void introFrame(u32 framecount) {
 		}
 		break;
 	case TITLE_FADE_IN_2:
-		if (framecount - introStart < 32) {
-			REG_DISPCNT = MODE_1 | BG1_ON | BG2_ON;
-			REG_BLDCNT = 0x00C4;
+		if (framecount - introStart <= 32) {
+			REG_DISPCNT = MODE_1 | BG1_ON | BG2_ON | OBJ_ON | OBJ_1D_MAP;
+			REG_BLDCNT = 0x24C4;
 			int value = (framecount - introStart) >> 1;
+			REG_BLDALPHA = (value >> 1) | ((value << 7) & 0x1F00);
 			m7Context.fadeOffset = 17 - value;
 		} else {
 			switchState(PRESS_START, framecount);
@@ -218,7 +251,8 @@ void introFrame(u32 framecount) {
 	case PRESS_START:
 		if (framecount == introStart) {
 			m7Context.fadeOffset = 1;
-			REG_BLDCNT = 0x00C4;
+			REG_BLDCNT = 0x24C4;
+			REG_BLDALPHA = 0x0808;
 			REG_DISPCNT = MODE_1 | BG1_ON | BG2_ON | OBJ_ON | OBJ_1D_MAP;
 			unmapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 14);
 			renderText("PRESS START", &(Textarea) {
@@ -238,23 +272,23 @@ void introFrame(u32 framecount) {
 	case MODE_SELECT:
 		if (framecount == introStart) {
 			unmapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 18);
-			renderText("EASY", &(Textarea) {
+			renderText("SCRIPT KIDDIE", &(Textarea) {
 				.destination = TILE_BASE_ADR(2),
-				.clipX = 96,
+				.clipX = 72,
 				.clipY = 96,
 				.clipW = 128,
 				.clipH = 16
 			}, &largeFont);
-			renderText("NORMAL", &(Textarea) {
+			renderText("ENGINEER", &(Textarea) {
 				.destination = TILE_BASE_ADR(2),
-				.clipX = 96,
+				.clipX = 72,
 				.clipY = 112,
 				.clipW = 128,
 				.clipH = 16
 			}, &largeFont);
-			renderText("HARD", &(Textarea) {
+			renderText("SCRUM MASTER", &(Textarea) {
 				.destination = TILE_BASE_ADR(2),
-				.clipX = 96,
+				.clipX = 72,
 				.clipY = 128,
 				.clipW = 128,
 				.clipH = 16
@@ -263,7 +297,6 @@ void introFrame(u32 framecount) {
 
 			cursor.y = 112;
 			appendSprite(&cursor);
-			writeSpriteTable();
 		}
 		if (keys & (KEY_START | KEY_A)) {
 			currentParams = *modes[modeIndex];
@@ -275,7 +308,7 @@ void introFrame(u32 framecount) {
 				modeIndex = 0;
 			}
 			cursor.y = 96 + 16 * modeIndex;
-			updateSprite(&cursor, 0);
+			updateSprite(&cursor, 2);
 		}
 		if (keys & KEY_UP) {
 			--modeIndex;
@@ -283,9 +316,8 @@ void introFrame(u32 framecount) {
 				for (modeIndex = -1; modes[modeIndex + 1]; ++modeIndex);
 			}
 			cursor.y = 96 + 16 * modeIndex;
-			updateSprite(&cursor, 0);
+			updateSprite(&cursor, 2);
 		}
-		writeSpriteTable();
 		break;
 	case TITLE_FADE_OUT:
 		if (framecount - introStart >= 32) {
@@ -296,8 +328,15 @@ void introFrame(u32 framecount) {
 		} else {
 			int value = (framecount - introStart) >> 1;
 			REG_BLDCNT = 0x3FFF;
+			REG_BLDALPHA = 0xF - value;
 			m7Context.fadeOffset = value + 1;
 		}
 		break;
+	}
+
+	if (state >= TITLE_FADE_IN) {
+		cycle.affine.theta -= 128;
+		ObjAffineSet(&cycle.affine, affineTable(0), 1, 8);
+		writeSpriteTable();
 	}
 }

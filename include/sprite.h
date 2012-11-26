@@ -1,6 +1,7 @@
 #ifndef SPRITE_H
 #define SPRITE_H
 
+#include <gba_affine.h>
 #include <gba_types.h>
 
 typedef union Sprite {
@@ -42,6 +43,12 @@ typedef union Sprite {
 		u16 : 16;
 	};
 } __attribute__((packed)) Sprite;
+
+typedef struct AffineSprite {
+	Sprite sprite;
+	int id;
+	ObjAffineSource affine;
+} AffineSprite;
 
 void clearSpriteTable(void);
 void writeSpriteTable(void);
