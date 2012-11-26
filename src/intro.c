@@ -328,7 +328,7 @@ void introFrame(u32 framecount) {
 		} else {
 			int value = (framecount - introStart) >> 1;
 			REG_BLDCNT = 0x3FFF;
-			REG_BLDALPHA = 0xF - value;
+			REG_BLDALPHA = ((16 - value) >> 1) | (((16 - value) << 6) & 0x1F00);
 			m7Context.fadeOffset = value + 1;
 		}
 		break;
