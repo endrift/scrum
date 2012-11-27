@@ -1,6 +1,7 @@
 #include "gameParams.h"
 
-const GameParameters defaultParams = {
+static const GameParameters defaultParams = {
+	.modeName = "ENGINEER",
 	.dropTimerLength = 300,
 	.dropTimerMin = 150,
 	.rampSpeed = 4,
@@ -15,7 +16,8 @@ const GameParameters defaultParams = {
 	.bulletCooldown = 20
 };
 
-const GameParameters easyParams = {
+static const GameParameters easyParams = {
+	.modeName = "SCRIPT KIDDIE",
 	.dropTimerLength = 360,
 	.dropTimerMin = 180,
 	.rampSpeed = 2,
@@ -30,7 +32,8 @@ const GameParameters easyParams = {
 	.bulletCooldown = 15
 };
 
-const GameParameters hardParams = {
+static const GameParameters hardParams = {
+	.modeName = "SCRUM MASTER",
 	.dropTimerLength = 200,
 	.dropTimerMin = 100,
 	.rampSpeed = 8,
@@ -44,3 +47,13 @@ const GameParameters hardParams = {
 	.bulletsMax = 1,
 	.bulletCooldown = 30
 };
+
+const GameParameters* modes[] = {
+	&easyParams,
+	&defaultParams,
+	&hardParams,
+	0
+};
+
+GameParameters currentParams;
+int gameMode;

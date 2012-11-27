@@ -1,7 +1,10 @@
 #ifndef GAME_PARAMS_H
 #define GAME_PARAMS_H
 
+#define NUM_GAME_MODES 3
+
 typedef struct GameParameters {
+	const char* modeName;
 	int dropTimerLength;
 	int dropTimerMin;
 	int rampSpeed;
@@ -16,8 +19,8 @@ typedef struct GameParameters {
 	int bulletCooldown;
 } GameParameters;
 
-extern const GameParameters defaultParams;
-extern const GameParameters easyParams;
-extern const GameParameters hardParams;
+extern GameParameters currentParams;
+extern int gameMode;
+extern const GameParameters* modes[];
 
 #endif

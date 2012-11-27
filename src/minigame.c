@@ -5,6 +5,7 @@
 #include <gba_video.h>
 
 #include "gameboard.h"
+#include "highscore.h"
 #include "intro.h"
 #include "m7.h"
 #include "rng.h"
@@ -649,6 +650,9 @@ void minigameFrame(u32 framecount) {
 			switchState(FLYING_END, framecount);
 		}
 		if (board->bugs >= currentParams.maxBugs) {
+			if (isHighScore(gameMode, &(Score) { .score = board->score })) {
+				registerHighScore(gameMode, &(Score) { .score = board->score, .name = "ETAOIN" });
+			}
 			switchState(FLYING_GAME_OVER, framecount);
 		}
 		break;

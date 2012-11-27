@@ -45,7 +45,7 @@ typedef struct GameBoard {
 	int activeY;
 	int timer;
 
-	int score;
+	unsigned int score;
 	int lines;
 	int branch;
 	int bugs;
@@ -56,6 +56,5 @@ typedef struct GameBoard {
 } GameBoard;
 
 extern GameBoard* board;
-extern GameParameters currentParams;
 
 #endif

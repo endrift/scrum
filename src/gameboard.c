@@ -29,7 +29,6 @@ GameBoard localBoard = {
 };
 
 GameBoard* board = &masterBoard;
-GameParameters currentParams;
 
 const static Sprite bugSprite = {
 	.x = 183,

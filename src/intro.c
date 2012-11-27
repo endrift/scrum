@@ -9,6 +9,7 @@
 
 #include "gameboard.h"
 #include "gameParams.h"
+#include "highscore.h"
 #include "m7.h"
 #include "rng.h"
 #include "text.h"
@@ -43,13 +44,6 @@ Runloop intro = {
 	.frame = introFrame
 };
 
-static const GameParameters* modes[] = {
-	&easyParams,
-	&defaultParams,
-	&hardParams,
-	0
-};
-
 static u32 introStart = 0;
 static int modeIndex = 1;
 static Sprite cursor = {
@@ -81,6 +75,8 @@ static Sprite circle = {
 	.priority = 2,
 	.mode = 1
 };
+
+static Runloop* destinationMode;
 
 static void switchState(int nextState, u32 framecount) {
 	state = nextState;
@@ -165,10 +161,13 @@ void introInit(u32 framecount) {
 
 	clearSpriteTable();
 	writeSpriteTable();
+
+	initSRAM();
 }
 
 void introDeinit(void) {
 	enableMode7(0);
+	REG_BLDCNT = 0x0000;
 }
 
 void introFrame(u32 framecount) {
@@ -272,21 +271,21 @@ void introFrame(u32 framecount) {
 	case MODE_SELECT:
 		if (framecount == introStart) {
 			unmapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 18);
-			renderText("SCRIPT KIDDIE", &(Textarea) {
+			renderText(modes[0]->modeName, &(Textarea) {
 				.destination = TILE_BASE_ADR(2),
 				.clipX = 72,
 				.clipY = 96,
 				.clipW = 128,
 				.clipH = 16
 			}, &largeFont);
-			renderText("ENGINEER", &(Textarea) {
+			renderText(modes[1]->modeName, &(Textarea) {
 				.destination = TILE_BASE_ADR(2),
 				.clipX = 72,
 				.clipY = 112,
 				.clipW = 128,
 				.clipH = 16
 			}, &largeFont);
-			renderText("SCRUM MASTER", &(Textarea) {
+			renderText(modes[2]->modeName, &(Textarea) {
 				.destination = TILE_BASE_ADR(2),
 				.clipX = 72,
 				.clipY = 128,
@@ -300,6 +299,12 @@ void introFrame(u32 framecount) {
 		}
 		if (keys & (KEY_START | KEY_A)) {
 			currentParams = *modes[modeIndex];
+			destinationMode = &gameBoard;
+			switchState(TITLE_FADE_OUT, framecount);
+		}
+		if (keys & (KEY_SELECT)) {
+			currentParams = *modes[modeIndex];
+			destinationMode = &displayHighScores;
 			switchState(TITLE_FADE_OUT, framecount);
 		}
 		if (keys & KEY_DOWN) {
@@ -324,7 +329,8 @@ void introFrame(u32 framecount) {
 			REG_DISPCNT = 0;
 			hzero((u16*) VRAM, 48 * 1024);
 			hzero(BG_PALETTE, 256);
-			setRunloop(&gameBoard);
+			gameMode = modeIndex;
+			setRunloop(destinationMode);
 		} else {
 			int value = (framecount - introStart) >> 1;
 			REG_BLDCNT = 0x3FFF;
