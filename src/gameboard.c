@@ -979,7 +979,6 @@ void gameBoardSetup(u32 framecount) {
 	DMA3COPY(tile_bluePal + 1, &BG_COLORS[1], DMA16 | DMA_IMMEDIATE | (16 * 4 - 1));
 	DMA3COPY(tile_bluePal, &OBJ_COLORS[0], DMA16 | DMA_IMMEDIATE | (16 * 4));
 	resetPlayfield();
-	drawBoard();
 
 	mapText(SCREEN_BASE_BLOCK(3), 0, 30, 0, 3, 5);
 
@@ -997,6 +996,8 @@ void gameBoardSetup(u32 framecount) {
 	REG_WIN0V = 0x1898;
 	REG_WININ = 0x3B3F;
 	REG_WINOUT = 0x001B;
+
+	drawBoard();
 
 	REG_SOUNDCNT_X = 0x80;
 	REG_SOUNDCNT_L = SND1_R_ENABLE | SND1_L_ENABLE | SND4_R_ENABLE | SND4_L_ENABLE | 0x33;
