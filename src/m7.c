@@ -17,8 +17,8 @@ IWRAM_CODE static void m7() {
 	s32 lcf, lxr, lyr;
 
 	s16 fade = m7Context.bgFade[vcount] + m7Context.fadeOffset;
-	if (fade > 0xF) {
-		REG_BLDY = 0xF;
+	if (fade > 0x10) {
+		REG_BLDY = 0x10;
 	} else {
 		REG_BLDY = fade;
 	}
