@@ -11,6 +11,7 @@
 #include "text.h"
 #include "util.h"
 
+#include "game-backdrop.h"
 #include "hud-sprites.h"
 
 const char* savetype = "SRAM_V413"; // Make sure emulators that autodetect know we're faking SRAM
@@ -121,7 +122,7 @@ static void drawHighScore(int gameMode, int place, int x, int y) {
 	formatNumber(placeNum, 2, place + 1);
 	renderText(placeNum, &(Textarea) {
 		.destination = TILE_BASE_ADR(2),
-		.clipX = x,
+		.clipX = x + 2,
 		.clipY = y,
 		.clipW = 80,
 		.clipH = 16,
@@ -153,7 +154,7 @@ static void drawHighScore(int gameMode, int place, int x, int y) {
 		formatNumber(scoreBuffer, 9, score->score);
 		renderText(scoreBuffer,  &(Textarea) {
 			.destination = TILE_BASE_ADR(2),
-			.clipX = x + 128,
+			.clipX = x + 124,
 			.clipY = y,
 			.clipW = 80,
 			.clipH = 16,
@@ -168,16 +169,52 @@ static void updatePage(void) {
 	remapText(SCREEN_BASE_BLOCK(3), 0, 10 * page + 8, 0, 32, 8, 18, 4);
 }
 
+static void drawRectangle(int startX, int startY, int endX, int endY) {
+	u16* mapBase = SCREEN_BASE_BLOCK(1);
+
+	mapBase[32 * startY + startX] = 600 | CHAR_PALETTE(4);
+	mapBase[32 * endY + startX] = 824 | CHAR_PALETTE(4);
+	mapBase[32 * startY + endX] = 600 | 0x400 | CHAR_PALETTE(4);
+	mapBase[32 * endY + endX] = 824 | 0x400 | CHAR_PALETTE(4);
+
+	int i;
+	for (i = startX + 1; i < endX; ++i) {
+		mapBase[32 * startY + i] = 601 | CHAR_PALETTE(4);
+		mapBase[32 * endY + i] = 825 | CHAR_PALETTE(4);
+	}
+	for (i = startY + 1; i < endY; ++i) {
+		mapBase[32 * i + startX] = 632 | CHAR_PALETTE(4);
+		mapBase[32 * i + endX] = 632 | 0x400 | CHAR_PALETTE(4);
+	}
+
+	int x, y;
+	for (y = 0; y < (endY - startY) >> 1; ++y) {
+		for (x = startX + 1; x < endX; ++x) {
+			mapBase[x + (y * 2 + startY + 1) * 32] = 7 | CHAR_PALETTE(5);
+			if (y == ((endY - startY) >> 1) - 1) {
+				mapBase[x + (y * 2 + startY + 2) * 32] = 7 | CHAR_PALETTE(5);
+			} else {
+				mapBase[x + (y * 2 + startY + 2) * 32] = 9 | CHAR_PALETTE(5);
+			}
+		}
+	}
+}
+
 void highScoresScreenInit(u32 framecount) {
 	switchState(HIGHSCORE_FADE_IN, framecount);
 
 	REG_DISPCNT = BG0_ON | BG1_ON;
-	REG_BG0CNT = CHAR_BASE(0) | SCREEN_BASE(1) | 3;
+	REG_BG0CNT = CHAR_BASE(0) | SCREEN_BASE(1) | 2;
 	REG_BG1CNT = CHAR_BASE(2) | SCREEN_BASE(3);
 	REG_BLDCNT = 0x00FF;
 
+	DMA3COPY(game_backdropTiles, TILE_BASE_ADR(0) + 64, DMA16 | DMA_IMMEDIATE | (game_backdropTilesLen >> 1));
+	DMA3COPY(game_backdropPal, &BG_COLORS[16 * 5], DMA16 | DMA_IMMEDIATE | (game_backdropPalLen >> 1));
 	DMA3COPY(hud_spritesTiles, TILE_BASE_ADR(1), DMA16 | DMA_IMMEDIATE | (hud_spritesTilesLen >> 1));
 	DMA3COPY(hud_spritesPal, &BG_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
+
+	drawRectangle(2, 1, 27, 6);
+	drawRectangle(1, 7, 28, 18);
 
 	page = 0;
 }
@@ -195,7 +232,7 @@ void highScoresScreenFrame(u32 framecount) {
 			int i;
 			renderText("HIGH SCORES", &(Textarea) {
 				.destination = TILE_BASE_ADR(2),
-				.clipX = 24,
+				.clipX = 25,
 				.clipY = 16,
 				.clipW = 64,
 				.clipH = 16,
@@ -203,7 +240,7 @@ void highScoresScreenFrame(u32 framecount) {
 			}, &largeFont);
 			renderText(currentParams.modeName, &(Textarea) {
 				.destination = TILE_BASE_ADR(2),
-				.clipX = 24,
+				.clipX = 25,
 				.clipY = 32,
 				.clipW = 64,
 				.clipH = 16,
