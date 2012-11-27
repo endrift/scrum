@@ -46,9 +46,9 @@ typedef struct GameBoard {
 	int timer;
 
 	unsigned int score;
-	int lines;
+	unsigned int lines;
 	int branch;
-	int bugs;
+	unsigned int bugs;
 
 	int rowsRemaining;
 

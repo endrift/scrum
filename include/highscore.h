@@ -8,7 +8,7 @@
 typedef struct Score {
 	char name[8];
 	unsigned int score;
-	int lines;
+	unsigned int lines;
 } Score;
 
 void initSRAM(void);

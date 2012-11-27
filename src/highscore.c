@@ -1,11 +1,13 @@
 #include "highscore.h"
 
 #include <gba_dma.h>
+#include <gba_input.h>
 #include <gba_video.h>
 
 #include <string.h>
 
 #include "gameParams.h"
+#include "intro.h"
 #include "text.h"
 #include "util.h"
 
@@ -26,7 +28,7 @@ typedef struct ScoreDB {
 
 	PaddedScore scores[NUM_HIGH_SCORES];
 
-	int paddingBottom[256 - (16 * NUM_HIGH_SCORES)];
+	int paddingBottom[240 - (16 * NUM_HIGH_SCORES)];
 } ScoreDB;
 
 typedef struct SRAMBase {
@@ -160,6 +162,12 @@ static void drawHighScore(int gameMode, int place, int x, int y) {
 	}
 }
 
+static int page;
+
+static void updatePage(void) {
+	remapText(SCREEN_BASE_BLOCK(3), 0, 10 * page + 8, 0, 32, 8, 18, 4);
+}
+
 void highScoresScreenInit(u32 framecount) {
 	switchState(HIGHSCORE_FADE_IN, framecount);
 
@@ -170,16 +178,20 @@ void highScoresScreenInit(u32 framecount) {
 
 	DMA3COPY(hud_spritesTiles, TILE_BASE_ADR(1), DMA16 | DMA_IMMEDIATE | (hud_spritesTilesLen >> 1));
 	DMA3COPY(hud_spritesPal, &BG_COLORS[16 * 4], DMA16 | DMA_IMMEDIATE | (hud_spritesPalLen >> 2));
+
+	page = 0;
 }
 
 void highScoresScreenDeinit(void) {
 }
 
 void highScoresScreenFrame(u32 framecount) {
+	scanKeys();
+	u16 keys = keysDown();
 	switch (state) {
 	case HIGHSCORE_FADE_IN:
 		if (framecount == startFrame) {
-			mapText(SCREEN_BASE_BLOCK(3), 0, 32, 0, 20, 4);
+			mapText(SCREEN_BASE_BLOCK(3), 0, 32, 0, 18, 4);
 			int i;
 			renderText("HIGH SCORES", &(Textarea) {
 				.destination = TILE_BASE_ADR(2),
@@ -197,15 +209,52 @@ void highScoresScreenFrame(u32 framecount) {
 				.clipH = 16,
 				.baseline = 0
 			}, &largeFont);
-			for (i = 0; i < 5; ++i) {
+			for (i = 0; i < 10; ++i) {
 				drawHighScore(gameMode, i, 16, 64 + 16 * i);
 			}
 		}
-		if (framecount - startFrame < 64) {
-			REG_BLDY = 0x10 - ((framecount - startFrame) >> 2);
+		if (framecount - startFrame < 32) {
+			REG_BLDY = 0x10 - ((framecount - startFrame) >> 1);
+		} else {
+			switchState(HIGHSCORE_DISPLAY, framecount);
 		}
 		break;
 	case HIGHSCORE_DISPLAY:
+		if (keys & (KEY_B | KEY_UP)) {
+			if (page != 0) {
+				page = 0;
+				updatePage();
+			}
+		}
+
+		if (keys & KEY_A) {
+			if (page == 0) {
+				page = 1;
+				updatePage();
+			} else {
+				switchState(HIGHSCORE_FADE_OUT, framecount);
+			}
+		}
+
+		if (keys & KEY_DOWN) {
+			if (page == 0) {
+				page = 1;
+				updatePage();
+			}
+		}
+
+		if (keys & KEY_START) {
+			switchState(HIGHSCORE_FADE_OUT, framecount);
+		}
 		break;
+	case HIGHSCORE_FADE_OUT:
+		if (framecount == startFrame) {
+			REG_BLDCNT = 0x00BF;
+		}
+		if (framecount - startFrame <= 32) {
+			REG_BLDY = ((framecount - startFrame) >> 1);
+		} else {
+			setRunloop(&intro);
+		}
 	}
 }
