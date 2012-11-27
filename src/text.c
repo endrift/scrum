@@ -25,12 +25,20 @@ EWRAM_DATA const Glyph largeFontGlyphs[128] = {
 		.clipLeft = 3,
 		.clipWidth = 10,
 		.width = 9
-	}, {}, {}, {},
+	},
+	{}, {}, {},
 	{ // %
 		.clipLeft = 1,
 		.clipWidth = 14,
 		.width = 13,
-	}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
+	},
+	{}, {}, {}, {}, {}, {}, {}, {},
+	{ // .
+		.clipLeft = 6,
+		.clipWidth = 4,
+		.width = 4
+	},
+	{},
 	{ // 0
 		.clipLeft = 3,
 		.clipWidth = 10,
