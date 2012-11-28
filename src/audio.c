@@ -1,6 +1,11 @@
 #include "audio.h"
 
+#include <gba_interrupt.h>
 #include <gba_sound.h>
+#include <maxmod.h>
+
+#include "soundbank.h"
+#include "soundbank_bin.h"
 
 static struct {
 	u32 time;
@@ -11,6 +16,9 @@ void soundInit(void) {
 	sfx.time = 0;
 	REG_SOUNDCNT_X = 0x80;
 	REG_SOUNDCNT_L = SND1_R_ENABLE | SND1_L_ENABLE | SND2_R_ENABLE | SND2_L_ENABLE | SND4_R_ENABLE | SND4_L_ENABLE | 0x77;
+	mmInitDefault((mm_addr) soundbank_bin, 9);
+	irqSet(IRQ_VBLANK, mmVBlank);
+	mmSetVBlankHandler(soundFrame);
 }
 
 void soundFrame(void) {
