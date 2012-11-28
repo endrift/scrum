@@ -1,0 +1,72 @@
+<html>
+<head>
+<title>Scrum</title>
+<base href="../gbajs/">
+
+<link href="../scrum/resources/style.css" rel="stylesheet">
+
+<script src="js/core.js"></script>
+<script src="js/arm.js"></script>
+<script src="js/thumb.js"></script>
+<script src="js/mmu.js"></script>
+<script src="js/io.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/video.js"></script>
+<script src="js/video/proxy.js"></script>
+<script src="js/video/software.js"></script>
+<script src="js/irq.js"></script>
+<script src="js/keypad.js"></script>
+<script src="js/savedata.js"></script>
+<script src="js/gpio.js"></script>
+<script src="js/gba.js"></script>
+<script src="resources/xhr.js"></script>
+
+<script>
+var gba;
+
+try {
+	gba = new GameBoyAdvance();
+	gba.keypad.eatInput = true;
+	gba.setLogger(function(error) {
+		console.log(error);
+		gba.pause();
+		var screen = document.getElementById('screen');
+		if (screen.getAttribute('class') == 'dead') {
+			console.log('We appear to have crashed multiple times without reseting.');
+			return;
+		}
+		var crash = document.createElement('img');
+		crash.setAttribute('id', 'crash');
+		crash.setAttribute('src', 'resources/crash.png');
+		screen.parentElement.insertBefore(crash, screen);
+		screen.setAttribute('class', 'dead');
+	});
+} catch (exception) {
+	gba = null;
+}
+window.onload = function() {
+	if (gba && FileReader) {
+		var canvas = document.getElementById('screen');
+		gba.setCanvas(canvas);
+
+		gba.logLevel = gba.LOG_ERROR;
+		loadRom('resources/bios.bin', function(bios) {
+			gba.setBios(bios);
+			loadRom('../scrum/resources/scrum.gba', function(game) {
+				gba.setRom(game);
+				gba.runStable();
+			});
+		});
+
+	}
+}
+</script>
+
+</head>
+<body>
+	<img src="../scrum/resources/title.png" alt="Scrum" id="title">
+	<div id="game">
+		<canvas id="screen" class="gamesize" width="240" height="160"></canvas>
+	</div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+html {
+	background: url('tile.png');
+}
+
+#game {
+	border: 8px solid;
+	border-image: url('border.png') 8 round;
+	margin: auto;
+	width: 240px;
+	zoom: 3;
+	-moz-transform: scale(3) translate(0, 60px);
+}
+
+#game > * {
+	background-color: #161d22;
+}
+
+#game, .gamesize {
+	width: 240px;
+	height: 160px;
+    image-rendering: -webkit-optimize-contrast;
+}
+
+#title {
+	display: block;
+	margin: auto;
+}
