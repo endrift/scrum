@@ -9,6 +9,7 @@
 #include "gameParams.h"
 #include "intro.h"
 #include "key.h"
+#include "rng.h"
 #include "text.h"
 #include "util.h"
 
@@ -25,9 +26,20 @@ typedef struct PaddedScore {
 } PaddedScore;
 static PaddedScore bufferScore;
 
+static char initialNames[][8] = {
+	"BUSHNELL",
+	"DIJKSTRA",
+	"MIYAMOTO",
+	"MORPHEUS",
+	"PAJITNOV",
+	"THOMPSON",
+	"TORVALDS",
+	"SWOZNIAK"
+};
+
 static int entered = -1;
 static Score enteredScore;
-static char enteredName[8] = "WOZNIAK";
+static char enteredName[8];
 static int enterCharacter = 0;
 static int enteredGameMode;
 
@@ -106,6 +118,9 @@ int isHighScore(int gameMode, const Score* score) {
 }
 
 void enterHighScore(int gameMode, const Score* score) {
+	if (!score->score) {
+		return;
+	}
 	enteredGameMode = gameMode;
 	enteredScore = *score;
 	entered = -2;
@@ -306,6 +321,9 @@ void highScoresScreenFrame(u32 framecount) {
 				.align = TextCenter
 			}, &largeFont);
 			if (entered == -2) {
+				if (!enteredName[0]) {
+					memcpy(enteredName, initialNames[(rand() >> 16) & 7], 8);
+				}
 				int j;
 				for (i = j = 0; i < 10; ++i) {
 					const Score* oldScore = getHighScore(gameMode, j);
@@ -415,6 +433,10 @@ void highScoresScreenFrame(u32 framecount) {
 			clearBlock(TILE_BASE_ADR(2), 41, 64 + 16 * entered, 96, 16);
 			drawHighScore(&enteredScore, entered, 16, 64 + 16 * entered);
 			switchState(HIGHSCORE_DISPLAY, framecount);
+
+			// TODO: why is this necessary?
+			page = entered >= 5;
+			updatePage();
 			entered = -1;
 		}
 		break;
