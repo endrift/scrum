@@ -805,6 +805,9 @@ void gameBoardInit(u32 framecount) {
 
 void gameBoardDeinit() {
 	clearSpriteTable();
+
+	hzero((u16*) VRAM, 48 * 1024);
+	hzero(BG_PALETTE, 256);
 }
 
 void gameBoardFrame(u32 framecount) {

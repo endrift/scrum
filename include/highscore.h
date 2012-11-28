@@ -14,6 +14,7 @@ typedef struct Score {
 void initSRAM(void);
 const Score* getHighScore(int gameMode, int place);
 int isHighScore(int gameMode, const Score* score);
+void enterHighScore(int gameMode, const Score* score);
 void registerHighScore(int gameMode, const Score* score);
 
 extern Runloop displayHighScores;

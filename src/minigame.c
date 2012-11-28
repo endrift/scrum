@@ -650,9 +650,6 @@ void minigameFrame(u32 framecount) {
 			switchState(FLYING_END, framecount);
 		}
 		if (board->bugs >= currentParams.maxBugs) {
-			if (isHighScore(gameMode, &(Score) { .score = board->score })) {
-				registerHighScore(gameMode, &(Score) { .score = board->score, .name = "ETAOIN" });
-			}
 			switchState(FLYING_GAME_OVER, framecount);
 		}
 		break;
@@ -698,7 +695,11 @@ void minigameFrame(u32 framecount) {
 		}
 		if (keys & KEY_START) {
 			hideMinigame(framecount);
-			setRunloop(&intro);
+			Score score = { .score = board->score, .lines = board->lines };
+			if (isHighScore(gameMode, &score)) {
+				enterHighScore(gameMode, &score);
+			}
+			setRunloop(&displayHighScores);
 		}
 		break;
 	case FLYING_PAUSED:

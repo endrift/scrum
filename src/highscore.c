@@ -8,6 +8,7 @@
 
 #include "gameParams.h"
 #include "intro.h"
+#include "key.h"
 #include "text.h"
 #include "util.h"
 
@@ -23,6 +24,12 @@ typedef struct PaddedScore {
 	int padding[12];
 } PaddedScore;
 static PaddedScore bufferScore;
+
+static int entered = -1;
+static Score enteredScore;
+static char enteredName[8] = "WOZNIAK";
+static int enterCharacter = 0;
+static int enteredGameMode;
 
 typedef struct ScoreDB {
 	int paddingTop[16];
@@ -48,6 +55,7 @@ void highScoresScreenFrame(u32 framecount);
 static enum {
 	HIGHSCORE_FADE_IN,
 	HIGHSCORE_DISPLAY,
+	HIGHSCORE_ENTER,
 	HIGHSCORE_FADE_OUT
 } state;
 static u32 startFrame;
@@ -97,6 +105,12 @@ int isHighScore(int gameMode, const Score* score) {
 	}
 }
 
+void enterHighScore(int gameMode, const Score* score) {
+	enteredGameMode = gameMode;
+	enteredScore = *score;
+	entered = -2;
+}
+
 void registerHighScore(int gameMode, const Score* score) {
 	if (gameMode >= NUM_GAME_MODES) {
 		return;
@@ -116,8 +130,7 @@ void registerHighScore(int gameMode, const Score* score) {
 	}
 }
 
-static void drawHighScore(int gameMode, int place, int x, int y) {
-	const Score* score = getHighScore(gameMode, place);
+static void drawHighScore(const Score* score, int place, int x, int y) {
 	static char placeNum[4] = "00.\0";
 	formatNumber(placeNum, 2, place + 1);
 	renderText(placeNum, &(Textarea) {
@@ -144,7 +157,7 @@ static void drawHighScore(int gameMode, int place, int x, int y) {
 		strncpy(nameBuffer, score->name, 8);
 		renderText(nameBuffer,  &(Textarea) {
 			.destination = TILE_BASE_ADR(2),
-			.clipX = x + 40,
+			.clipX = x + 32,
 			.clipY = y,
 			.clipW = 80,
 			.clipH = 16,
@@ -200,6 +213,55 @@ static void drawRectangle(int startX, int startY, int endX, int endY) {
 	}
 }
 
+static void drawCharacter(int k) {
+	char letter[2] = "\0\0";
+	letter[0] = enteredName[k];
+	renderText(letter, &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 41 + k * 12,
+		.clipY = 64 + 16 * entered,
+		.clipW = 12,
+		.clipH = 16,
+		.baseline = 0
+	}, &largeFont);
+}
+
+static void letterOffset(int increment) {
+	char letter = enteredName[enterCharacter];
+	if (letter >= 'A' && letter <= 'Z') {
+		letter += increment;
+		if (letter < 'A' || letter > 'Z') {
+			enteredName[enterCharacter] = ' ';
+		} else {
+			enteredName[enterCharacter] = (letter - 'A' + 26) % 26 + 'A';
+		}
+	} else if (increment < 0) {
+		enteredName[enterCharacter] = 'Z';
+	} else {
+		enteredName[enterCharacter] = 'A';
+	}
+	clearBlock(TILE_BASE_ADR(2), 41 + enterCharacter * 12, 64 + 16 * (entered - 5 * page), 12, 16);
+	drawCharacter(enterCharacter);
+}
+
+static void repeatHandler(KeyContext* context, int keys) {
+	(void) (context);
+	if (keys & KEY_UP) {
+		letterOffset(-1);
+	}
+	if (keys & KEY_DOWN) {
+		letterOffset(1);
+	}
+}
+
+static KeyContext keyContext = {
+	.next = {},
+	.active = 0,
+	.startDelay = 18,
+	.repeatDelay = 6,
+	.repeatHandler = repeatHandler
+};
+
 void highScoresScreenInit(u32 framecount) {
 	switchState(HIGHSCORE_FADE_IN, framecount);
 
@@ -225,6 +287,7 @@ void highScoresScreenDeinit(void) {
 void highScoresScreenFrame(u32 framecount) {
 	scanKeys();
 	u16 keys = keysDown();
+	u16 unkeys = keysUp();
 	switch (state) {
 	case HIGHSCORE_FADE_IN:
 		if (framecount == startFrame) {
@@ -246,12 +309,43 @@ void highScoresScreenFrame(u32 framecount) {
 				.clipH = 16,
 				.baseline = 0
 			}, &largeFont);
-			for (i = 0; i < 10; ++i) {
-				drawHighScore(gameMode, i, 16, 64 + 16 * i);
+			if (entered == -2) {
+				int j;
+				for (i = j = 0; i < 10; ++i) {
+					const Score* oldScore = getHighScore(gameMode, j);
+					if (entered == -2 && (!oldScore || oldScore->score < enteredScore.score)) {
+						drawHighScore(&enteredScore, i, 16, 64 + 16 * i);
+						int k;
+						char letter[2] = "\0\0";
+						for (k = 0; k < 8; ++k) {
+							letter[0] = enteredName[k];
+							renderText(letter, &(Textarea) {
+								.destination = TILE_BASE_ADR(2),
+								.clipX = 41 + k * 12,
+								.clipY =  64 + 16 * i,
+								.clipW = 12,
+								.clipH = 16,
+								.baseline = 0
+							}, &largeFont);
+						}
+						page = i >= 5;
+						updatePage();
+						entered = i;
+					} else {
+						drawHighScore(oldScore, i, 16, 64 + 16 * i);
+						++j;
+					}
+				}
+			} else {
+				for (i = 0; i < 10; ++i) {
+					drawHighScore(getHighScore(gameMode, i), i, 16, 64 + 16 * i);
+				}
 			}
 		}
 		if (framecount - startFrame < 32) {
 			REG_BLDY = 0x10 - ((framecount - startFrame) >> 1);
+		} else if (entered >= 0) {
+			switchState(HIGHSCORE_ENTER, framecount);
 		} else {
 			switchState(HIGHSCORE_DISPLAY, framecount);
 		}
@@ -284,6 +378,50 @@ void highScoresScreenFrame(u32 framecount) {
 			switchState(HIGHSCORE_FADE_OUT, framecount);
 		}
 		break;
+	case HIGHSCORE_ENTER:
+		if (unkeys) {
+			stopRepeat(&keyContext, unkeys);
+		}
+		doRepeat(&keyContext, framecount);
+
+		if (keys & KEY_UP) {
+			startRepeat(&keyContext, framecount, KEY_UP);
+			letterOffset(-1);
+		}
+		if (keys & KEY_DOWN) {
+			startRepeat(&keyContext, framecount, KEY_DOWN);
+			letterOffset(1);
+		}
+
+		if (keys & (KEY_LEFT | KEY_B)) {
+			stopRepeat(&keyContext, KEY_UP | KEY_DOWN);
+
+			if (enterCharacter > 0) {
+				drawCharacter(enterCharacter);
+				--enterCharacter;
+				if ((framecount & 0x3F) > 0x1F) {
+					clearBlock(TILE_BASE_ADR(2), 41 + enterCharacter * 12, 64 + 16 * entered, 12, 16);
+				}
+			}
+		}
+
+		if ((enterCharacter < 7) && (keys & (KEY_RIGHT | KEY_A))) {
+			stopRepeat(&keyContext, KEY_UP | KEY_DOWN);
+			drawCharacter(enterCharacter);
+			++enterCharacter;
+			if ((framecount & 0x3F) > 0x1F) {
+				clearBlock(TILE_BASE_ADR(2), 41 + enterCharacter * 12, 64 + 16 * entered, 12, 16);
+			}
+		} else if (keys & (KEY_A | KEY_START)) {
+			stopRepeat(&keyContext, KEY_UP | KEY_DOWN);
+			strncpy(enteredScore.name, enteredName, 8);
+			registerHighScore(enteredGameMode, &enteredScore);
+			clearBlock(TILE_BASE_ADR(2), 41, 64 + 16 * entered, 96, 16);
+			drawHighScore(&enteredScore, entered, 16, 64 + 16 * entered);
+			switchState(HIGHSCORE_DISPLAY, framecount);
+			entered = -1;
+		}
+		break;
 	case HIGHSCORE_FADE_OUT:
 		if (framecount == startFrame) {
 			REG_BLDCNT = 0x00BF;
@@ -292,6 +430,14 @@ void highScoresScreenFrame(u32 framecount) {
 			REG_BLDY = ((framecount - startFrame) >> 1);
 		} else {
 			setRunloop(&intro);
+		}
+	}
+
+	if (entered >= 0) {
+		if (!(framecount & 0x3F)) {
+			drawCharacter(enterCharacter);
+		} else if (!(framecount & 0x1F)) {
+			clearBlock(TILE_BASE_ADR(2), 41 + enterCharacter * 12, 64 + 16 * (entered - 5 * page), 12, 16);
 		}
 	}
 }
