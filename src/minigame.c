@@ -347,8 +347,8 @@ static void updateBug(void) {
 		updateSprite(&bugDoom.sprite, bugDoom.id);
 		updateSprite(&bug.sprite.sprite, bug.sprite.id);
 	}
-	if (!bug.active && board->bugs) {
-		if ((rand() & 0xF0000) == 0xF0000) {
+	if (!bug.active) {
+		if (board->bugs && (rand() & 0xF0000) == 0xF0000) {
 			generateBug();
 		} else {
 			return;
