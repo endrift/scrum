@@ -5,13 +5,19 @@
 
 typedef struct Font Font;
 
+typedef enum TextAlignment {
+	TextLeft = 0,
+	TextCenter,
+	TextRight
+} TextAlignment;
+
 typedef struct Textarea {
 	void* destination;
 	int clipX;
 	int clipY;
 	unsigned int clipW;
 	unsigned int clipH;
-	int baseline;
+	TextAlignment align;
 } Textarea;
 
 typedef struct Glyph {

@@ -334,8 +334,7 @@ void updateScore(void) {
 			.clipX = 185,
 			.clipY = 40,
 			.clipW = 64,
-			.clipH = 16,
-			.baseline = 0
+			.clipH = 16
 		}, &thinFont);
 	} else {
 		formatNumber(&buffer[4], 5, board->score);
@@ -344,8 +343,7 @@ void updateScore(void) {
 			.clipX = 185,
 			.clipY = 40,
 			.clipW = 64,
-			.clipH = 16,
-			.baseline = 0
+			.clipH = 16
 		}, &largeFont);
 	}
 
@@ -355,8 +353,7 @@ void updateScore(void) {
 		.clipX = 185,
 		.clipY = 72,
 		.clipW = 64,
-		.clipH = 16,
-		.baseline = 0
+		.clipH = 16
 	}, &largeFont);
 
 	formatNumber(&buffer[6], 3, board->bugs);
@@ -365,8 +362,7 @@ void updateScore(void) {
 		.clipX = 203,
 		.clipY = 120,
 		.clipW = 32,
-		.clipH = 16,
-		.baseline = 0
+		.clipH = 16
 	}, &largeFont);
 }
 
@@ -667,8 +663,7 @@ void gameBoardInit(u32 framecount) {
 		.clipX = 186,
 		.clipY = 24,
 		.clipW = 64,
-		.clipH = 16,
-		.baseline = 0
+		.clipH = 16
 	}, &largeFont);
 
 	renderText("LINES", &(Textarea) {
@@ -676,8 +671,7 @@ void gameBoardInit(u32 framecount) {
 		.clipX = 192,
 		.clipY = 56,
 		.clipW = 64,
-		.clipH = 16,
-		.baseline = 0
+		.clipH = 16
 	}, &largeFont);
 
 	renderText("ON BRANCH", &(Textarea) {
@@ -685,8 +679,7 @@ void gameBoardInit(u32 framecount) {
 		.clipX = 186,
 		.clipY = 88,
 		.clipW = 64,
-		.clipH = 16,
-		.baseline = 0
+		.clipH = 16
 	}, &thinFont);
 
 	// Draw offscreen
@@ -698,8 +691,7 @@ void gameBoardInit(u32 framecount) {
 		.clipX = 61,
 		.clipY = 52,
 		.clipW = 160,
-		.clipH = 16,
-		.baseline = 0
+		.clipH = 16
 	}, &largeFont);
 
 	renderText("CLONING REPOSITORY", &(Textarea) {
@@ -707,8 +699,7 @@ void gameBoardInit(u32 framecount) {
 		.clipX = 12,
 		.clipY = 76,
 		.clipW = 160,
-		.clipH = 16,
-		.baseline = 0
+		.clipH = 16
 	}, &largeFont);
 
 	renderText("BEGIN PROGRAMMING!", &(Textarea) {
@@ -716,8 +707,7 @@ void gameBoardInit(u32 framecount) {
 		.clipX = 11,
 		.clipY = 100,
 		.clipW = 160,
-		.clipH = 16,
-		.baseline = 0
+		.clipH = 16
 	}, &largeFont);
 
 	renderText("GAME OVER", &(Textarea) {
@@ -725,8 +715,7 @@ void gameBoardInit(u32 framecount) {
 		.clipX = 48,
 		.clipY = 124,
 		.clipW = 160,
-		.clipH = 16,
-		.baseline = 0
+		.clipH = 16
 	}, &largeFont);
 
 	renderText("* LOCAL", &(Textarea) {
@@ -734,8 +723,7 @@ void gameBoardInit(u32 framecount) {
 		.clipX = 3,
 		.clipY = 160,
 		.clipW = 64,
-		.clipH = 16,
-		.baseline = 0
+		.clipH = 16
 	}, &thinFont);
 
 	renderText("* MASTER", &(Textarea) {
@@ -743,8 +731,7 @@ void gameBoardInit(u32 framecount) {
 		.clipX = 3,
 		.clipY = 176,
 		.clipW = 64,
-		.clipH = 16,
-		.baseline = 0
+		.clipH = 16
 	}, &thinFont);
 
 	renderText("BRANCH", &(Textarea) {
@@ -752,8 +739,7 @@ void gameBoardInit(u32 framecount) {
 		.clipX = 67,
 		.clipY = 164,
 		.clipW = 64,
-		.clipH = 16,
-		.baseline = 0
+		.clipH = 16
 	}, &largeFont);
 
 	renderText("CHECKOUT", &(Textarea) {
@@ -761,8 +747,7 @@ void gameBoardInit(u32 framecount) {
 		.clipX = 67,
 		.clipY = 188,
 		.clipW = 64,
-		.clipH = 16,
-		.baseline = 0
+		.clipH = 16
 	}, &largeFont);
 
 	renderText("MERGE", &(Textarea) {
@@ -770,8 +755,7 @@ void gameBoardInit(u32 framecount) {
 		.clipX = 152,
 		.clipY = 164,
 		.clipW = 64,
-		.clipH = 16,
-		.baseline = 0
+		.clipH = 16
 	}, &largeFont);
 
 	renderText("DELETE", &(Textarea) {
@@ -779,8 +763,7 @@ void gameBoardInit(u32 framecount) {
 		.clipX = 147,
 		.clipY = 188,
 		.clipW = 64,
-		.clipH = 16,
-		.baseline = 0
+		.clipH = 16
 	}, &largeFont);
 
 	introRow = 0;
@@ -824,8 +807,7 @@ void gameBoardFrame(u32 framecount) {
 			.clipX = 188,
 			.clipY = 136,
 			.clipW = 64,
-			.clipH = 16,
-			.baseline = 0
+			.clipH = 16
 		}, &largeFont);
 		if (!((framecount - startFrame + 1) & 1)) {
 			if (introRow == GAMEBOARD_ROWS) {

@@ -138,8 +138,7 @@ static void drawHighScore(const Score* score, int place, int x, int y) {
 		.clipX = x + 2,
 		.clipY = y,
 		.clipW = 80,
-		.clipH = 16,
-		.baseline = 0
+		.clipH = 16
 	}, &largeFont);
 
 	if (!score) {
@@ -148,8 +147,7 @@ static void drawHighScore(const Score* score, int place, int x, int y) {
 			.clipX = x + 88,
 			.clipY = y,
 			.clipW = 80,
-			.clipH = 16,
-			.baseline = 0
+			.clipH = 16
 		}, &largeFont);
 	} else {
 		static char nameBuffer[9] = {};
@@ -160,8 +158,7 @@ static void drawHighScore(const Score* score, int place, int x, int y) {
 			.clipX = x + 32,
 			.clipY = y,
 			.clipW = 80,
-			.clipH = 16,
-			.baseline = 0
+			.clipH = 16
 		}, &largeFont);
 
 		formatNumber(scoreBuffer, 9, score->score);
@@ -170,8 +167,7 @@ static void drawHighScore(const Score* score, int place, int x, int y) {
 			.clipX = x + 124,
 			.clipY = y,
 			.clipW = 80,
-			.clipH = 16,
-			.baseline = 0
+			.clipH = 16
 		}, &largeFont);
 	}
 }
@@ -222,7 +218,7 @@ static void drawCharacter(int k) {
 		.clipY = 64 + 16 * entered,
 		.clipW = 12,
 		.clipH = 16,
-		.baseline = 0
+		.align = TextCenter
 	}, &largeFont);
 }
 
@@ -297,17 +293,17 @@ void highScoresScreenFrame(u32 framecount) {
 				.destination = TILE_BASE_ADR(2),
 				.clipX = 25,
 				.clipY = 16,
-				.clipW = 64,
+				.clipW = 190,
 				.clipH = 16,
-				.baseline = 0
+				.align = TextCenter
 			}, &largeFont);
 			renderText(currentParams.modeName, &(Textarea) {
 				.destination = TILE_BASE_ADR(2),
 				.clipX = 25,
 				.clipY = 32,
-				.clipW = 64,
+				.clipW = 190,
 				.clipH = 16,
-				.baseline = 0
+				.align = TextCenter
 			}, &largeFont);
 			if (entered == -2) {
 				int j;
@@ -325,7 +321,7 @@ void highScoresScreenFrame(u32 framecount) {
 								.clipY =  64 + 16 * i,
 								.clipW = 12,
 								.clipH = 16,
-								.baseline = 0
+								.align = TextCenter
 							}, &largeFont);
 						}
 						page = i >= 5;

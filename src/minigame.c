@@ -555,8 +555,7 @@ void showMinigame(u32 framecount) {
 		.clipX = 186,
 		.clipY = 136,
 		.clipW = 64,
-		.clipH = 16,
-		.baseline = 0
+		.clipH = 16
 	}, &largeFont);
 
 	calcMap(0, 0, 16, 16, 0, 0);

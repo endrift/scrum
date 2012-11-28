@@ -507,10 +507,30 @@ EWRAM_DATA const Font thinFont = {
 };
 
 IWRAM_CODE void renderText(const char* text, const Textarea* destination, const Font* font) {
-	int x = destination->clipX, y, i;
+	int x, y, i;
 	int lastX = 0;
 	u16* pixels = destination->destination;
 	size_t len = strlen(text);
+	switch (destination->align) {
+	case TextLeft:
+	default:
+		x = destination->clipX;
+		break;
+	case TextCenter:
+		x = 0;
+		for (i = 0; i < len; ++i) {
+			x += font->metrics->glyphs[(int) text[i]].width;
+		}
+		x = destination->clipX + ((destination->clipW - x) >> 1);
+		break;
+	case TextRight:
+		x = 0;
+		for (i = 0; i < len; ++i) {
+			x += font->metrics->glyphs[(int) text[i]].width;
+		}
+		x = destination->clipX + (destination->clipW - x);
+		break;
+	}
 	for (i = 0; i < len; ++i) {
 		int startX = x;
 		for (y = 0; y < destination->clipH; ++y) {
