@@ -497,6 +497,7 @@ void minigameInit(u32 framecount) {
 	spaceship.sprite.sprite.doublesize = 1;
 	spaceship.sprite.sprite.transformGroup = 0;
 	spaceshipDoom.sprite.doublesize = 1;
+	spaceshipDoom.sprite.transformed = 0;
 	spaceshipDoom.sprite.transformGroup = 0;
 	spaceshipDoom.id = appendSprite(&spaceshipDoom.sprite);
 	spaceship.sprite.id = appendSprite(&spaceship.sprite.sprite);
