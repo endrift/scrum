@@ -472,7 +472,7 @@ static void updateBullets(void) {
 			} else {
 				bullet->sprite.affine.sX = bullet->sprite.affine.sY = 256 - (bullet->coords.z >> 3);
 				bullet->sprite.sprite.base ^= 2;
-				bullet->sprite.sprite.y = (((82 - (bullet->coords.y >> 9) + (offsets.y >> 10)) * ((1024 << 5) + bullet->coords.z) + (-((128 + (bullet->coords.y << 1) - offsets.y) << 15) * bullet->coords.z))) >> 15;
+				bullet->sprite.sprite.y = ((78 - (7 * (bullet->coords.y >> 12)) + (offsets.y >> 11)) * (bullet->coords.z + 8192) - (56 - (bullet->coords.y >> 11) + (offsets.y >> 12)) * bullet->coords.z) >> 13;
 				bullet->sprite.sprite.x = 80 - (((bullet->coords.x >> 11) - (offsets.x >> 12)) * ((256 << 5) + bullet->coords.z) >> 13);
 				ObjAffineSet(&bullet->sprite.affine, affineTable(bullet->sprite.sprite.transformGroup), 1, 8);
 			}
