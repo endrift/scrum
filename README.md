@@ -42,7 +42,19 @@ JavaScript is, unfortunately, a rather high-level language. As a result, it can 
 
 # Gameplay
 
-*TODO*
+<img src="http://jpfau.github.com/scrum/resources/begin.png">
+
+When you start the game, you're dumped into a "development environment" as it clones the repository so you can begin your very long night of coding. The board is populated and then you can begin. The main gameplay consists of trying to complete lines of code in your program.
+
+Each line contains blocks of four colors. You can place new blocks into the line of your choosing by pressing `Z` (or `A` if you're on a GBA), and when you fill up the line all the way up to the delimited column, the portion of that line that matches the last color on the line is cleared. You can clear an whole line by making the line entirely one color. Be careful, though! The more lines you clear, the harder the game gets.
+
+<img src="http://jpfau.github.com/scrum/resources/about-to-clear.png"><img src="http://jpfau.github.com/scrum/resources/cleared.png">
+
+If, however, you go over the line, you've made one bug for each column over you go. Furthermore, if you place a block of a mismatched color onto an existing line, you also get a bug. Watch your bug count! If it goes too high, you need to start debugging and will be automatically kicked into the debugger! If your bug counter isn't greyed out, you can voluntarily enter debugging mode by pressing `X` (`B` if you're on a GBA). You can manually exit the debugger when you've patched enough bugs by pressing `X` again, or if you meet your quota, you'll get kicked out of the debugger automatically.
+
+But what's a good development environment without a good revision control system behind it? You can create a local branch by hitting `A` (or `L` on a GBA). Each branch has its own score, line count and bug count, and you only get one local branch at a time, so use it wisely. Once you have a local branch, you can switch between your local branch and the master branch by hitting `A` again. Then, once you want to merge your changes back into master, or if you want to get rid of the local branch, hit `S` (or `R` on a GBA) and it will discard the branch you're not currently on. Unfortuantely, it seems that the version of git you're using isn't very good at resolving merge conflicts of colored blocks, so any changes you've made on the other branch are lost when you merge.
+
+When selecting a difficulty, you can press `\` (or `Select` on a GBA) to view high scores for that difficulty. The game can be paused by pressing `Enter` (or `Start` on a GBA).
 
 # Source
 
