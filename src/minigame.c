@@ -267,7 +267,7 @@ static inline int bulletHit(Bullet* bullet, Bug* bug) {
 	int bugDiffX = bug->currentCoords.x - (bullet->coords.x >> 6);
 	int bugDiffY = bug->currentCoords.y - (bullet->coords.y >> 6);
 	int bugDiffZ = (bullet->coords.z >> 4) - bug->currentCoords.z;
-	int scatter = -bullet->coords.z >> 10;
+	int scatter = -bullet->coords.z >> 11;
 	int scatterZ = 1 * scatter;
 	int scatterX = 4 * scatter;
 	int scatterY = 4 * scatter;
