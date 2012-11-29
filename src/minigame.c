@@ -455,9 +455,9 @@ static void updateBullets(void) {
 				bugDoom.sprite.doublesize = 1;
 				updateScore();
 				int inner;
-				for (inner = i + 1; inner > activeBullets; ++inner) {
-					bullet = &friendlyBullets[i];
-					Bullet* prevBullet = &friendlyBullets[i - 1];
+				for (inner = i + 1; inner < activeBullets; ++inner) {
+					bullet = &friendlyBullets[inner];
+					Bullet* prevBullet = &friendlyBullets[inner - 1];
 					int id = prevBullet->sprite.id;
 					int transformGroup = prevBullet->sprite.sprite.transformGroup;
 					prevBullet->coords = bullet->coords;
