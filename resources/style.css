@@ -6,9 +6,6 @@ html {
 	border: 8px solid;
 	border-image: url('border.png') 8 round;
 	margin: auto;
-	width: 240px;
-	zoom: 3;
-	-moz-transform: scale(3) translate(0, 60px);
 }
 
 #game > * {
@@ -16,12 +13,36 @@ html {
 }
 
 #game, .gamesize {
-	width: 240px;
-	height: 160px;
-    image-rendering: -webkit-optimize-contrast;
+	width: 720px;
+	height: 480px;
+}
+
+#game button {
+	border: 0;
+	position: absolute;
+	font-size: 48px;
+	-webkit-text-stroke: 3px #2D3236;
+	color: white;
+}
+
+#play {
+	background-image: url('title-screen-faded.png');
+	background-size: 100%;
 }
 
 #title {
 	display: block;
 	margin: auto;
+}
+
+#content {
+	width: 100%;
+	margin: auto;
+	text-align: center;
+	color: white;
+}
+
+footer {
+	margin-top: 20px;
+	font-family: 'Source Sans Pro', 'Source Code Pro', sans-serif;
 }

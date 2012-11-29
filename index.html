@@ -4,6 +4,7 @@
 <base href="../gbajs/">
 
 <link href="../scrum/resources/style.css" rel="stylesheet">
+<meta charset="UTF-8"> 
 
 <script src="js/core.js"></script>
 <script src="js/arm.js"></script>
@@ -23,6 +24,9 @@
 
 <script>
 var gba;
+var biosLoaded = false;
+var gameLoaded = false;
+var startGame = false;
 
 try {
 	gba = new GameBoyAdvance();
@@ -30,43 +34,57 @@ try {
 	gba.setLogger(function(error) {
 		console.log(error);
 		gba.pause();
-		var screen = document.getElementById('screen');
-		if (screen.getAttribute('class') == 'dead') {
-			console.log('We appear to have crashed multiple times without reseting.');
-			return;
-		}
-		var crash = document.createElement('img');
-		crash.setAttribute('id', 'crash');
-		crash.setAttribute('src', 'resources/crash.png');
-		screen.parentElement.insertBefore(crash, screen);
-		screen.setAttribute('class', 'dead');
 	});
 } catch (exception) {
 	gba = null;
 }
+
+function playGame() {
+	if (biosLoaded && gameLoaded) {
+		gba.runStable();
+	} else {
+		startGame = true;
+	}
+}
+
 window.onload = function() {
-	if (gba && FileReader) {
+	if (gba) {
 		var canvas = document.getElementById('screen');
+		var ctx = canvas.getContext('2d');
+		ctx.webkitImageSmoothingEnabled = false;
+		ctx.mozImageSmoothingEnabled = false;
 		gba.setCanvas(canvas);
 
 		gba.logLevel = gba.LOG_ERROR;
 		loadRom('resources/bios.bin', function(bios) {
 			gba.setBios(bios);
-			loadRom('../scrum/resources/scrum.gba', function(game) {
-				gba.setRom(game);
+			if (gameLoaded && startGame) {
 				gba.runStable();
-			});
+			} else {
+				biosLoaded = true;
+			}
 		});
-
+		loadRom('../scrum/resources/scrum.gba', function(game) {
+			gba.setRom(game);
+			if (biosLoaded && startGame) {
+				gba.runStable();
+			} else {
+				gameLoaded = true;
+			}
+		});
 	}
 }
 </script>
 
 </head>
 <body>
-	<img src="../scrum/resources/title.png" alt="Scrum" id="title">
-	<div id="game">
-		<canvas id="screen" class="gamesize" width="240" height="160"></canvas>
+	<div id="content">
+		<img src="../scrum/resources/title.png" alt="Scrum" id="title">
+		<div id="game">
+			<button onclick="playGame(); this.parentElement.removeChild(this)" id="play" class="gamesize">►</button>
+			<canvas id="screen" class="gamesize" width="720" height="480"></canvas>
+		</div>
+		<footer>© 2012 Jeffrey Pfau</footer>
 	</div>
 </body>
 </html>
