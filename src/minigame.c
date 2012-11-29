@@ -266,12 +266,12 @@ static void calcMap(int startX, int startY, int endX, int endY, int xOffset, int
 static inline int bulletHit(Bullet* bullet, Bug* bug) {
 	int bugDiffX = bug->currentCoords.x - (bullet->coords.x >> 6);
 	int bugDiffY = bug->currentCoords.y - (bullet->coords.y >> 6);
-	int bugDiffZ = (192 << 8) + (bullet->coords.z << 2) + bug->currentCoords.z;
-	int scatter = bullet->coords.z >> 10;
-	int scatterZ = 128 * scatter;
+	int bugDiffZ = (bullet->coords.z >> 4) - bug->currentCoords.z;
+	int scatter = -bullet->coords.z >> 10;
+	int scatterZ = 1 * scatter;
 	int scatterX = 4 * scatter;
 	int scatterY = 4 * scatter;
-	if (bugDiffZ < -(0x1000 - scatterZ) || bugDiffZ > 0x1000 - scatterZ) {
+	if (bugDiffZ < -(0x10 - scatterZ) || bugDiffZ > 0x10 - scatterZ) {
 		return 0;
 	}
 	if (bugDiffX < -(64 - scatterX) || bugDiffX > 64 - scatterX) {
@@ -363,7 +363,7 @@ static void updateBug(void) {
 	y += (bug.dead * bug.dead * advance) >> 18;
 	bug.currentCoords.x = x;
 	bug.currentCoords.y = y;
-	bug.currentCoords.z = advance;
+	bug.currentCoords.z = 128 - bug.sprite.affine.sX;
 	bug.sprite.sprite.y = 24 + ((((((offsets.y >> 6) - y) >> 3) + 16) * (-advance >> 9)) >> 6);
 	bug.sprite.sprite.x = 56 + (((((-offsets.x >> 6) + x) >> 3) * (-advance >> 9)) >> 6);
 	bugDoom.sprite.x = bug.sprite.sprite.x;
