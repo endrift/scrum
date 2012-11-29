@@ -24,19 +24,19 @@ The initial brainstorming session led me to a natural conclusion: a puzzle game,
 
 The web version of the game can be found on [GitHub](http://jpfau.github.com/scrum). But there's a twist: while the GitHub Game Off rules state that the game must run in a web browser, it does not state *how*, and in accordance with this, the game is programmed in the most arcane manner possible: it's a Game Boy Advance game.
 
-## Wait, what?
+### Wait, what?
 
 Scrum was written from scratch, using only DevKitPRO and associated libraries, for the Game Boy Advance. A freely-distributable ROM is [available for download](http://jpfau.github.com/scrum/resources/scrum.gba) and works (relatively) well in most GBA emulators and even on real GBA hardware, if you have a way of running them.
 
-## But, how?
+### But, how?
 
 The GitHub Game Off rules state that the entries can use any libraries or runtimes they like, e.g. Unity3D or Flash, so long as they're embedded in the browser. So what better than a pure JavaScript/HTML5 Game Boy Advance emulator like [GBA.js](http://jpfau.github.com/gbajs/), which was developed primarily between July and October of 2012?
 
-## So, why?
+### So, why?
 
 The [IOCCC](http://www.ioccc.org) has a Best/Worst Abuse of the Rules category, which I've always admired. I'm hoping maybe the GitHub Game Off will have one, too. It was an interesting challenge, and given that I'd just recently written GBA.js, the platform was fresh on my mind and I figured I could probably pretty easily write a game for it, with all I'd learned from the process. Turns out it was more than enough to write a game for the GBA. Plus, it's really damn cool to be able to take a GBA out of my pocket, turn it on, point to the screen and say, "I wrote this!"
 
-## Hold on a second…
+### Hold on a second…
 
 JavaScript is, unfortunately, a rather high-level language. As a result, it can be slow. GBA.js is no exception, so Scrum can run slowly in some browsers or on some platforms. You will generally need good hardware. A Sandy Bridge i5 or better is recommended hardware, and the browser should be either Safari 6.0 or Chrome 22+. Firefox and Opera also work, but are much slower and have no sound. IE10 also apparently works, but is highly un-recommended.
 
