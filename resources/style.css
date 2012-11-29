@@ -2,6 +2,18 @@ html {
 	background: url('tile.png');
 }
 
+a:link, a:visited {
+	color: #9ca6ab;
+	font-weight: bold;
+	text-decoration: none;
+	letter-spacing: 1px;
+	margin: 0 10px;
+}
+
+a:link:hover, a:visited:hover {
+	color: white;
+}
+
 #game {
 	border: 8px solid;
 	border-image: url('border.png') 8 round;
@@ -21,7 +33,7 @@ html {
 	border: 0;
 	position: absolute;
 	font-size: 48px;
-	-webkit-text-stroke: 3px #2D3236;
+	-webkit-text-stroke: 3px #384040;
 	color: white;
 }
 
