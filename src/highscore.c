@@ -3,6 +3,7 @@
 #include <gba_dma.h>
 #include <gba_input.h>
 #include <gba_video.h>
+#include <maxmod.h>
 
 #include <string.h>
 
@@ -16,6 +17,7 @@
 
 #include "game-backdrop.h"
 #include "hud-sprites.h"
+#include "soundbank.h"
 
 static char initialNames[][8] = {
 	"BUSHNELL",
@@ -268,9 +270,12 @@ void highScoresScreenInit(u32 framecount) {
 	drawRectangle(1, 7, 28, 18);
 
 	page = 0;
+	mmSetModuleVolume(1024);
+	mmStart(MOD_SCORE, MM_PLAY_LOOP);
 }
 
 void highScoresScreenDeinit(void) {
+	mmStop();
 }
 
 void highScoresScreenFrame(u32 framecount) {
@@ -423,8 +428,10 @@ void highScoresScreenFrame(u32 framecount) {
 			REG_BLDCNT = 0x00BF;
 		}
 		if (framecount - startFrame <= 32) {
+			mmSetModuleVolume((32 - (framecount - startFrame)) << 5);
 			REG_BLDY = ((framecount - startFrame) >> 1);
 		} else {
+			mmStop();
 			setRunloop(&intro);
 		}
 	}

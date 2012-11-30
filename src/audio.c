@@ -15,8 +15,9 @@ static struct {
 void soundInit(void) {
 	sfx.time = 0;
 	REG_SOUNDCNT_X = 0x80;
-	REG_SOUNDCNT_L = SND1_R_ENABLE | SND1_L_ENABLE | SND2_R_ENABLE | SND2_L_ENABLE | SND4_R_ENABLE | SND4_L_ENABLE | 0x77;
-	mmInitDefault((mm_addr) soundbank_bin, 9);
+	mmInitDefault((mm_addr) soundbank_bin, 8);
+	REG_SOUNDCNT_H |= 2;
+	REG_SOUNDCNT_L |= SND1_R_ENABLE | SND1_L_ENABLE | SND2_R_ENABLE | SND2_L_ENABLE | SND4_R_ENABLE | SND4_L_ENABLE | 0x77;
 	irqSet(IRQ_VBLANK, mmVBlank);
 	mmSetVBlankHandler(soundFrame);
 }

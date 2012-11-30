@@ -6,6 +6,7 @@
 #include <gba_sprites.h>
 #include <gba_systemcalls.h>
 #include <gba_video.h>
+#include <maxmod.h>
 
 #include "gameboard.h"
 #include "gameParams.h"
@@ -21,6 +22,7 @@
 #include "cycle.h"
 #include "endrift.h"
 #include "hud-sprites.h"
+#include "soundbank.h"
 #include "tile-palette.h"
 #include "tile-large.h"
 #include "title.h"
@@ -195,6 +197,8 @@ static void endIntro(u32 framecount) {
 	writeSpriteTable();
 
 	REG_DISPCNT = MODE_1 | BG1_ON;
+	mmStart(MOD_INTRO, MM_PLAY_LOOP);
+	mmSetModuleVolume(1024);
 }
 
 void introInit(u32 framecount) {
@@ -407,8 +411,11 @@ void introFrame(u32 framecount) {
 			hzero((u16*) VRAM, 48 * 1024);
 			hzero(BG_PALETTE, 256);
 			gameMode = modeIndex;
+			mmStop();
+			mmSetModuleVolume(1024);
 			setRunloop(destinationMode);
 		} else {
+			mmSetModuleVolume((32 - (framecount - introStart)) << 5);
 			int value = (framecount - introStart) >> 1;
 			REG_BLDCNT = 0x3FFF;
 			REG_BLDALPHA = ((16 - value) >> 1) | (((16 - value) << 6) & 0x1F00);

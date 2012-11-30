@@ -4,6 +4,7 @@
 #include <gba_input.h>
 #include <gba_sprites.h>
 #include <gba_video.h>
+#include <maxmod.h>
 
 #include "audio.h"
 #include "intro.h"
@@ -18,6 +19,7 @@
 #include "tile-data.h"
 #include "game-backdrop.h"
 #include "hud-sprites.h"
+#include "soundbank.h"
 
 Runloop gameBoard = {
 	.init = gameBoardInit,
@@ -609,6 +611,7 @@ static void hideBoard(void) {
 	updateSprite(&board->next.spriteL, 2);
 	updateSprite(&board->next.spriteR, 3);
 	writeSpriteTable();
+	mmStop();
 
 	unmapText(SCREEN_BASE_BLOCK(3), 0, 30, 0, 3);
 }
@@ -846,6 +849,7 @@ void gameBoardFrame(u32 framecount) {
 			switchState(GAMEPLAY, framecount);
 			unmapText(SCREEN_BASE_BLOCK(3), 1, 22, 9, 12);
 		} else if (keys & KEY_SELECT) {
+			mmStop();
 			saveGame(&masterBoard, &localBoard);
 			setRunloop(&intro);
 			return;
@@ -917,6 +921,7 @@ void gameBoardFrame(u32 framecount) {
 	case GAMEPLAY_FADE_FOR_MINIGAME:
 		REG_DMA0CNT = 0;
 		if (framecount - startFrame < 48) {
+			mmSetModuleVolume((48 - (framecount - startFrame)) << 3);
 			int i;
 			for (i = 16; i < 152; ++i) {
 				if (i & 1) {
@@ -992,6 +997,8 @@ void gameBoardSetup(u32 framecount) {
 	REG_WINOUT = 0x001B;
 
 	drawBoard();
+	mmSetModuleVolume(384);
+	mmStart(MOD_PROGRAMMING, MM_PLAY_LOOP);
 }
 
 void loadGame(void) {
