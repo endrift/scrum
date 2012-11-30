@@ -2,13 +2,15 @@
 
 It's past 3 AM on Thursday morning (or a Wednesday night, if you're going to keep lying to yourself), and there's a Friday deadline bearing down on you. You have to finish coding your GAME for the GitHub Game Off 2012 challenge, but you're not quite done yet and you haven't had enough sleep….
 
+A strange thought occurs to you. What happens if you make the game for the GAME BOY ADVANCE instead of a WEB BROWSER like the rules say? All you need to do is write a GAME BOY ADVANCE EMULATOR IN JAVASCRIPT. You wonder if someone's already done that, though. It seems like someone must have by now.
+
 You take another sip from your PINT GLASS OF COLD COFFEE and your eyes go funny. The screen blurs and the lines of code all blend together. The combination of caffeine overdosing and the abject lack of sleep has definitely affected your BRAIN in the strangest of ways.
 
 The screen flickers off.
 
 It is pitch black. You are likely to be eaten by a GRUE.
 
-There are no GRUES around, however. Only something more sinister…. The screen flashes and you realize you have been transported inside of a BAD PROGRAMMING METAPHOR!
+There are no GRUES around, however. Only something more sinister…. You hear a noise coming from your CLOSET. You open the door and discover that your loyal GAME BOY ADVANCE has somehow turned itself on and is glowing the title screen of the GAME you have been writing for the past month. The screen flashes and you realize you have been transported inside of a BAD PROGRAMMING METAPHOR!
 
 Now you must fight your way through COLORFUL LINES OF CODE and EXPLODING BUGS to survive through the night!
 
@@ -18,11 +20,11 @@ This is SCRUM. Enjoy your stay.
 
 <img src="http://jpfau.github.com/scrum/resources/title-screen.png">
 
-Scrum is an entry for the GitHub Game Off 2012 competition. It's not a text adventure, however: it's a puzzle game based on a simple premise: How can I misrepresent programming as a game without making it some arbitrary minigame that may or may not involve Pipe Mania.
+Scrum is an entry for the GitHub Game Off 2012 competition. It's not a text adventure, however. It's a puzzle game based on a simple premise: How can I misrepresent programming as a game without making it some arbitrary minigame that may or may not involve Pipe Mania?
 
 The initial brainstorming session led me to a natural conclusion: a puzzle game, but line-based. While it superficially similar to Tetris, the gameplay is very different. See the tutorial section for a rundown on the gameplay.
 
-The web version of the game can be found on [GitHub](http://jpfau.github.com/scrum). But there's a twist: while the GitHub Game Off rules state that the game must run in a web browser, it does not state *how*, and in accordance with this, the game is programmed in the most arcane manner possible: it's a Game Boy Advance game.
+The web version of the game can be found on [GitHub](http://jpfau.github.com/scrum). But there's a twist: while the GitHub Game Off rules state that the game must run in a web browser, it does not state *how*, and in accordance with this, the game is programmed in the most arcane manner possible: it's a Game Boy Advance game running on a JavaScript Game Boy Advance emulator.
 
 ### Wait, what?
 
@@ -46,11 +48,11 @@ JavaScript is, unfortunately, a rather high-level language. As a result, it can 
 
 When you start the game, you're dumped into a "development environment" as it clones the repository so you can begin your very long night of coding. The board is populated and then you can begin. The main gameplay consists of trying to complete lines of code in your program.
 
-Each line contains blocks of four colors. You can place new blocks into the line of your choosing by pressing `Z` (or `A` if you're on a GBA), and when you fill up the line all the way up to the delimited column, the portion of that line that matches the last color on the line is cleared. You can clear an whole line by making the line entirely one color. Be careful, though! The more lines you clear, the harder the game gets.
+Each line contains blocks of four colors. You can place new blocks into the line of your choosing by pressing `Z` (or `A` if you're on a GBA), and when you fill up the line all the way up to the delimited column, the portion of that line that matches the last color on the line is cleared. You can clear an whole line by making the line entirely one color. Be careful, though! The more lines you clear, the harder the game gets. You only get a limited amount of time to decide which line a block should go on, and the more lines you have, the shorter that duration gets.
 
 <img src="http://jpfau.github.com/scrum/resources/about-to-clear.png"><img src="http://jpfau.github.com/scrum/resources/cleared.png">
 
-If, however, you go over the line, you've made one bug for each column over you go. Furthermore, if you place a block of a mismatched color onto an existing line, you also get a bug. Watch your bug count! If it goes too high, you need to start debugging and will be automatically kicked into the debugger! If your bug counter isn't greyed out, you can voluntarily enter debugging mode by pressing `X` (`B` if you're on a GBA). You can manually exit the debugger when you've patched enough bugs by pressing `X` again, or if you meet your quota, you'll get kicked out of the debugger automatically.
+If, however, you go over the line, you've made one bug for each column over you go. Furthermore, if you place a block of a mismatched color onto an existing line, you also get a bug. Watch your bug count! If it goes too high, you need to start debugging and will be automatically kicked into the debugger! If your bug counter isn't greyed out, you can voluntarily enter debugging mode by pressing `X` (`B` if you're on a GBA). You can manually exit the debugger when you've patched enough bugs by pressing `X` again, or if you meet your quota, you'll get kicked out of the debugger automatically. If you fail at debugging, however, it's GAME OVER.
 
 But what's a good development environment without a good revision control system behind it? You can create a local branch by hitting `A` (or `L` on a GBA). Each branch has its own score, line count and bug count, and you only get one local branch at a time, so use it wisely. Once you have a local branch, you can switch between your local branch and the master branch by hitting `A` again. Then, once you want to merge your changes back into master, or if you want to get rid of the local branch, hit `S` (or `R` on a GBA) and it will discard the branch you're not currently on. Unfortuantely, it seems that the version of git you're using isn't very good at resolving merge conflicts of colored blocks, so any changes you've made on the other branch are lost when you merge.
 
