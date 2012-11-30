@@ -4,6 +4,7 @@
 #include <gba_input.h>
 #include <gba_video.h>
 
+#include "audio.h"
 #include "gameboard.h"
 #include "highscore.h"
 #include "intro.h"
@@ -433,6 +434,7 @@ static void fireFriendly(u32 framecount) {
 	bullet->sprite.sprite.disable = 0;
 	updateSprite(&bullet->sprite.sprite, bullet->sprite.id);
 	++activeBullets;
+	playSoundEffect(SFX_SHOT);
 }
 
 static void updateBullets(void) {
@@ -446,6 +448,7 @@ static void updateBullets(void) {
 				bullet->sprite.sprite.disable = 1;
 				--activeBullets;
 			} else if (!bug.dead && bug.active == 1 && bulletHit(bullet, &bug)) {
+				playSoundEffect(SFX_EXPLOSION);
 				bug.dead = 1;
 				++killstreak;
 				board->score += killstreak;
@@ -650,6 +653,7 @@ void minigameFrame(u32 framecount) {
 			switchState(FLYING_END, framecount);
 		}
 		if (board->bugs >= currentParams.maxBugs) {
+			playSoundEffect(SFX_EXPLOSION);
 			switchState(FLYING_GAME_OVER, framecount);
 		}
 		break;
@@ -675,6 +679,9 @@ void minigameFrame(u32 framecount) {
 			remapText(SCREEN_BASE_BLOCK(3), 1, 15, 1, 22, 9, 12, 5);
 		}
 		if (framecount - startFrame < 160) {
+			if (!((framecount - startFrame) & 0x1F)) {
+				playSoundEffect(SFX_EXPLOSION);
+			}
 			updateExplosion(&spaceshipDoom.sprite, (framecount - startFrame) >> 1);
 		}
 		if (framecount - startFrame >= 128) {

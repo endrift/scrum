@@ -15,6 +15,7 @@
 #include "text.h"
 #include "util.h"
 
+#include "audio.h"
 #include "cursor.h"
 #include "cycle.h"
 #include "endrift.h"
@@ -309,6 +310,7 @@ void introFrame(u32 framecount) {
 		}
 		if (keys & KEY_DOWN) {
 			++modeIndex;
+			playSoundEffect(SFX_MOVE_DOWN);
 			if (!modes[modeIndex]) {
 				modeIndex = 0;
 			}
@@ -317,6 +319,7 @@ void introFrame(u32 framecount) {
 		}
 		if (keys & KEY_UP) {
 			--modeIndex;
+			playSoundEffect(SFX_MOVE_UP);
 			if (modeIndex < 0) {
 				for (modeIndex = -1; modes[modeIndex + 1]; ++modeIndex);
 			}

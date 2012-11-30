@@ -2,13 +2,13 @@
 
 #include <gba_dma.h>
 #include <gba_input.h>
-#include <gba_sound.h>
 #include <gba_sprites.h>
 #include <gba_video.h>
 
-#include "rng.h"
+#include "audio.h"
 #include "key.h"
 #include "minigame.h"
+#include "rng.h"
 #include "save.h"
 #include "text.h"
 #include "util.h"
@@ -526,8 +526,7 @@ static void removeRow(u32 framecount) {
 		genRow(GAMEBOARD_ROWS - 1);
 	}
 	board->score += score;
-	REG_SOUND4CNT_L = 0xF200;
-	REG_SOUND4CNT_H = 0x8062;
+	playSoundEffect(SFX_CLEAR);
 }
 
 static void layBlock(void) {
@@ -544,9 +543,7 @@ static void layBlock(void) {
 }
 
 static void dropBlock(u32 framecount) {
-	REG_SOUND1CNT_L = 0x001F;
-	REG_SOUND1CNT_H = 0xE2B4;
-	REG_SOUND1CNT_X = 0x8500;
+	playSoundEffect(SFX_DROP);
 	layBlock();
 	if (board->rows[board->activeY].width >= GAMEBOARD_COLS) {
 		removeRow(framecount);
@@ -589,9 +586,7 @@ static void blockUp(void) {
 	if (board->activeY < 0) {
 		board->activeY = GAMEBOARD_ROWS - 1;
 	}
-	REG_SOUND1CNT_L = 0x0027;
-	REG_SOUND1CNT_H = 0xA1B4;
-	REG_SOUND1CNT_X = 0x8500;
+	playSoundEffect(SFX_MOVE_UP);
 }
 
 static void blockDown(void) {
@@ -599,9 +594,7 @@ static void blockDown(void) {
 	if (board->activeY >= GAMEBOARD_ROWS) {
 		board->activeY = 0;
 	}
-	REG_SOUND1CNT_L = 0x0027;
-	REG_SOUND1CNT_H = 0xA1B4;
-	REG_SOUND1CNT_X = 0x8440;
+	playSoundEffect(SFX_MOVE_DOWN);
 }
 
 static void hideBoard(void) {
@@ -993,9 +986,6 @@ void gameBoardSetup(u32 framecount) {
 	REG_WINOUT = 0x001B;
 
 	drawBoard();
-
-	REG_SOUNDCNT_X = 0x80;
-	REG_SOUNDCNT_L = SND1_R_ENABLE | SND1_L_ENABLE | SND4_R_ENABLE | SND4_L_ENABLE | 0x33;
 }
 
 inline int ramp(int a, int b) {
