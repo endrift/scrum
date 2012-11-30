@@ -294,7 +294,7 @@ void introFrame(u32 framecount) {
 			}, &largeFont);
 			mapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 18, 4);
 
-			cursor.y = 112;
+			cursor.y = 96 + 16 * modeIndex;
 			appendSprite(&cursor);
 		}
 		if (keys & (KEY_START | KEY_A)) {
