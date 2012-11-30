@@ -11,6 +11,20 @@ typedef struct Score {
 	unsigned int lines;
 } Score;
 
+typedef struct PaddedScore {
+	Score score;
+
+	int padding[12];
+} PaddedScore;
+
+typedef struct ScoreDB {
+	int paddingTop[16];
+
+	PaddedScore scores[NUM_HIGH_SCORES];
+
+	int paddingBottom[240 - (16 * NUM_HIGH_SCORES)];
+} ScoreDB;
+
 void initSRAM(void);
 const Score* getHighScore(int gameMode, int place);
 int isHighScore(int gameMode, const Score* score);

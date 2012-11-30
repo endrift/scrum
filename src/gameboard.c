@@ -9,6 +9,7 @@
 #include "rng.h"
 #include "key.h"
 #include "minigame.h"
+#include "save.h"
 #include "text.h"
 #include "util.h"
 
@@ -840,6 +841,15 @@ void gameBoardFrame(u32 framecount) {
 			REG_BLDCNT = 0x0100;
 			switchState(GAMEPLAY, framecount);
 			unmapText(SCREEN_BASE_BLOCK(3), 1, 22, 9, 12);
+		} else if (keys & KEY_SELECT) {
+			if (isSavedGame()) {
+				loadGame(&masterBoard, &localBoard);
+				drawBoard();
+				updateBlocks();
+				updateScore();
+			} else {
+				saveGame(&masterBoard, &localBoard);
+			}
 		}
 		break;
 	case GAMEPLAY:

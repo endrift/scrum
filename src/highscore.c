@@ -10,21 +10,12 @@
 #include "intro.h"
 #include "key.h"
 #include "rng.h"
+#include "save.h"
 #include "text.h"
 #include "util.h"
 
 #include "game-backdrop.h"
 #include "hud-sprites.h"
-
-const char* savetype = "SRAM_V413"; // Make sure emulators that autodetect know we're faking SRAM
-const char* magic = "BPM:GAME";
-
-typedef struct PaddedScore {
-	Score score;
-
-	int padding[12];
-} PaddedScore;
-static PaddedScore bufferScore;
 
 static char initialNames[][8] = {
 	"BUSHNELL",
@@ -43,21 +34,8 @@ static char enteredName[8];
 static int enterCharacter = 0;
 static int enteredGameMode;
 
-typedef struct ScoreDB {
-	int paddingTop[16];
-
-	PaddedScore scores[NUM_HIGH_SCORES];
-
-	int paddingBottom[240 - (16 * NUM_HIGH_SCORES)];
-} ScoreDB;
-
-typedef struct SRAMBase {
-	char magic[8];
-	int paddingTop[254];
-	ScoreDB scoreDB[NUM_GAME_MODES];
-} SRAMBase;
-
-SRAMBase* const sram = (SRAMBase*) 0x0E000000;
+static ScoreDB* scoreDB;
+static PaddedScore bufferScore;
 
 void highScoresScreenInit(u32 framecount);
 void highScoresScreenDeinit(void);
@@ -84,21 +62,15 @@ Runloop displayHighScores = {
 	.frame = highScoresScreenFrame
 };
 
-void initSRAM(void) {
-	static char buffer[8];
-	byteCopy(buffer, sram->magic, 8);
-	if (memcmp(buffer, magic, 8)) {
-		byteZero(sram, 0x8000);
-		byteCopy(sram->magic, magic, 8);
-	}
-}
-
 const Score* getHighScore(int gameMode, int place) {
 	if (place >= 10 || gameMode >= NUM_GAME_MODES) {
 		return 0;
 	}
 
-	byteCopy(&bufferScore, &sram->scoreDB[gameMode].scores[place], sizeof(bufferScore));
+	if (!scoreDB) {
+		scoreDB = scoreBase();
+	}
+	byteCopy(&bufferScore, &scoreDB[gameMode].scores[place], sizeof(bufferScore));
 	if (bufferScore.score.name[0]) {
 		return &bufferScore.score;
 	}
@@ -109,7 +81,10 @@ int isHighScore(int gameMode, const Score* score) {
 	if (gameMode >= NUM_GAME_MODES) {
 		return 0;
 	}
-	byteCopy(&bufferScore, &sram->scoreDB[gameMode].scores[NUM_HIGH_SCORES - 1], sizeof(bufferScore));
+	if (!scoreDB) {
+		scoreDB = scoreBase();
+	}
+	byteCopy(&bufferScore, &scoreDB[gameMode].scores[NUM_HIGH_SCORES - 1], sizeof(bufferScore));
 	if (bufferScore.score.name[0]) {
 		return score->score > bufferScore.score.score;
 	} else {
@@ -130,7 +105,10 @@ void registerHighScore(int gameMode, const Score* score) {
 	if (gameMode >= NUM_GAME_MODES) {
 		return;
 	}
-	PaddedScore* scores = sram->scoreDB[gameMode].scores;
+	if (!scoreDB) {
+		scoreDB = scoreBase();
+	}
+	PaddedScore* scores = scoreDB[gameMode].scores;
 	int i, j;
 	for (i = 0; i < NUM_HIGH_SCORES; ++i) {
 		byteCopy(&bufferScore, &scores[i], sizeof(bufferScore));
