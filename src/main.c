@@ -11,6 +11,7 @@ int main(void) {
 	soundInit();
 
 	irqEnable(IRQ_VBLANK);
+	irqSet(IRQ_VBLANK, soundFrame);
 	REG_IME = 1;
 
 	VBlankIntrWait();
@@ -18,7 +19,6 @@ int main(void) {
 
 	for (;;) {
 		VBlankIntrWait();
-		soundFrame();
 		incrementRunloop();
 	}
 

@@ -266,6 +266,7 @@ void introFrame(u32 framecount) {
 		}
 		if (keys & (KEY_START | KEY_A)) {
 			clearBlock(TILE_BASE_ADR(2), 71, 96, 128, 16);
+			playSoundEffect(SFX_SELECT);
 			switchState(MODE_SELECT, framecount);
 		}
 		break;
@@ -301,6 +302,7 @@ void introFrame(u32 framecount) {
 		if (keys & (KEY_START | KEY_A)) {
 			currentParams = *modes[modeIndex];
 			destinationMode = &gameBoard;
+			playSoundEffect(SFX_START);
 			switchState(TITLE_FADE_OUT, framecount);
 		}
 		if (keys & (KEY_SELECT)) {
