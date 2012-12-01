@@ -55,6 +55,7 @@ a:link:hover, a:visited:hover {
 #sidebar {
 	position: absolute;
 	top: 16px;
+	bottom: 16px;
 	right: -100%;
 	left: 100%;
 	font-size: 14px;
@@ -79,6 +80,9 @@ a:link:hover, a:visited:hover {
 }
 
 #sidebar > div {
+	overflow: auto;
+	height: 100%;
+	box-sizing: border-box;
 	padding: 0.5em 1em;
 	background-color: #161d22;
 }
