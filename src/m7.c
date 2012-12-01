@@ -3,8 +3,9 @@
 #include <gba_interrupt.h>
 #include <gba_video.h>
 
-Mode7Context m7Context;
+extern void asmM7(void);
 
+#if 0
 // From Tonc
 IWRAM_CODE static void m7() {
 	int vcount = REG_VCOUNT;
@@ -37,10 +38,11 @@ IWRAM_CODE static void m7() {
 
 	REG_IF |= IRQ_HBLANK;
 }
+#endif
 
 void enableMode7(int enable) {
 	if (enable) {
-		irqSet(IRQ_HBLANK, m7);
+		irqSet(IRQ_HBLANK, asmM7);
 		irqEnable(IRQ_HBLANK);
 	} else {
 		irqDisable(IRQ_HBLANK);
