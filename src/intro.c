@@ -121,6 +121,55 @@ static void endIntro(u32 framecount) {
 	}
 	DMA3COPY(titleTiles, TILE_BASE_ADR(2), DMA16 | DMA_IMMEDIATE | (titleTilesLen >> 1));
 	mapText(SCREEN_BASE_BLOCK(1), 0, 32, 0, 11, 5);
+	renderText("PRESS START", &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 71,
+		.clipY = 96,
+		.clipW = 128,
+		.clipH = 16
+	}, &largeFont);
+	renderText("NEW GAME", &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 71,
+		.clipY = 112,
+		.clipW = 128,
+		.clipH = 16
+	}, &largeFont);
+	renderText("OPTIONS", &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 71,
+		.clipY = 128,
+		.clipW = 128,
+		.clipH = 16
+	}, &largeFont);
+	renderText("STASH POP", &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 71,
+		.clipY = 144,
+		.clipW = 128,
+		.clipH = 16
+	}, &largeFont);
+	renderText(modes[0]->modeName, &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 72,
+		.clipY = 160,
+		.clipW = 128,
+		.clipH = 16
+	}, &largeFont);
+	renderText(modes[1]->modeName, &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 72,
+		.clipY = 176,
+		.clipW = 128,
+		.clipH = 16
+	}, &largeFont);
+	renderText(modes[2]->modeName, &(Textarea) {
+		.destination = TILE_BASE_ADR(2),
+		.clipX = 72,
+		.clipY = 192,
+		.clipW = 128,
+		.clipH = 16
+	}, &largeFont);
 
 	m7Context.y = 128 << 8;
 	m7Context.x = 256 << 8;
@@ -256,17 +305,9 @@ void introFrame(u32 framecount) {
 			REG_BLDALPHA = 0x0808;
 			REG_DISPCNT = MODE_1 | BG1_ON | BG2_ON | OBJ_ON | OBJ_1D_MAP;
 			unmapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 14);
-			renderText("PRESS START", &(Textarea) {
-				.destination = TILE_BASE_ADR(2),
-				.clipX = 71,
-				.clipY = 96,
-				.clipW = 128,
-				.clipH = 16
-			}, &largeFont);
 			mapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 14, 4);
 		}
 		if (keys & (KEY_START | KEY_A)) {
-			clearBlock(TILE_BASE_ADR(2), 71, 96, 128, 16);
 			playSoundEffect(SFX_SELECT);
 			switchState(MODE_SELECT, framecount);
 		}
@@ -282,28 +323,7 @@ void introFrame(u32 framecount) {
 	case MODE_SELECT:
 		if (framecount == introStart) {
 			unmapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 18);
-			renderText(modes[0]->modeName, &(Textarea) {
-				.destination = TILE_BASE_ADR(2),
-				.clipX = 72,
-				.clipY = 96,
-				.clipW = 128,
-				.clipH = 16
-			}, &largeFont);
-			renderText(modes[1]->modeName, &(Textarea) {
-				.destination = TILE_BASE_ADR(2),
-				.clipX = 72,
-				.clipY = 112,
-				.clipW = 128,
-				.clipH = 16
-			}, &largeFont);
-			renderText(modes[2]->modeName, &(Textarea) {
-				.destination = TILE_BASE_ADR(2),
-				.clipX = 72,
-				.clipY = 128,
-				.clipW = 128,
-				.clipH = 16
-			}, &largeFont);
-			mapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 18, 4);
+			remapText(SCREEN_BASE_BLOCK(1), 0, 20, 0, 32, 12, 18, 4);
 
 			cursor.y = 96 + 16 * modeIndex;
 			appendSprite(&cursor);
