@@ -47,6 +47,16 @@ function playGame() {
 	}
 }
 
+function raiseInstructions() {
+	var instructions = document.getElementById('sidebar');
+	instructions.setAttribute('class', 'focused');
+}
+
+function dismissInstructions() {
+	var instructions = document.getElementById('sidebar');
+	instructions.setAttribute('class', 'blurred');
+}
+
 window.onload = function() {
 	if (gba) {
 		var canvas = document.getElementById('screen');
@@ -78,6 +88,7 @@ window.onload = function() {
 
 </head>
 <body>
+	<button onclick="raiseInstructions()" id="instructionsButton">Instructions</button>
 	<div id="content">
 		<img src="../scrum/resources/title.png" alt="Scrum" id="title">
 		<div id="game">
@@ -86,5 +97,27 @@ window.onload = function() {
 		</div>
 		<footer><a href="http://endrift.com/">© 2012 Jeffrey Pfau</a> • <a href="http://github.com/jpfau/scrum/">GitHub</a> • <a href="../scrum/resources/scrum.gba">Download</a></footer>
 	</div>
+	<aside id="sidebar">
+		<button class="roundButton" onclick="dismissInstructions()">×</button>
+		<div id="instructions">
+			<h1>Welcome to Scrum!</h1>
+
+			<p>Scrum is an entry for the GitHub Game Off 2012 competition. It's not a text adventure, however. It's a puzzle game based on a simple premise: How can I misrepresent programming as a game without making it some arbitrary minigame that may or may not involve Pipe Mania? Please be aware: <strong>This is a Game Boy Advance game running in a pure-JavaScript emulator</strong>, so it might be slow.</p>
+
+			<p>When you start the game, you're dumped into a "development environment" as it clones the repository so you can begin your very long night of coding. The board is populated and then you can begin. The main gameplay consists of trying to complete lines of code in your program.</p>
+
+			<p><img src="../scrum/resources/clearing.png" alt="Clearing a portion of a line" />Each line contains blocks of four colors. You can place new blocks into the line of your choosing by pressing <code>Z</code> (or <code>A</code> if you're on a GBA), and when you fill up the line all the way up to the delimited column, the portion of that line that matches the last color on the line is cleared.</p>
+
+			<p><img src="../scrum/resources/clear-line.png" alt="Clearing an entire line" />You can clear an whole line by making the line entirely one color. Be careful, though! The more lines you clear, the harder the game gets. You only get a limited amount of time to decide which line a block should go on, and the more lines you have, the shorter that duration gets.</p>
+
+			<p><img src="../scrum/resources/going-over.png" alt="Clearing a portion of a line" />If, however, you go over the line, you've made one bug for each column over you go. Furthermore, if you place a block of a mismatched color onto an existing line, you also get a bug. Watch your bug count! If it goes too high, you need to start debugging and will be automatically kicked into the debugger!</p>
+
+			<p>If your bug counter isn't greyed out, you can voluntarily enter debugging mode by pressing <code>X</code> (<code>B</code> if you're on a GBA). You can manually exit the debugger when you've patched enough bugs by pressing <code>X</code> again, or if you meet your quota, you'll get kicked out of the debugger automatically. If you fail at debugging, however, it's GAME OVER.</p>
+
+			<p>But what's a good development environment without a good revision control system behind it? You can create a local branch by hitting <code>A</code> (or <code>L</code> on a GBA). Each branch has its own score, line count and bug count, and you only get one local branch at a time, so use it wisely. Once you have a local branch, you can switch between your local branch and the master branch by hitting <code>A</code> again. Then, once you want to merge your changes back into master, or if you want to get rid of the local branch, hit <code>S</code> (or <code>R</code> on a GBA) and it will discard the branch you're not currently on. Unfortuantely, it seems that the version of git you're using isn't very good at resolving merge conflicts of colored blocks, so any changes you've made on the other branch are lost when you merge.</p>
+
+			<p>When selecting a difficulty, you can press <code>\</code> (or <code>Select</code> on a GBA) to view high scores for that difficulty. The game can be paused by pressing <code>Enter</code> (or <code>Start</code> on a GBA).</p>
+		</div>
+	</aside>
 </body>
 </html>

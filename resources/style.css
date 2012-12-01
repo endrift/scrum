@@ -34,7 +34,6 @@ a:link:hover, a:visited:hover {
 	position: absolute;
 	font-size: 48px;
 	-webkit-text-stroke: 3px #384040;
-	color: white;
 }
 
 #play {
@@ -48,13 +47,92 @@ a:link:hover, a:visited:hover {
 }
 
 #content {
+	display: block;
 	width: 100%;
-	margin: auto;
 	text-align: center;
+}
+
+#sidebar {
+	position: absolute;
+	top: 16px;
+	right: -100%;
+	left: 100%;
+	font-size: 14px;
+	margin-left: auto;
+	margin-right: 16px;
+	max-width: 640px;
+	border: 8px solid;
+	border-image: url('border.png') 8 round;
+
+	-webkit-transition-property: left, right;
+	-webkit-transition-duration: 0.7s, 0.7s;
+	-webkit-timing-function: ease-in, ease-in;
+}
+
+#sidebar.focused {
+	left: 0;
+	right: 0;
+}
+
+#sidebar > div {
+	padding: 0.5em 1em;
+	background-color: #161d22;
+}
+
+#sidebar p {
+	margin: 0.5em 0;
+	line-height: 1.5em;
+	clear: both;
+}
+
+#sidebar h1 {
+	text-align: center;
+}
+
+#instructions img {
+	display: block;
+	float: right;
+	clear: right;
+}
+
+button {
+	border: none;
+	background: none;
 	color: white;
+}
+
+#instructionsButton {
+	position: absolute;
+	right: 16px;
+	top: 16px;
+	font-size: 16px;
+	font-weight: bold;
+}
+
+.roundButton {
+	border: 3px solid #384040;
+	border-radius: 50%;
+	background-color: #161d22;
+	position: relative;
+	top: -16px;
+	left: -16px;
+	width: 32px;
+	height: 32px;
+	font-size: 16px;
+	margin: 0 -32px -32px 0;
+}
+
+body {
+	margin: 0;
+	color: white;
+	font-family: 'Source Sans Pro', 'Source Code Pro', sans-serif;
+}
+
+code {
+	font-weight: bold;
+	font-family: 'Source Code Pro', 'Lucida Typewriter Std', monospace;
 }
 
 footer {
 	margin-top: 20px;
-	font-family: 'Source Sans Pro', 'Source Code Pro', sans-serif;
 }
