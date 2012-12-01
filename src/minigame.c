@@ -374,7 +374,9 @@ static void updateBug(void) {
 		blend = -bug.dead >> 2;
 		bug.sprite.sprite.transformed ^= 1;
 		++bug.dead;
-		updateExplosion(&bugDoom.sprite, bug.dead >> 1);
+		if (bug.dead <= 24) {
+			updateExplosion(&bugDoom.sprite, bug.dead >> 1);
+		}
 	} else {
 		bug.sprite.sprite.base ^= 4;
 	}
