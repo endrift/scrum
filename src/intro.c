@@ -139,17 +139,10 @@ static void endIntro(u32 framecount) {
 		.clipW = 128,
 		.clipH = 16
 	}, &largeFont);
-	renderText("OPTIONS", &(Textarea) {
-		.destination = TILE_BASE_ADR(2),
-		.clipX = 71,
-		.clipY = 128,
-		.clipW = 128,
-		.clipH = 16
-	}, &largeFont);
 	renderText("STASH POP", &(Textarea) {
 		.destination = TILE_BASE_ADR(2),
 		.clipX = 71,
-		.clipY = 144,
+		.clipY = 128,
 		.clipW = 128,
 		.clipH = 16
 	}, &largeFont);
@@ -318,33 +311,31 @@ void introFrame(u32 framecount) {
 		if (keys & (KEY_START | KEY_A)) {
 			playSoundEffect(SFX_SELECT);
 			selectionIndex = 0;
-			switchState(TOP_SELECT, framecount);
+			if (canStashPop) {
+				switchState(TOP_SELECT, framecount);
+			} else {
+				switchState(MODE_SELECT, framecount);
+			}
 		}
 		break;
 	case TOP_SELECT:
 		if (framecount == introStart) {
 			unmapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 18);
-			remapText(SCREEN_BASE_BLOCK(1), 0, 14, 2, 32, 12, 16 + 2 * canStashPop, 4);
+			remapText(SCREEN_BASE_BLOCK(1), 0, 14, 2, 32, 12, 16, 4);
 
 			cursor.y = 96 + 16 * selectionIndex;
 			cursor.x = 72;
 			appendSprite(&cursor);
 		}
 		if (keys & KEY_DOWN) {
-			++selectionIndex;
+			selectionIndex ^= 1;
 			playSoundEffect(SFX_MOVE_DOWN);
-			if (selectionIndex > 1 + canStashPop) {
-				selectionIndex = 0;
-			}
 			cursor.y = 96 + 16 * selectionIndex;
 			updateSprite(&cursor, 2);
 		}
 		if (keys & KEY_UP) {
-			--selectionIndex;
+			selectionIndex ^= 1;
 			playSoundEffect(SFX_MOVE_UP);
-			if (selectionIndex < 0) {
-				selectionIndex = 1 + canStashPop;
-			}
 			cursor.y = 96 + 16 * selectionIndex;
 			updateSprite(&cursor, 2);
 		}
@@ -355,8 +346,6 @@ void introFrame(u32 framecount) {
 				switchState(MODE_SELECT, framecount);
 				break;
 			case 1:
-				break;
-			case 2:
 				if (isSavedGame()) {
 					loadGame();
 					destinationMode = &gameBoard;
