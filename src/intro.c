@@ -12,6 +12,7 @@
 #include "highscore.h"
 #include "m7.h"
 #include "rng.h"
+#include "save.h"
 #include "text.h"
 #include "util.h"
 
@@ -268,6 +269,14 @@ void introFrame(u32 framecount) {
 			clearBlock(TILE_BASE_ADR(2), 71, 96, 128, 16);
 			playSoundEffect(SFX_SELECT);
 			switchState(MODE_SELECT, framecount);
+		}
+		if (keys & KEY_SELECT) {
+			if (isSavedGame()) {
+				loadGame();
+				destinationMode = &gameBoard;
+				playSoundEffect(SFX_START);
+				switchState(TITLE_FADE_OUT, framecount);
+			}
 		}
 		break;
 	case MODE_SELECT:

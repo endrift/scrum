@@ -67,6 +67,7 @@ static u16 stupidShinyTransitionStates[160] = {};
 
 static int introRow;
 static int introBlock;
+static int gameLoaded = 0;
 
 static void repeatHandler(KeyContext* context, int key);
 static KeyContext keyContext = {
@@ -764,9 +765,14 @@ void gameBoardInit(u32 framecount) {
 	introBlock = 0;
 
 	srand(framecount);
-	resetBoard();
 	updateScore();
-	switchState(LOADING_INTRO, framecount);
+	if (gameLoaded) {
+		switchState(PRE_GAMEPLAY, framecount);
+		gameLoaded = 0;	
+	} else {
+		resetBoard();
+		switchState(LOADING_INTRO, framecount);
+	}
 	minigameInit(framecount);
 	gameBoardSetup(framecount);
 
@@ -835,14 +841,7 @@ void gameBoardFrame(u32 framecount) {
 			switchState(GAMEPLAY, framecount);
 			unmapText(SCREEN_BASE_BLOCK(3), 1, 22, 9, 12);
 		} else if (keys & KEY_SELECT) {
-			if (isSavedGame()) {
-				loadGame(&masterBoard, &localBoard);
-				drawBoard();
-				updateBlocks();
-				updateScore();
-			} else {
-				saveGame(&masterBoard, &localBoard);
-			}
+			saveGame(&masterBoard, &localBoard);
 		}
 		break;
 	case GAMEPLAY:
@@ -986,6 +985,13 @@ void gameBoardSetup(u32 framecount) {
 	REG_WINOUT = 0x001B;
 
 	drawBoard();
+}
+
+void loadGame(void) {
+	if (isSavedGame()) {
+		loadGameBoards(&masterBoard, &localBoard);
+		gameLoaded = 1;
+	}
 }
 
 inline int ramp(int a, int b) {

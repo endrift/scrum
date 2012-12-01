@@ -62,7 +62,7 @@ void saveGame(GameBoard* masterBoard, GameBoard* localBoard) {
 	byteCopy(&sram->savedGame, &saveBuffer, sizeof(saveBuffer));
 }
 
-void loadGame(GameBoard* masterBoard, GameBoard* localBoard) {
+void loadGameBoards(GameBoard* masterBoard, GameBoard* localBoard) {
 	byteCopy(&saveBuffer, &sram->savedGame, sizeof(saveBuffer));
 	if (!saveBuffer.isGameSaved) {
 		return;

@@ -9,6 +9,6 @@ void* scoreBase(void);
 
 int isSavedGame(void);
 void saveGame(GameBoard* masterBoard, GameBoard* localBoard);
-void loadGame(GameBoard* masterBoard, GameBoard* localBoard);
+void loadGameBoards(GameBoard* masterBoard, GameBoard* localBoard);
 
 #endif
