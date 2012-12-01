@@ -589,8 +589,8 @@ void showMinigame(u32 framecount) {
 	ObjAffineSet(&spaceship.sprite.affine, affineTable(0), 1, 8);
 	ObjAffineSet(&bug.sprite.affine, affineTable(1), 1, 8);
 	writeSpriteTable();
-	mmSetModuleVolume(1024);
-	mmStart(MOD_DEBUGGING, MM_PLAY_LOOP);
+	setModuleVolume(1024);
+	playModule(MOD_DEBUGGING);
 }
 
 void minigameFrame(u32 framecount) {
@@ -650,7 +650,7 @@ void minigameFrame(u32 framecount) {
 		}
 
 		if (keys & KEY_START) {
-			mmSetModuleVolume(512);
+			setModuleVolume(512);
 			remapText(SCREEN_BASE_BLOCK(3), 1, 6, 1, 22, 9, 12, 5);
 			m7Context.fadeOffset = 4;
 			switchState(FLYING_PAUSED, framecount);
@@ -661,7 +661,7 @@ void minigameFrame(u32 framecount) {
 		}
 		if (board->bugs >= currentParams.maxBugs) {
 			playSoundEffect(SFX_EXPLOSION);
-			mmStart(MOD_GAMEOVER, MM_PLAY_LOOP);
+			playModule(MOD_GAMEOVER);
 			switchState(FLYING_GAME_OVER, framecount);
 		}
 		break;
@@ -677,7 +677,7 @@ void minigameFrame(u32 framecount) {
 			bug.coords.x = (bug.coords.x * 33) >> 5;
 			updateBug();
 		}
-		mmSetModuleVolume((64 - (framecount - startFrame)) << 4);
+		setModuleVolume((64 - (framecount - startFrame)) << 4);
 		REG_BLDALPHA = m7Context.fadeOffset > 0xF ? 0 : 0xF - m7Context.fadeOffset;
 		if ((framecount - startFrame) >= 64) {
 			hideMinigame(framecount);
@@ -710,7 +710,7 @@ void minigameFrame(u32 framecount) {
 			REG_BLDALPHA = 0xF - ((framecount - startFrame) >> 3);
 		}
 		if (keys & KEY_START) {
-			mmStop();
+			stopModule();
 			hideMinigame(framecount);
 			Score score = { .score = board->score, .lines = board->lines };
 			if (isHighScore(gameMode, &score)) {
@@ -724,7 +724,7 @@ void minigameFrame(u32 framecount) {
 			m7Context.fadeOffset = 0;
 			switchState(FLYING_GAMEPLAY, framecount);
 			unmapText(SCREEN_BASE_BLOCK(3), 1, 22, 9, 12);
-			mmSetModuleVolume(1024);
+			setModuleVolume(1024);
 		}
 	};
  

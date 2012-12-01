@@ -43,6 +43,10 @@ CFLAGS	:=	-g -Wall -O3\
 
 CFLAGS	+=	$(INCLUDE)
 
+ifneq ($(MUSIC),)
+CFLAGS	+= -DUSE_MAXMOD
+endif
+
 CXXFLAGS	:=	$(CFLAGS) -fno-rtti -fno-exceptions
 
 ASFLAGS	:=	$(ARCH)

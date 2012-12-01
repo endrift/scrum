@@ -1,7 +1,6 @@
 #include <gba_interrupt.h>
 #include <gba_systemcalls.h>
 #include <gba_video.h>
-#include <maxmod.h>
 
 #include "audio.h"
 #include "intro.h"
@@ -19,7 +18,7 @@ int main(void) {
 
 	for (;;) {
 		VBlankIntrWait();
-		mmFrame();
+		soundFrame();
 		incrementRunloop();
 	}
 

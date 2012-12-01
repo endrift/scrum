@@ -12,17 +12,31 @@ static struct {
 	SoundEffect playing;
 } sfx;
 
+static void soundVblank(void);
+
 void soundInit(void) {
 	sfx.time = 0;
 	REG_SOUNDCNT_X = 0x80;
+#ifdef USE_MAXMOD
 	mmInitDefault((mm_addr) soundbank_bin, 8);
 	REG_SOUNDCNT_H |= 2;
 	REG_SOUNDCNT_L |= SND1_R_ENABLE | SND1_L_ENABLE | SND2_R_ENABLE | SND2_L_ENABLE | SND4_R_ENABLE | SND4_L_ENABLE | 0x77;
+	mmSetVBlankHandler(soundVblank);
 	irqSet(IRQ_VBLANK, mmVBlank);
-	mmSetVBlankHandler(soundFrame);
+#else
+	REG_SOUNDCNT_H = 2;
+	REG_SOUNDCNT_L = SND1_R_ENABLE | SND1_L_ENABLE | SND2_R_ENABLE | SND2_L_ENABLE | SND4_R_ENABLE | SND4_L_ENABLE | 0x77;
+	irqSet(IRQ_VBLANK, soundVblank);
+#endif
 }
 
 void soundFrame(void) {
+#ifdef USE_MAXMOD
+	mmFrame();
+#endif
+}
+
+static void soundVblank(void) {
 	switch (sfx.playing) {
 	case SFX_SELECT:
 		if (sfx.time == 0) {
@@ -48,6 +62,24 @@ void soundFrame(void) {
 		break;
 	}
 	++sfx.time;
+}
+
+void playModule(mm_word module) {
+#ifdef USE_MAXMOD
+	mmStart(module, MM_PLAY_LOOP);
+#endif
+}
+
+void stopModule(void) {
+#ifdef USE_MAXMOD
+	mmStop();
+#endif
+}
+
+void setModuleVolume(mm_word volume) {
+#ifdef USE_MAXMOD
+	mmSetModuleVolume(volume);
+#endif
 }
 
 void playSoundEffect(SoundEffect effect) {
