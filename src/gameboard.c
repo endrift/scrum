@@ -846,6 +846,7 @@ void gameBoardFrame(u32 framecount) {
 			board->active.spriteL.mode = 1;
 			board->active.spriteR.mode = 1;
 			REG_BLDCNT = 0x0100;
+			setModuleVolume(384);
 			switchState(GAMEPLAY, framecount);
 			unmapText(SCREEN_BASE_BLOCK(3), 1, 22, 9, 12);
 		} else if (keys & KEY_SELECT) {
@@ -865,6 +866,7 @@ void gameBoardFrame(u32 framecount) {
 			board->active.spriteR.mode = 0;
 			REG_BLDCNT = 0x01FD;
 			REG_BLDY = 0x000A;
+			setModuleVolume(256);
 			remapText(SCREEN_BASE_BLOCK(3), 1, 6, 1, 22, 9, 12, 5);
 			switchState(GAMEPLAY_PAUSED, framecount);
 		}
