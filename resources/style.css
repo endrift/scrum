@@ -39,6 +39,7 @@ a:link:hover, a:visited:hover {
 #play {
 	background-image: url('title-screen-faded.png');
 	background-size: 100%;
+	color: white;
 }
 
 #title {
@@ -102,22 +103,30 @@ a:link:hover, a:visited:hover {
 	float: right;
 	clear: right;
 }
-
-button {
-	border: none;
-	background: none;
-	color: white;
-}
-
-#instructionsButton {
+#extras {
 	position: absolute;
 	right: 16px;
 	top: 16px;
-	font-size: 16px;
-	font-weight: bold;
+	text-align: right;
+}
+
+#extras * {
+	background-clip: padding-box;
+	color: white;
+	border: 8px solid;
+	border-image: url('border.png') 8 round;
+	background-color: #161d22;
+	font-size: 12px;
+	margin-bottom: 16px;
+}
+
+#speedWarning {
+	display: block;
+	max-width: 200px;
 }
 
 .roundButton {
+	color: white;
 	border: 3px solid #384040;
 	border-radius: 50%;
 	background-color: #161d22;

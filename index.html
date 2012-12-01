@@ -28,6 +28,8 @@ var biosLoaded = false;
 var gameLoaded = false;
 var startGame = false;
 
+var storedSettings = JSON.parse(localStorage.getItem('com.endrift.scrum'));
+
 try {
 	gba = new GameBoyAdvance();
 	gba.keypad.eatInput = true;
@@ -44,6 +46,14 @@ function playGame() {
 		gba.runStable();
 	} else {
 		startGame = true;
+		if (!storedSettings) {
+			loadScrum(true);
+		}
+	}
+
+	var button = document.getElementById('speedWarning');
+	if (button) {
+		button.parentElement.removeChild(button);
 	}
 }
 
@@ -55,6 +65,44 @@ function raiseInstructions() {
 function dismissInstructions() {
 	var instructions = document.getElementById('sidebar');
 	instructions.setAttribute('class', 'blurred');
+}
+
+function loadScrum(loadWimpy) {
+	if (!storedSettings) {
+		storedSettings = { 'wimpy': loadWimpy };
+	} else {
+		storedSettings.wimpy = loadWimpy;
+	}
+	localStorage.setItem('com.endrift.scrum', JSON.stringify(storedSettings));
+
+	var rom = '../scrum/resources/scrum.gba';
+	if (loadWimpy) {
+		rom = '../scrum/resources/scrum-for-wimpy-computers.gba';
+	}
+	loadRom(rom, function(game) {
+		gba.setRom(game);
+		if (biosLoaded && startGame) {
+			gba.runStable();
+		} else {
+			gameLoaded = true;
+		}
+	});
+}
+
+function appendWimpyButton(wimpy) {
+	var button = document.createElement('button');
+	button.setAttribute('id', 'speedWarning');
+	if (wimpy) {
+		button.textContent = "I have a really beefy computer, give me the version with music!";
+	} else {
+		button.textContent = "Oh god! My computer isn't powerful enough! Give me the one without music again!";
+	}
+	button.onclick = function() {
+		loadScrum(!wimpy);
+		button.parentElement.removeChild(button);
+	}
+	var extras = document.getElementById('extras');
+	extras.appendChild(button);
 }
 
 window.onload = function() {
@@ -74,7 +122,9 @@ window.onload = function() {
 				biosLoaded = true;
 			}
 		});
-		loadRom('../scrum/resources/scrum.gba', function(game) {
+
+
+		loadRom('../scrum/resources/scrum-for-wimpy-computers.gba', function(game) {
 			gba.setRom(game);
 			if (biosLoaded && startGame) {
 				gba.runStable();
@@ -82,13 +132,21 @@ window.onload = function() {
 				gameLoaded = true;
 			}
 		});
+		if (storedSettings) {
+			appendWimpyButton(storedSettings.wimpy);
+			loadScrum(storedSettings.wimpy);
+		} else {
+			appendWimpyButton(true);
+		}
 	}
 }
 </script>
 
 </head>
 <body>
-	<button onclick="raiseInstructions()" id="instructionsButton">Instructions</button>
+	<div id="extras">
+		<button onclick="raiseInstructions()" id="instructionsButton">Instructions</button>
+	</div>
 	<div id="content">
 		<img src="../scrum/resources/title.png" alt="Scrum" id="title">
 		<div id="game">
