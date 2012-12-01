@@ -36,6 +36,7 @@ static enum {
 	TITLE_FADE_IN,
 	TITLE_FADE_IN_2,
 	PRESS_START,
+	TOP_SELECT,
 	MODE_SELECT,
 	TITLE_FADE_OUT
 } state;
@@ -48,8 +49,9 @@ Runloop intro = {
 
 static u32 introStart = 0;
 static int modeIndex = 1;
+static int selectionIndex;
+static int canStashPop = 0;
 static Sprite cursor = {
-	.x = 56,
 	.size = 1
 };
 
@@ -170,6 +172,8 @@ static void endIntro(u32 framecount) {
 		.clipW = 128,
 		.clipH = 16
 	}, &largeFont);
+
+	canStashPop = !!isSavedGame();
 
 	m7Context.y = 128 << 8;
 	m7Context.x = 256 << 8;
@@ -309,14 +313,52 @@ void introFrame(u32 framecount) {
 		}
 		if (keys & (KEY_START | KEY_A)) {
 			playSoundEffect(SFX_SELECT);
-			switchState(MODE_SELECT, framecount);
+			selectionIndex = 0;
+			switchState(TOP_SELECT, framecount);
 		}
-		if (keys & KEY_SELECT) {
-			if (isSavedGame()) {
-				loadGame();
-				destinationMode = &gameBoard;
-				playSoundEffect(SFX_START);
-				switchState(TITLE_FADE_OUT, framecount);
+		break;
+	case TOP_SELECT:
+		if (framecount == introStart) {
+			unmapText(SCREEN_BASE_BLOCK(1), 0, 32, 12, 18);
+			remapText(SCREEN_BASE_BLOCK(1), 0, 14, 2, 32, 12, 16 + 2 * canStashPop, 4);
+
+			cursor.y = 96 + 16 * selectionIndex;
+			cursor.x = 72;
+			appendSprite(&cursor);
+		}
+		if (keys & KEY_DOWN) {
+			++selectionIndex;
+			playSoundEffect(SFX_MOVE_DOWN);
+			if (selectionIndex > 1 + canStashPop) {
+				selectionIndex = 0;
+			}
+			cursor.y = 96 + 16 * selectionIndex;
+			updateSprite(&cursor, 2);
+		}
+		if (keys & KEY_UP) {
+			--selectionIndex;
+			playSoundEffect(SFX_MOVE_UP);
+			if (selectionIndex < 0) {
+				selectionIndex = 1 + canStashPop;
+			}
+			cursor.y = 96 + 16 * selectionIndex;
+			updateSprite(&cursor, 2);
+		}
+		if (keys & (KEY_START | KEY_A)) {
+			switch (selectionIndex) {
+			case 0:
+				playSoundEffect(SFX_SELECT);
+				switchState(MODE_SELECT, framecount);
+				break;
+			case 1:
+				break;
+			case 2:
+				if (isSavedGame()) {
+					loadGame();
+					destinationMode = &gameBoard;
+					playSoundEffect(SFX_START);
+					switchState(TITLE_FADE_OUT, framecount);
+				}
 			}
 		}
 		break;
@@ -326,7 +368,8 @@ void introFrame(u32 framecount) {
 			remapText(SCREEN_BASE_BLOCK(1), 0, 20, 0, 32, 12, 18, 4);
 
 			cursor.y = 96 + 16 * modeIndex;
-			appendSprite(&cursor);
+			cursor.x = 56;
+			updateSprite(&cursor, 2);
 		}
 		if (keys & (KEY_START | KEY_A)) {
 			currentParams = *modes[modeIndex];
