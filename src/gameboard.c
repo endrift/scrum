@@ -6,6 +6,7 @@
 #include <gba_video.h>
 
 #include "audio.h"
+#include "intro.h"
 #include "key.h"
 #include "minigame.h"
 #include "rng.h"
@@ -646,7 +647,6 @@ void gameBoardInit(u32 framecount) {
 	appendSprite(&bugSprite);
 	appendSprite(&shoulderL);
 	appendSprite(&shoulderR);
-	writeSpriteTable();
 
 	resetBackdrop();
 
@@ -767,6 +767,10 @@ void gameBoardInit(u32 framecount) {
 	srand(framecount);
 	updateScore();
 	if (gameLoaded) {
+		board->active.spriteL.mode = 1;
+		board->active.spriteR.mode = 1;
+		updateSprite(&board->active.spriteL, 0);
+		updateSprite(&board->active.spriteR, 1);
 		switchState(PRE_GAMEPLAY, framecount);
 		gameLoaded = 0;	
 	} else {
@@ -775,6 +779,7 @@ void gameBoardInit(u32 framecount) {
 	}
 	minigameInit(framecount);
 	gameBoardSetup(framecount);
+	writeSpriteTable();
 
 	drawBoard();
 	remapText(SCREEN_BASE_BLOCK(3), 1, 9, 1, 22, 9, 12, 5);
@@ -842,6 +847,8 @@ void gameBoardFrame(u32 framecount) {
 			unmapText(SCREEN_BASE_BLOCK(3), 1, 22, 9, 12);
 		} else if (keys & KEY_SELECT) {
 			saveGame(&masterBoard, &localBoard);
+			setRunloop(&intro);
+			return;
 		}
 		break;
 	case GAMEPLAY:
