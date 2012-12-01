@@ -768,7 +768,6 @@ void gameBoardInit(u32 framecount) {
 	introBlock = 0;
 
 	srand(framecount);
-	updateScore();
 	if (gameLoaded) {
 		board->active.spriteL.mode = 1;
 		board->active.spriteR.mode = 1;
@@ -780,6 +779,7 @@ void gameBoardInit(u32 framecount) {
 		resetBoard();
 		switchState(LOADING_INTRO, framecount);
 	}
+	updateScore();
 	minigameInit(framecount);
 	gameBoardSetup(framecount);
 	writeSpriteTable();
