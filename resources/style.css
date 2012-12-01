@@ -67,6 +67,10 @@ a:link:hover, a:visited:hover {
 	-webkit-transition-property: left, right;
 	-webkit-transition-duration: 0.7s, 0.7s;
 	-webkit-timing-function: ease-in, ease-in;
+
+	-moz-transition-property: left, right;
+	-moz-transition-duration: 0.7s, 0.7s;
+	-moz-timing-function: ease-in, ease-in;
 }
 
 #sidebar.focused {
