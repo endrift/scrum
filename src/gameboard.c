@@ -809,15 +809,15 @@ void gameBoardFrame(u32 framecount) {
 
 	switch (state) {
 	case LOADING_INTRO:
-		formatNumber(buffer, 3, 100 * (framecount - startFrame) / (GAMEBOARD_ROWS * 8 + 1));
-		renderText(buffer, &(Textarea) {
-			.destination = TILE_BASE_ADR(2),
-			.clipX = 188,
-			.clipY = 136,
-			.clipW = 64,
-			.clipH = 16
-		}, &largeFont);
 		if (!((framecount - startFrame + 1) & 1)) {
+			formatNumber(buffer, 3, 100 * (framecount - startFrame) / (GAMEBOARD_ROWS * 8 + 1));
+			renderText(buffer, &(Textarea) {
+				.destination = TILE_BASE_ADR(2),
+				.clipX = 188,
+				.clipY = 136,
+				.clipW = 64,
+				.clipH = 16
+			}, &largeFont);
 			if (introRow == GAMEBOARD_ROWS) {
 				clearBlock(TILE_BASE_ADR(2), 188, 136, 64, 16);
 				switchState(PRE_GAMEPLAY, framecount);
