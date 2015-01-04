@@ -1,4 +1,4 @@
-<img src="http://jpfau.github.com/scrum/resources/title.png">
+![Logo](http://endrift.github.com/scrum/resources/title.png)
 
 It's past 3 AM on Thursday morning (or a Wednesday night, if you're going to keep lying to yourself), and there's a Friday deadline bearing down on you. You have to finish coding your GAME for the GitHub Game Off 2012 challenge, but you're not quite done yet and you haven't had enough sleep….
 
@@ -18,21 +18,21 @@ This is SCRUM. Enjoy your stay.
 
 # What is Scrum?
 
-<img src="http://jpfau.github.com/scrum/resources/title-screen.png">
+![Title screen](http://endrift.github.com/scrum/resources/title-screen.png)
 
 Scrum is an entry for the GitHub Game Off 2012 competition. It's not a text adventure, however. It's a puzzle game based on a simple premise: How can I misrepresent programming as a game without making it some arbitrary minigame that may or may not involve Pipe Mania?
 
 The initial brainstorming session led me to a natural conclusion: a puzzle game, but line-based. While it superficially similar to Tetris, the gameplay is very different. See the tutorial section for a rundown on the gameplay.
 
-The web version of the game can be found on [GitHub](http://jpfau.github.com/scrum). But there's a twist: while the GitHub Game Off rules state that the game must run in a web browser, it does not state *how*, and in accordance with this, the game is programmed in the most arcane manner possible: it's a Game Boy Advance game running on a JavaScript Game Boy Advance emulator.
+The web version of the game can be found on [GitHub](http://endrift.github.com/scrum). But there's a twist: while the GitHub Game Off rules state that the game must run in a web browser, it does not state *how*, and in accordance with this, the game is programmed in the most arcane manner possible: it's a Game Boy Advance game running on a JavaScript Game Boy Advance emulator.
 
 ### Wait, what?
 
-Scrum was written from scratch, using only DevKitPRO and associated libraries, for the Game Boy Advance. A freely-distributable ROM is [available for download](http://jpfau.github.com/scrum/resources/scrum.gba) and works (relatively) well in most GBA emulators and even on real GBA hardware, if you have a way of running them.
+Scrum was written from scratch, using only DevKitPRO and associated libraries, for the Game Boy Advance. A freely-distributable ROM is [available for download](http://endrift.github.com/scrum/resources/scrum.gba) and works (relatively) well in most GBA emulators and even on real GBA hardware, if you have a way of running them.
 
 ### But, how?
 
-The GitHub Game Off rules state that the entries can use any libraries or runtimes they like, e.g. Unity3D or Flash, so long as they're embedded in the browser. So what better than a pure JavaScript/HTML5 Game Boy Advance emulator like [GBA.js](http://jpfau.github.com/gbajs/), which was developed primarily between July and October of 2012?
+The GitHub Game Off rules state that the entries can use any libraries or runtimes they like, e.g. Unity3D or Flash, so long as they're embedded in the browser. So what better than a pure JavaScript/HTML5 Game Boy Advance emulator like [GBA.js](http://endrift.github.com/gbajs/), which was developed primarily between July and October of 2012?
 
 ### So, why?
 
@@ -44,21 +44,21 @@ JavaScript is, unfortunately, a rather high-level language. As a result, it can 
 
 # Gameplay
 
-![Begin Programming!](http://jpfau.github.com/scrum/resources/begin.png)
+![Begin Programming!](http://endrift.github.com/scrum/resources/begin.png)
 
 When you start the game, you're dumped into a "development environment" as it clones the repository so you can begin your very long night of coding. The board is populated and then you can begin. The main gameplay consists of trying to complete lines of code in your program.
 
 Each line contains blocks of four colors. You can place new blocks into the line of your choosing by pressing `Z` (or `A` if you're on a GBA), and when you fill up the line all the way up to the delimited column, the portion of that line that matches the last color on the line is cleared.
 
-![Clearing a portion of a line](http://jpfau.github.com/scrum/resources/clearing.png)
+![Clearing a portion of a line](http://endrift.github.com/scrum/resources/clearing.png)
 
 You can clear an whole line by making the line entirely one color. Be careful, though! The more lines you clear, the harder the game gets. You only get a limited amount of time to decide which line a block should go on, and the more lines you have, the shorter that duration gets.
 
-![Clearing an entire line](http://jpfau.github.com/scrum/resources/clear-line.png)
+![Clearing an entire line](http://endrift.github.com/scrum/resources/clear-line.png)
 
 If, however, you go over the line, you've made one bug for each column over you go. Furthermore, if you place a block of a mismatched color onto an existing line, you also get a bug. Watch your bug count! If it goes too high, you need to start debugging and will be automatically kicked into the debugger!
 
-![Clearing a portion of a line](http://jpfau.github.com/scrum/resources/going-over.png)
+![Clearing a portion of a line](http://endrift.github.com/scrum/resources/going-over.png)
 
 If your bug counter isn't greyed out, you can voluntarily enter debugging mode by pressing `X` (`B` if you're on a GBA). You can manually exit the debugger when you've patched enough bugs by pressing `X` again, or if you meet your quota, you'll get kicked out of the debugger automatically. If you fail at debugging, however, it's GAME OVER.
 
@@ -68,6 +68,6 @@ When selecting a difficulty, you can press `\` (or `Select` on a GBA) to view hi
 
 # Source
 
-The source code for the game is available on [GitHub](http://github.com/jpfau/scrum/) under the BSD 2-clause license. Compilation requires installing DevKitARM and libgba. There are no further dependencies, and building should work out-of-the-box using GNU Make (make on Linux or Mac, gmake on BSDs).
+The source code for the game is available on [GitHub](http://github.com/endrift/scrum/) under the BSD 2-clause license. Compilation requires installing DevKitARM and libgba. There are no further dependencies, and building should work out-of-the-box using GNU Make (make on Linux or Mac, gmake on BSDs).
 
 Scrum is © 2012 Jeffrey Pfau
